@@ -5,7 +5,7 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 // Importación de las páginas
 import Home from './pages/Home.jsx';
 import Transactions from './pages/Transactions.jsx';
-import Login from './pages/Login.jsx';
+//import Login from './pages/Login.jsx';
 import PaymentSuccess from './pages/PaymentSuccess.jsx';
 
 // Importación de componentes de la interfaz
@@ -34,7 +34,7 @@ function AppContent() {
         <Routes>
           {/* Rutas Públicas */}
           <Route path="/" element={<Home />} />
-          <Route path="/login" element={<Login />} />
+          {/*<Route path="/login" element={<Login />} />*/}
           <Route path="/payment-success" element={<PaymentSuccess />} />
           
           {/* Contenedor de Rutas Protegidas */}
