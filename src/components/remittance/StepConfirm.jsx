@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, Button, ListGroup, Row, Col, Spinner, Alert } from 'react-bootstrap';
 import { createWithdrawal } from '../../services/api';
 import { formatNumberForDisplay, formatRate } from '../../utils/formatting';
