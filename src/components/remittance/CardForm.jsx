@@ -4,9 +4,6 @@ import { useAppContext } from '../../context/AppContext';
 import { getQuote } from '../../services/api';
 import { formatNumberForDisplay, parseFormattedNumber, formatRate } from '../../utils/formatting';
 
-// 2 minutes validity for the quote timer
-const QUOTE_VALIDITY_DURATION = 2 * 60 * 1000;
-
 const CardForm = ({ onQuoteSuccess }) => {
   const { countries, loading: loadingCountries } = useAppContext();
   const [amount, setAmount] = useState(0);
@@ -16,62 +13,34 @@ const CardForm = ({ onQuoteSuccess }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const [quoteTimestamp, setQuoteTimestamp] = useState(null);
-  const [remainingTime, setRemainingTime] = useState(null);
-
-  const fetchQuote = async () => {
-    if (amount <= 0 || !destCountry) return;
-
-    setLoading(true);
-    setError('');
-    setQuote(null);
-    setQuoteTimestamp(null);
-    setRemainingTime(null);
-
-    try {
-      const response = await getQuote({ amount, destCountry });
-      if (response.ok) {
-        if (response.data.validations && response.data.validations.length > 0) {
-          setError(response.data.validations.join(', '));
-        } else {
-          setQuote(response.data);
-          setQuoteTimestamp(Date.now());
-        }
-      }
-    } catch (err) {
-      setError(err.error || 'No se pudo obtener la cotización.');
-    } finally {
-      setLoading(false);
+  useEffect(() => {
+    if (amount <= 0 || !destCountry) {
+      setQuote(null);
+      setError('');
+      return;
     }
-  };
 
-  useEffect(() => {
-    if (!quoteTimestamp) return;
-
-    const interval = setInterval(() => {
-      const elapsedTime = Date.now() - quoteTimestamp;
-      const timeLeft = QUOTE_VALIDITY_DURATION - elapsedTime;
-
-      if (timeLeft <= 0) {
-        clearInterval(interval);
-        setRemainingTime(0);
-        setError('La cotización ha expirado.');
+    const debounceHandler = setTimeout(async () => {
+      setLoading(true);
+      setError('');
+      try {
+        const response = await getQuote({ amount, destCountry });
+        if (response.ok) {
+          if (response.data.validations?.length > 0) {
+            setError(response.data.validations.join(', '));
+            setQuote(null);
+          } else {
+            setQuote(response.data);
+          }
+        }
+      } catch (err) {
+        setError(err.error || 'No se pudo obtener la cotización.');
         setQuote(null);
-        setQuoteTimestamp(null);
-      } else {
-        setRemainingTime(timeLeft);
-      }
-    }, 1000);
-
-    return () => clearInterval(interval);
-  }, [quoteTimestamp]);
-
-  useEffect(() => {
-    const debounceHandler = setTimeout(() => {
-      if (amount > 0 && destCountry) {
-        fetchQuote();
+      } finally {
+        setLoading(false);
       }
     }, 800);
+
     return () => clearTimeout(debounceHandler);
   }, [amount, destCountry]);
 
@@ -83,18 +52,11 @@ const CardForm = ({ onQuoteSuccess }) => {
 
   const handleNextStep = () => {
     if (!quote || error) {
-      alert("Por favor, obtenga una cotización válida y vigente antes de continuar.");
+      alert("Por favor, obtenga una cotización válida antes de continuar.");
       return;
     }
+    // Al continuar, pasamos la cotización y la marca de tiempo actual
     onQuoteSuccess({ quoteData: quote, destCountry, quoteTimestamp: Date.now() });
-  };
-
-  const formatTime = (ms) => {
-    if (ms === null || ms <= 0) return '00:00';
-    const totalSeconds = Math.floor(ms / 1000);
-    const minutes = Math.floor(totalSeconds / 60).toString().padStart(2, '0');
-    const seconds = (totalSeconds % 60).toString().padStart(2, '0');
-    return `${minutes}:${seconds}`;
   };
 
   return (
@@ -154,31 +116,15 @@ const CardForm = ({ onQuoteSuccess }) => {
           )}
 
           {error && <Alert variant="danger" className="text-center small py-2 mt-3">{error}</Alert>}
-          
-          {quote && remainingTime > 0 && (
-            <div className="text-center text-muted small mt-2">
-              Cotización válida por: <strong style={{ color: remainingTime < 60000 ? '#dc3545' : 'inherit' }}>{formatTime(remainingTime)}</strong>
-            </div>
-          )}
 
           <div className="d-grid mt-4">
-            {remainingTime === 0 && error ? (
-              <Button 
-                onClick={fetchQuote} 
-                variant="outline-primary"
-                style={{ color: 'var(--avf-secondary)', borderColor: 'var(--avf-secondary)' }}
-              >
-                Actualizar Cotización
-              </Button>
-            ) : (
-              <Button 
-                onClick={handleNextStep} 
-                disabled={!quote || loading}
-                style={{ backgroundColor: 'var(--avf-secondary)', borderColor: 'var(--avf-secondary)' }}
-              >
-                Continuar
-              </Button>
-            )}
+            <Button 
+              onClick={handleNextStep} 
+              disabled={!quote || loading}
+              style={{ backgroundColor: 'var(--avf-secondary)', borderColor: 'var(--avf-secondary)' }}
+            >
+              Continuar
+            </Button>
           </div>
         </Form>
       </Card.Body>
