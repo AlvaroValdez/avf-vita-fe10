@@ -1,15 +1,15 @@
-import React, { useState, useEffect } from 'react';
-import { Card, Button, ListGroup, Row, Col, Spinner, Alert } from 'react-bootstrap';
+import React, { useState, useEffect } from 'react'; // <-- LA CORRECCIÓN CLAVE
+import { Card, Button, Row, Col, Spinner, Alert } from 'react-bootstrap';
 import { createWithdrawal } from '../../services/api';
 import { formatNumberForDisplay, formatRate } from '../../utils/formatting';
 
+const QUOTE_VALIDITY_DURATION = 2 * 60 * 1000;
+
 const StepConfirm = ({ formData, fields, onBack }) => {
-  const { quoteData, beneficiary, destCountry } = formData;
+  const { quoteData, beneficiary, destCountry, quoteTimestamp } = formData;
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [transactionResult, setTransactionResult] = useState(null);
-
-  // --- NEW TIMER LOGIC ---
   const [remainingTime, setRemainingTime] = useState(null);
   const [isExpired, setIsExpired] = useState(false);
 
@@ -23,7 +23,7 @@ const StepConfirm = ({ formData, fields, onBack }) => {
       if (timeLeft <= 0) {
         clearInterval(interval);
         setRemainingTime(0);
-        setIsExpired(true); // Mark the quote as expired
+        setIsExpired(true);
       } else {
         setRemainingTime(timeLeft);
       }
@@ -88,6 +88,22 @@ const StepConfirm = ({ formData, fields, onBack }) => {
       setLoading(false);
     }
   };
+
+  if (isExpired) {
+    return (
+      <Card className="p-4 text-center">
+        <Card.Body>
+          <Alert variant="danger">
+            <Alert.Heading>¡Tu cotización ha expirado!</Alert.Heading>
+            <p>Para asegurar la mejor tasa de cambio, las cotizaciones son válidas por un tiempo limitado. Por favor, vuelve al inicio para cotizar nuevamente.</p>
+          </Alert>
+          <Button variant="outline-primary" onClick={() => window.location.reload()}>
+            Volver a Cotizar
+          </Button>
+        </Card.Body>
+      </Card>
+    );
+  }
 
   if (transactionResult) {
     const txId = transactionResult.id || transactionResult.uuid || transactionResult.transaction?.id || 'N/A';
