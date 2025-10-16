@@ -3,12 +3,39 @@ import axios from 'axios';
 //const API_URL = 'http://localhost:5000/api';
 const API_URL = 'https://remesas-avf1-0.onrender.com/api';
 
-const apiClient = axios.create({
+export const apiClient = axios.create({
   baseURL: API_URL,
   headers: {
     'Content-Type': 'application/json',
   },
 });
+
+// --- NEW LOGIN FUNCTION ---
+export const loginUser = async (credentials) => {
+  try {
+    // In the future, this will be the real API call:
+    // const response = await apiClient.post('/auth/login', credentials);
+    // return response.data;
+
+    // --- TEMPORARY SIMULATION ---
+    console.log("Simulating login with:", credentials);
+    if (credentials.email && credentials.password) {
+      // Simulate a successful response from the backend
+      return Promise.resolve({
+        ok: true,
+        token: 'fake-jwt-token-for-testing-purposes',
+        user: { name: 'Test User', email: credentials.email }
+      });
+    } else {
+      // Simulate a failed response
+      return Promise.reject({ ok: false, error: 'Invalid credentials' });
+    }
+    // --- END SIMULATION ---
+  } catch (error) {
+    console.error('Login error:', error.response?.data || error.message);
+    throw error.response?.data || error;
+  }
+};
 
 export const getQuote = async (params) => {
   try {
