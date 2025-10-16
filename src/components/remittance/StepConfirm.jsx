@@ -9,6 +9,37 @@ const StepConfirm = ({ formData, fields, onBack }) => {
   const [error, setError] = useState(null);
   const [transactionResult, setTransactionResult] = useState(null);
 
+  // --- NEW TIMER LOGIC ---
+  const [remainingTime, setRemainingTime] = useState(null);
+  const [isExpired, setIsExpired] = useState(false);
+
+  useEffect(() => {
+    if (!quoteTimestamp) return;
+
+    const interval = setInterval(() => {
+      const elapsedTime = Date.now() - quoteTimestamp;
+      const timeLeft = QUOTE_VALIDITY_DURATION - elapsedTime;
+
+      if (timeLeft <= 0) {
+        clearInterval(interval);
+        setRemainingTime(0);
+        setIsExpired(true); // Mark the quote as expired
+      } else {
+        setRemainingTime(timeLeft);
+      }
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [quoteTimestamp]);
+
+  const formatTime = (ms) => {
+    if (ms === null || ms <= 0) return '00:00';
+    const totalSeconds = Math.floor(ms / 1000);
+    const minutes = Math.floor(totalSeconds / 60).toString().padStart(2, '0');
+    const seconds = (totalSeconds % 60).toString().padStart(2, '0');
+    return `${minutes}:${seconds}`;
+  };
+
   // --- FUNCIONES DE AYUDA PARA OBTENER NOMBRES Y VALORES LEGIBLES ---
   const getFieldDetails = (key) => fields.find(f => f.key === key);
 
@@ -26,35 +57,25 @@ const StepConfirm = ({ formData, fields, onBack }) => {
     setLoading(true);
     setError(null);
     try {
-      // --- PASO A: Crear el Withdrawal en nuestro sistema ---
-      const withdrawalPayload = {
+      // Paso A: Crear el Withdrawal
+      const withdrawalResult = await createWithdrawal({
         country: destCountry,
         currency: quoteData.origin,
         amount: quoteData.amountIn,
         ...beneficiary,
-      };
-      // Limpiamos los datos
-      if (withdrawalPayload.company_name === "") delete withdrawalPayload.company_name;
-      if (withdrawalPayload.purpose) withdrawalPayload.purpose = String(withdrawalPayload.purpose).toUpperCase();
+      });
 
-      const withdrawalResult = await createWithdrawal(withdrawalPayload);
-
-      // Si la creación del withdrawal es exitosa...
+      // Paso B: Crear la Orden de Pago
       if (withdrawalResult.ok) {
-        // --- PASO B: Crear la Orden de Pago (Pay-in) ---
-        const paymentOrderData = {
+        const paymentOrderResult = await createPaymentOrder({
           amount: quoteData.amountIn,
-          country: 'CL', // El país donde el usuario paga (Chile)
-          orderId: withdrawalResult.data.order, // Usamos el ID de la transacción creada
-        };
+          country: 'CL',
+          orderId: withdrawalResult.data.order,
+        });
 
-        const paymentOrderResult = await createPaymentOrder(paymentOrderData);
-
-        // --- PASO C: Redirigir al usuario a la pasarela de pago ---
+        // Paso C: Redirigir al usuario
         if (paymentOrderResult.ok) {
-          // Extraemos la URL de pago de la respuesta de Vita
-          const paymentUrl = paymentOrderResult.data.data.payment_url; 
-          window.location.href = paymentUrl; // Redirige al usuario
+          window.location.href = paymentOrderResult.data.data.payment_url;
         } else {
           throw new Error('No se pudo generar el link de pago.');
         }
@@ -62,9 +83,9 @@ const StepConfirm = ({ formData, fields, onBack }) => {
         throw new Error('No se pudo crear la transacción inicial.');
       }
     } catch (err) {
-      const errorDetails = err.details ? (typeof err.details === 'object' ? JSON.stringify(err.details) : err.details.join(', ')) : (err.error || err.message);
+      const errorDetails = err.details ? JSON.stringify(err.details) : (err.error || err.message);
       setError(`Error al procesar el envío: ${errorDetails}`);
-      setLoading(false); // Detenemos la carga si hay un error
+      setLoading(false);
     }
   };
 
