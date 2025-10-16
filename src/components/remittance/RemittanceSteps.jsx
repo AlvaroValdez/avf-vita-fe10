@@ -11,10 +11,7 @@ const RemittanceSteps = () => {
   const [beneficiaryFields, setBeneficiaryFields] = useState([]);
   const [isLoadingRules, setIsLoadingRules] = useState(false);
 
-  // --- FUNCIÓN CORREGIDA ---
-  // Ahora recibe 'quotePayload' que incluye quoteData, destCountry y quoteTimestamp
   const handleQuoteSuccess = async (quotePayload) => {
-    // Guarda TODOS los datos recibidos de CardForm en el estado principal
     setFormData(prev => ({ ...prev, ...quotePayload }));
     setIsLoadingRules(true);
     try {
@@ -71,7 +68,6 @@ const RemittanceSteps = () => {
                   onComplete={handleBeneficiaryComplete} 
                />;
       case 3:
-        // El objeto 'formData' ahora sí contiene 'quoteTimestamp'
         return <StepConfirm 
                   formData={formData} 
                   fields={beneficiaryFields} 

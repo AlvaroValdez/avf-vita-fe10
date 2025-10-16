@@ -4,8 +4,7 @@ import { useAppContext } from '../../context/AppContext';
 import { getQuote } from '../../services/api';
 import { formatNumberForDisplay, parseFormattedNumber, formatRate } from '../../utils/formatting';
 
-// Duración de la validez de la cotización en milisegundos (ej: 2 minutos)
-// Lo reducimos para ser más conservadores y evitar el error.
+// 2 minutes validity for the quote timer
 const QUOTE_VALIDITY_DURATION = 2 * 60 * 1000;
 
 const CardForm = ({ onQuoteSuccess }) => {
@@ -16,56 +15,80 @@ const CardForm = ({ onQuoteSuccess }) => {
   const [quote, setQuote] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  
-  // Estados para gestionar el temporizador de expiración
+
   const [quoteTimestamp, setQuoteTimestamp] = useState(null);
   const [remainingTime, setRemainingTime] = useState(null);
 
-  // Efecto para obtener la cotización
-  useEffect(() => {
-    if (amount <= 0 || !destCountry) {
-        setQuote(null);
-        return;
-    }
-  
-    const debounceHandler = setTimeout(async () => {
-        setLoading(true);
-        setError('');  
-        try {
-            const response = await getQuote({ amount, destCountry });
-            if (response.ok) {
-                if (response.data.validations && response.data.validations.length > 0) {
-                    setError(response.data.validations.join(', '));
-                    setQuote(null);
-                } else {
-                    setQuote(response.data);
-                }
-            }
-        } catch (err) {
-            setError(err.error || 'No se pudo obtener la cotización.');
-            setQuote(null);
-        } finally {
-            setLoading(false);
+  const fetchQuote = async () => {
+    if (amount <= 0 || !destCountry) return;
+
+    setLoading(true);
+    setError('');
+    setQuote(null);
+    setQuoteTimestamp(null);
+    setRemainingTime(null);
+
+    try {
+      const response = await getQuote({ amount, destCountry });
+      if (response.ok) {
+        if (response.data.validations && response.data.validations.length > 0) {
+          setError(response.data.validations.join(', '));
+        } else {
+          setQuote(response.data);
+          setQuoteTimestamp(Date.now());
         }
+      }
+    } catch (err) {
+      setError(err.error || 'No se pudo obtener la cotización.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (!quoteTimestamp) return;
+
+    const interval = setInterval(() => {
+      const elapsedTime = Date.now() - quoteTimestamp;
+      const timeLeft = QUOTE_VALIDITY_DURATION - elapsedTime;
+
+      if (timeLeft <= 0) {
+        clearInterval(interval);
+        setRemainingTime(0);
+        setError('La cotización ha expirado.');
+        setQuote(null);
+        setQuoteTimestamp(null);
+      } else {
+        setRemainingTime(timeLeft);
+      }
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [quoteTimestamp]);
+
+  useEffect(() => {
+    const debounceHandler = setTimeout(() => {
+      if (amount > 0 && destCountry) {
+        fetchQuote();
+      }
     }, 800);
-  
     return () => clearTimeout(debounceHandler);
   }, [amount, destCountry]);
-  
-  const handleNextStep = () => {
-    if (!quote || error) {
-        alert("Por favor, obtenga una cotización válida y vigente antes de continuar.");
-        return;
-    }
-    onQuoteSuccess({ quoteData: quote, destCountry });
-  };
 
   const handleAmountChange = (e) => {
     const parsedValue = parseFormattedNumber(e.target.value);
     setAmount(parsedValue);
     setDisplayAmount(e.target.value === '' ? '' : formatNumberForDisplay(parsedValue));
   };
-  
+
+  const handleNextStep = () => {
+    if (!quote || error) {
+      alert("Por favor, obtenga una cotización válida y vigente antes de continuar.");
+      return;
+    }
+    onQuoteSuccess({ quoteData: quote, destCountry, quoteTimestamp: Date.now() });
+  };
+
   const formatTime = (ms) => {
     if (ms === null || ms <= 0) return '00:00';
     const totalSeconds = Math.floor(ms / 1000);
@@ -139,13 +162,23 @@ const CardForm = ({ onQuoteSuccess }) => {
           )}
 
           <div className="d-grid mt-4">
-            <Button 
-              onClick={handleNextStep} 
-              disabled={!quote || loading}
-              style={{ backgroundColor: 'var(--avf-secondary)', borderColor: 'var(--avf-secondary)' }}
-            >
-              Continuar
-            </Button>
+            {remainingTime === 0 && error ? (
+              <Button 
+                onClick={fetchQuote} 
+                variant="outline-primary"
+                style={{ color: 'var(--avf-secondary)', borderColor: 'var(--avf-secondary)' }}
+              >
+                Actualizar Cotización
+              </Button>
+            ) : (
+              <Button 
+                onClick={handleNextStep} 
+                disabled={!quote || loading}
+                style={{ backgroundColor: 'var(--avf-secondary)', borderColor: 'var(--avf-secondary)' }}
+              >
+                Continuar
+              </Button>
+            )}
           </div>
         </Form>
       </Card.Body>
