@@ -8,38 +8,37 @@ import { getWithdrawalRules } from '../../services/api';
 const RemittanceSteps = () => {
   const [step, setStep] = useState(1);
   const [formData, setFormData] = useState({});
-  // ESTE ESTADO AHORA GUARDARÁ EL ARRAY DE CAMPOS DIRECTAMENTE
-  const [beneficiaryFields, setBeneficiaryFields] = useState([]); 
+  const [beneficiaryFields, setBeneficiaryFields] = useState([]);
   const [isLoadingRules, setIsLoadingRules] = useState(false);
 
+  // --- FUNCIÓN CORREGIDA ---
+  // Ahora recibe 'quotePayload' que incluye quoteData, destCountry y quoteTimestamp
   const handleQuoteSuccess = async (quotePayload) => {
+    // Guarda TODOS los datos recibidos de CardForm en el estado principal
     setFormData(prev => ({ ...prev, ...quotePayload }));
     setIsLoadingRules(true);
     try {
       const response = await getWithdrawalRules({ country: quotePayload.destCountry });
-      
       if (response.ok) {
         const countryCode = quotePayload.destCountry.toLowerCase();
-        // NAVEGAMOS LA ESTRUCTURA COMPLEJA Y EXTRAEMOS SOLO EL ARRAY 'fields'
-        const fields = response.data.rules[countryCode].fields;
-        
+        const fields = response.data.rules[countryCode]?.fields;
         if (fields) {
-          setBeneficiaryFields(fields); // Guardamos el array de campos
-          setStep(2); // Avanzamos al siguiente paso
+          setBeneficiaryFields(fields);
+          setStep(2);
         } else {
-          throw new Error(`No se encontraron 'fields' para el país ${countryCode}`);
+          throw new Error(`No se encontraron campos para el país ${countryCode}`);
         }
       } else {
-        throw new Error("La respuesta de la API para las reglas no fue exitosa.");
+        throw new Error("La respuesta para las reglas no fue exitosa.");
       }
     } catch (error) {
-      console.error("Fallo al obtener u procesar withdrawal rules:", error);
-      alert("No se pudieron cargar los requisitos para el país de destino.");
+      console.error("Fallo al obtener las reglas:", error);
+      alert("No se pudieron cargar los requisitos para el país.");
     } finally {
       setIsLoadingRules(false);
     }
   };
-  
+
   const handleBeneficiaryComplete = (beneficiaryData) => {
     setFormData(prev => ({ ...prev, beneficiary: beneficiaryData }));
     setStep(3);
@@ -53,14 +52,18 @@ const RemittanceSteps = () => {
 
   const renderStep = () => {
     if (isLoadingRules) {
-        // ... (código del spinner sin cambios)
+      return (
+        <div className="text-center p-5">
+          <Spinner animation="border" />
+          <p className="mt-2">Cargando requisitos del país...</p>
+        </div>
+      );
     }
 
     switch (step) {
       case 1:
         return <CardForm onQuoteSuccess={handleQuoteSuccess} />;
       case 2:
-        // AHORA LE PASAMOS EL ARRAY 'fields' DIRECTAMENTE
         return <StepBeneficiary 
                   formData={formData} 
                   fields={beneficiaryFields} 
@@ -68,7 +71,7 @@ const RemittanceSteps = () => {
                   onComplete={handleBeneficiaryComplete} 
                />;
       case 3:
-        // El 'StepConfirm' también necesitará los fields para los labels
+        // El objeto 'formData' ahora sí contiene 'quoteTimestamp'
         return <StepConfirm 
                   formData={formData} 
                   fields={beneficiaryFields} 
