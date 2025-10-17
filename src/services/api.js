@@ -103,3 +103,32 @@ export const createPaymentOrder = async (orderData) => {
     throw error.response?.data || error;
   }
 };
+
+/**
+ * Obtiene la configuración actual de la comisión (markup).
+ * @returns {Promise<object>}
+ */
+export const getMarkup = async () => {
+  try {
+    const response = await apiClient.get('/admin/markup');
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching markup:', error.response?.data || error.message);
+    throw error.response?.data || error;
+  }
+};
+
+/**
+ * Actualiza la configuración de la comisión (markup).
+ * @param {number} newMarkup - El nuevo porcentaje de comisión.
+ * @returns {Promise<object>}
+ */
+export const updateMarkup = async (newMarkup) => {
+  try {
+    const response = await apiClient.put('/admin/markup', { markup: newMarkup });
+    return response.data;
+  } catch (error) {
+    console.error('Error updating markup:', error.response?.data || error.message);
+    throw error.response?.data || error;
+  }
+};

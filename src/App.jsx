@@ -1,6 +1,8 @@
 import React from 'react';
 import { Routes, Route, Navigate, Outlet } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import AdminRoute from './components/auth/AdminRoute.jsx'; 
+import AdminMarkup from './pages/AdminMarkup.jsx'; 
 
 // Importación de las páginas
 import Home from './pages/Home.jsx';
@@ -37,10 +39,14 @@ function AppContent() {
           <Route path="/login" element={<Login />} />
           <Route path="/payment-success" element={<PaymentSuccess />} />
           
-          {/* Contenedor de Rutas Protegidas */}
+          {/* Rutas de usuario logueado */}
           <Route element={<ProtectedRoute />}>
             <Route path="/transactions" element={<Transactions />} />
-            {/* Aquí se podrían añadir más rutas protegidas en el futuro, como /admin */}
+          </Route>
+
+          {/* Rutas solo para administradores */}
+          <Route element={<AdminRoute />}>
+            <Route path="/admin/markup" element={<AdminMarkup />} />
           </Route>
 
         </Routes>

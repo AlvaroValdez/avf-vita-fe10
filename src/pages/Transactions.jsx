@@ -1,25 +1,26 @@
 import React, { useState, useEffect } from 'react';
 import { Container, Card, Spinner, Alert, ListGroup, Badge, Form, Row, Col, Pagination } from 'react-bootstrap';
 import { getTransactions } from '../services/api';
-import { useAppContext } from '../context/AppContext'; // 1. Importamos el contexto de la app
+import { useAppContext } from '../context/AppContext';
 
-const TRANSACTIONS_PER_PAGE = 10;
+const TRANSACTIONS_PER_PAGE = 10; // Define cuántas transacciones mostrar por página
 
 const Transactions = () => {
-  const { countries, loading: loadingCountries } = useAppContext(); // 2. Obtenemos la lista de países
+  const { countries, loading: loadingCountries } = useAppContext();
   const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-
+  
+  // --- ESTADOS PARA LA PAGINACIÓN ---
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(0);
 
-  // 3. Añadimos 'country' al estado de los filtros
   const [filters, setFilters] = useState({
     status: '',
     country: '',
   });
 
+  // El useEffect ahora también depende de 'currentPage'
   useEffect(() => {
     const fetchTransactions = async () => {
       try {
@@ -28,14 +29,16 @@ const Transactions = () => {
         if (!activeFilters.status) delete activeFilters.status;
         if (!activeFilters.country) delete activeFilters.country;
 
-        const response = await getTransactions({
-          page: currentPage,
+        // Se incluyen los parámetros de paginación en la llamada a la API
+        const response = await getTransactions({ 
+          page: currentPage, 
           limit: TRANSACTIONS_PER_PAGE,
-          ...activeFilters
+          ...activeFilters 
         });
 
         if (response.ok) {
           setTransactions(response.transactions);
+          // El backend nos da el total para calcular el número de páginas
           setTotalPages(Math.ceil(response.total / TRANSACTIONS_PER_PAGE));
         }
       } catch (err) {
@@ -49,7 +52,7 @@ const Transactions = () => {
   }, [filters, currentPage]);
 
   const handleFilterChange = (e) => {
-    setCurrentPage(1);
+    setCurrentPage(1); // Resetea a la primera página al cambiar un filtro
     const { name, value } = e.target;
     setFilters(prevFilters => ({ ...prevFilters, [name]: value }));
   };
@@ -58,7 +61,6 @@ const Transactions = () => {
     setCurrentPage(pageNumber);
   };
 
-  // --- FUNCIÓN PARA DAR ESTILO AL ESTADO ---
   const getStatusBadge = (status) => {
     switch (status) {
       case 'succeeded': return <Badge bg="success">Completado</Badge>;
@@ -68,7 +70,6 @@ const Transactions = () => {
     }
   };
 
-  // --- FUNCIÓN RESTAURADA PARA RENDERIZAR EL CONTENIDO ---
   const renderContent = () => {
     if (loading) {
       return <div className="text-center p-5"><Spinner animation="border" /></div>;
@@ -115,20 +116,14 @@ const Transactions = () => {
                   </Form.Select>
                 </Form.Group>
               </Col>
-              
-              {/* 4. NUEVO FILTRO POR PAÍS */}
               <Col md={4}>
                 <Form.Group>
                   <Form.Label>Filtrar por País</Form.Label>
                   <Form.Select name="country" value={filters.country} onChange={handleFilterChange} disabled={loadingCountries}>
                     <option value="">Todos</option>
-                    {loadingCountries ? (
-                      <option>Cargando...</option>
-                    ) : (
-                      countries.map(country => (
-                        <option key={country.code} value={country.code}>{country.name}</option>
-                      ))
-                    )}
+                    {loadingCountries ? <option>Cargando...</option> : countries.map(country => (
+                      <option key={country.code} value={country.code}>{country.name}</option>
+                    ))}
                   </Form.Select>
                 </Form.Group>
               </Col>
@@ -137,6 +132,7 @@ const Transactions = () => {
 
           {renderContent()}
 
+          {/* --- COMPONENTE DE PAGINACIÓN --- */}
           {totalPages > 1 && (
             <div className="d-flex justify-content-center mt-4">
               <Pagination>

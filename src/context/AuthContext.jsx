@@ -21,13 +21,18 @@ export const AuthProvider = ({ children }) => {
     try {
       const response = await loginUser({ email, password });
       if (response.ok) {
+        localStorage.setItem('token', response.token);
         setToken(response.token);
-        setUser(response.user);
+        
+        // --- SIMULACIÓN DE ROL ---
+        // Asignamos un rol de 'admin' al usuario de prueba para el desarrollo
+        setUser({ ...response.user, role: 'admin' }); 
+        
         return true;
       }
-      throw new Error(response.error || 'Login failed.');
+      throw new Error(response.error || 'Error al iniciar sesión');
     } catch (error) {
-      console.error("Login process failed:", error);
+      console.error("Login failed:", error);
       throw error;
     }
   };
