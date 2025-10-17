@@ -51,6 +51,7 @@ function AppContent() {
 
         </Routes>
       </main>
+      <Footer /> 
     </>
   );
 }
