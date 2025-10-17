@@ -4,8 +4,9 @@ import { loginUser, apiClient } from '../services/api';
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
-  const [token, setToken] = useState(localStorage.getItem('token'));
+  // --- CORRECCIÓN: Lee el usuario y el token desde localStorage al iniciar ---
+  const [user, setUser] = useState(() => JSON.parse(localStorage.getItem('user')) || null);
+  const [token, setToken] = useState(() => localStorage.getItem('token') || null);
 
   useEffect(() => {
     if (token) {
@@ -21,23 +22,27 @@ export const AuthProvider = ({ children }) => {
     try {
       const response = await loginUser({ email, password });
       if (response.ok) {
+        const userWithRole = { ...response.user, role: 'admin' }; // Simulación de rol
+
+        // --- CORRECCIÓN: Guarda el usuario y el token ---
         localStorage.setItem('token', response.token);
+        localStorage.setItem('user', JSON.stringify(userWithRole));
+        
         setToken(response.token);
-        
-        // --- SIMULACIÓN DE ROL ---
-        // Asignamos un rol de 'admin' al usuario de prueba para el desarrollo
-        setUser({ ...response.user, role: 'admin' }); 
-        
+        setUser(userWithRole);
         return true;
       }
-      throw new Error(response.error || 'Error al iniciar sesión');
+      throw new Error(response.error || 'Login failed.');
     } catch (error) {
-      console.error("Login failed:", error);
+      console.error("Login process failed:", error);
       throw error;
     }
   };
 
   const logout = () => {
+    // --- CORRECCIÓN: Limpia el usuario y el token ---
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
     setToken(null);
     setUser(null);
   };
