@@ -1,129 +1,166 @@
 import React, { useState, useEffect } from 'react';
-import { Card, Form, Row, Col, InputGroup, Button, Spinner, ListGroup, Alert } from 'react-bootstrap';
-import { useAppContext } from '../../context/AppContext';
+import { Card, Form, Button, Row, Col, Spinner, Alert, InputGroup } from 'react-bootstrap';
 import { getQuote } from '../../services/api';
-import { formatNumberForDisplay, parseFormattedNumber, formatRate } from '../../utils/formatting';
+import { useAppContext } from '../../context/AppContext';
+import { formatNumberForDisplay, formatRate } from '../../utils/formatting';
 
-const CardForm = ({ onQuoteSuccess }) => {
-  const { countries, loading: loadingCountries } = useAppContext();
-  const [amount, setAmount] = useState(0);
-  const [displayAmount, setDisplayAmount] = useState('');
-  const [destCountry, setDestCountry] = useState('CO');
-  const [quote, setQuote] = useState(null);
+const CardForm = ({ onNext }) => {
+  const { countries, loading: loadingCountries, error: countriesError } = useAppContext();
+  const [destCountry, setDestCountry] = useState('');
+  const [amountIn, setAmountIn] = useState('');
+  const [quoteData, setQuoteData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
+  // Efecto para obtener la cotización cuando cambian los campos relevantes
   useEffect(() => {
-    if (amount <= 0 || !destCountry) {
-      setQuote(null);
-      setError('');
-      return;
-    }
+    const fetchQuote = async () => {
+      if (!destCountry || amountIn <= 0) {
+        setQuoteData(null);
+        setError('');
+        return;
+      }
 
-    const debounceHandler = setTimeout(async () => {
       setLoading(true);
       setError('');
       try {
-        const response = await getQuote({ amount, destCountry });
+        const response = await getQuote({ amount: amountIn, destCountry });
         if (response.ok) {
-          if (response.data.validations?.length > 0) {
+          setQuoteData(response.data);
+          if (response.data.validations && response.data.validations.length > 0) {
             setError(response.data.validations.join(', '));
-            setQuote(null);
-          } else {
-            setQuote(response.data);
           }
+        } else {
+          setError(response.error || 'Error al obtener la cotización.');
         }
       } catch (err) {
-        setError(err.error || 'No se pudo obtener la cotización.');
-        setQuote(null);
+        setError('Error de red o servidor al cotizar.');
       } finally {
         setLoading(false);
       }
-    }, 800);
+    };
 
-    return () => clearTimeout(debounceHandler);
-  }, [amount, destCountry]);
+    const handler = setTimeout(() => {
+      fetchQuote();
+    }, 500); // Debounce para evitar llamadas excesivas a la API
 
-  const handleAmountChange = (e) => {
-    const parsedValue = parseFormattedNumber(e.target.value);
-    setAmount(parsedValue);
-    setDisplayAmount(e.target.value === '' ? '' : formatNumberForDisplay(parsedValue));
-  };
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [destCountry, amountIn]);
 
-  const handleNextStep = () => {
-    if (!quote || error) {
-      alert("Por favor, obtenga una cotización válida antes de continuar.");
-      return;
+  const handleNext = () => {
+    if (quoteData && !error) {
+      onNext({ destCountry, amountIn, quoteData });
+    } else if (!destCountry || amountIn <= 0) {
+      setError('Por favor, selecciona un país y un monto para cotizar.');
+    } else if (error) {
+      setError('Por favor, corrige los errores antes de continuar.');
     }
-    // Al continuar, pasamos la cotización y la marca de tiempo actual
-    onQuoteSuccess({ quoteData: quote, destCountry, quoteTimestamp: Date.now() });
   };
+
+  const currentOriginCurrency = 'CLP'; // Fijo por ahora
+  const currentDestCurrency = quoteData?.destCurrency || '???';
 
   return (
-    <Card className="p-4">
+    <Card className="p-4 shadow-lg border-0" style={{ borderRadius: '15px' }}> {/* Sombra y bordes redondeados */}
       <Card.Body>
-        <Card.Title as="h5" className="mb-4">Cotizar envío</Card.Title>
+        <h4 className="mb-4 text-center fw-bold">Cotizar envío</h4> {/* Título centrado y en negrita */}
         <Form>
+          {/* Campo País Destino */}
           <Form.Group className="mb-3">
-            <Form.Label>Enviar dinero a</Form.Label>
-            <Form.Select value={destCountry} onChange={(e) => setDestCountry(e.target.value)} disabled={loadingCountries}>
-              {loadingCountries ? <option>Cargando países...</option> : countries.map(country => (
-                <option key={country.code} value={country.code}>{country.name}</option>
-              ))}
+            <Form.Label className="text-muted">Enviar dinero a</Form.Label> {/* Etiqueta más sutil */}
+            <Form.Select 
+              value={destCountry} 
+              onChange={(e) => setDestCountry(e.target.value)} 
+              disabled={loadingCountries}
+              className="border-0 bg-light py-2 px-3" // Sin borde, fondo ligero, padding
+              style={{ minHeight: '50px', fontSize: '1.1rem' }} // Altura y tamaño de fuente
+            >
+              <option value="">Selecciona un país</option>
+              {loadingCountries ? (
+                <option disabled>Cargando países...</option>
+              ) : (
+                countries.map(country => (
+                  <option key={country.code} value={country.code}>
+                    {country.name}
+                  </option>
+                ))
+              )}
             </Form.Select>
           </Form.Group>
-          <Row>
-            <Col md={6}>
-              <Form.Group className="mb-3">
-                <Form.Label>Monto a enviar</Form.Label>
-                <InputGroup>
-                  <Form.Control type="text" inputMode="numeric" placeholder="50.000" value={displayAmount} onChange={handleAmountChange} />
-                  <InputGroup.Text>CLP</InputGroup.Text>
-                </InputGroup>
-              </Form.Group>
+
+          {/* Monto a enviar / Monto a recibir */}
+          <Row className="mb-3">
+            <Col>
+              <Form.Label className="text-muted">Monto a enviar</Form.Label>
+              <InputGroup>
+                <Form.Control
+                  type="number"
+                  placeholder="0"
+                  value={amountIn}
+                  onChange={(e) => setAmountIn(e.target.value)}
+                  className="border-0 bg-light py-2 ps-3 pe-0"
+                  style={{ minHeight: '50px', fontSize: '1.1rem' }}
+                />
+                <InputGroup.Text className="bg-light border-0 fw-bold fs-6">{currentOriginCurrency}</InputGroup.Text>
+              </InputGroup>
             </Col>
-            <Col md={6}>
-              <Form.Group className="mb-3">
-                <Form.Label>Monto a recibir</Form.Label>
-                <InputGroup>
-                  <Form.Control type="text" readOnly placeholder="Calculado" value={quote ? formatNumberForDisplay(quote.amountOut) : ''} />
-                  <InputGroup.Text>{quote ? quote.destCurrency : '---'}</InputGroup.Text>
-                </InputGroup>
-              </Form.Group>
+            <Col>
+              <Form.Label className="text-muted">Monto a recibir</Form.Label>
+              <InputGroup>
+                <Form.Control
+                  type="text"
+                  readOnly
+                  value={quoteData?.amountOut ? formatNumberForDisplay(quoteData.amountOut) : '0'}
+                  className="border-0 bg-light py-2 ps-3 pe-0"
+                  style={{ minHeight: '50px', fontSize: '1.1rem' }}
+                />
+                <InputGroup.Text className="bg-light border-0 fw-bold fs-6">{currentDestCurrency}</InputGroup.Text>
+              </InputGroup>
             </Col>
           </Row>
 
-          {loading && <div className="text-center my-2"><Spinner size="sm" /> Cotizando...</div>}
-          
-          {quote && (
-            <>
-              <ListGroup variant="flush" className="my-3 small">
-                <ListGroup.Item className="d-flex justify-content-between px-0">
-                  <span>Tasa de cambio (Vita):</span>
-                  <span>1 {quote.destCurrency} = {formatRate(1 / quote.baseRate)} {quote.origin}</span>
-                </ListGroup.Item>
-                <ListGroup.Item className="d-flex justify-content-between px-0">
-                  <span>Comisión AVF:</span>
-                  <span>{quote.markupPercent}%</span>
-                </ListGroup.Item>
-                <ListGroup.Item className="d-flex justify-content-between px-0 fw-bold">
-                  <span>Nuestra Tasa (Tasa Final):</span>
-                  <span>1 {quote.destCurrency} = {formatRate(1 / quote.rateWithMarkup)} {quote.origin}</span>
-                </ListGroup.Item>
-              </ListGroup>
-              <p className="fw-bold mt-2">Total a pagar: {formatNumberForDisplay(quote.amountIn)} {quote.origin} *</p>
-            </>
+          {/* Detalles de la Cotización */}
+          {quoteData && !error && (
+            <div className="mt-4 p-3 bg-light rounded" style={{ fontSize: '0.9rem' }}>
+              <div className="d-flex justify-content-between mb-1">
+                <span className="text-muted">Tasa de cambio (Vita):</span>
+                <span>1 {currentDestCurrency} = {formatRate(1 / quoteData.baseRate)} {currentOriginCurrency}</span>
+              </div>
+              <div className="d-flex justify-content-between mb-1">
+                <span className="text-muted">Comisión AVF:</span>
+                <span>{quoteData.markupPercent}%</span>
+              </div>
+              <div className="d-flex justify-content-between fw-bold">
+                <span>Nuestra Tasa (Tasa Final):</span>
+                <span>1 {currentDestCurrency} = {formatRate(1 / quoteData.rateWithMarkup)} {currentOriginCurrency}</span>
+              </div>
+              <hr className="my-2" />
+              <div className="d-flex justify-content-between fw-bold fs-5" style={{ color: 'var(--avf-primary)' }}>
+                <span>Total a pagar:</span>
+                <span>{formatNumberForDisplay(amountIn)} {currentOriginCurrency} *</span>
+              </div>
+            </div>
           )}
 
-          {error && <Alert variant="danger" className="text-center small py-2 mt-3">{error}</Alert>}
+          {error && <Alert variant="danger" className="mt-4 text-center">{error}</Alert>}
 
           <div className="d-grid mt-4">
             <Button 
-              onClick={handleNextStep} 
-              disabled={!quote || loading}
-              style={{ backgroundColor: 'var(--avf-secondary)', borderColor: 'var(--avf-secondary)' }}
+              variant="warning" 
+              onClick={handleNext} 
+              disabled={loading || !quoteData || !!error}
+              className="py-3 fw-bold" // Mayor padding y negrita
+              style={{ 
+                backgroundColor: 'var(--avf-secondary)', 
+                borderColor: 'var(--avf-secondary)', 
+                color: 'white', 
+                fontSize: '1.2rem',
+                borderRadius: '10px' // Bordes más redondeados
+              }}
             >
-              Continuar
+              {loading ? <Spinner as="span" size="sm" /> : 'Continuar'}
             </Button>
           </div>
         </Form>
