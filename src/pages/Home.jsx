@@ -12,7 +12,7 @@ const Home = () => {
       {/* --- SECCIÓN PRINCIPAL CON IMAGEN DE FONDO --- */}
       <div 
         style={{
-          backgroundImage: src="assets/home-background.jpg", 
+          backgroundImage: "url('assets/home-background.jpg')", 
           backgroundSize: 'cover',
           backgroundPosition: 'center',
           height: '600px', // Ajusta esta altura según prefieras
