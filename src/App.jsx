@@ -2,26 +2,26 @@ import React from 'react';
 import { Routes, Route, Navigate, Outlet } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 
-// Pages
+// Páginas
 import Home from './pages/Home.jsx';
 import Transactions from './pages/Transactions.jsx';
 import Login from './pages/Login.jsx';
 import PaymentSuccess from './pages/PaymentSuccess.jsx';
 import AdminMarkup from './pages/AdminMarkup.jsx';
 
-// Components
+// Componentes
 import AppNavbar from './components/ui/Navbar.jsx';
-import Footer from './components/ui/Footer.jsx'; // <-- IMPORT MISSING HERE
-import AdminRoute from './components/auth/AdminRoute.jsx';
-import ProtectedRoute from './components/auth/ProtectedRoute.jsx'; // Assuming you created this
+import Footer from './components/ui/Footer.jsx'; // <-- LA IMPORTACIÓN QUE FALTABA
+import AdminRoute from './components/auth/AdminRoute.jsx'; // Asumiendo que existe
+import ProtectedRoute from './components/auth/ProtectedRoute.jsx'; // Asumiendo que existe
 
-// Helper component for protected routes
+// Componente para proteger rutas de usuario
 const ProtectedRouteWrapper = () => {
   const { token } = useAuth();
   return token ? <Outlet /> : <Navigate to="/login" replace />;
 };
 
-// Helper component for admin routes
+// Componente para proteger rutas de admin
 const AdminRouteWrapper = () => {
     const { user, token } = useAuth();
     if (!token) return <Navigate to="/login" replace />;
@@ -36,23 +36,23 @@ function AppContent() {
       <AppNavbar />
       <main className="flex-grow-1">
         <Routes>
-          {/* Public Routes */}
+          {/* Rutas Públicas */}
           <Route path="/" element={<Home />} />
           <Route path="/login" element={<Login />} />
           <Route path="/payment-success" element={<PaymentSuccess />} />
 
-          {/* Protected User Routes */}
+          {/* Rutas Protegidas (Usuario) */}
           <Route element={<ProtectedRouteWrapper />}>
             <Route path="/transactions" element={<Transactions />} />
           </Route>
 
-          {/* Protected Admin Routes */}
+          {/* Rutas Protegidas (Admin) */}
           <Route element={<AdminRouteWrapper />}>
             <Route path="/admin/markup" element={<AdminMarkup />} />
           </Route>
         </Routes>
       </main>
-      <Footer /> {/* This line needs the import to work */}
+      <Footer /> {/* Esta línea necesita la importación para funcionar */}
     </div>
   );
 }
