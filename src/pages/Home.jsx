@@ -2,6 +2,9 @@ import React from 'react';
 import { Container, Row, Col, Image, Button } from 'react-bootstrap';
 import RemittanceSteps from '../components/remittance/RemittanceSteps';
 
+import homeBackground from '../assets/home-background.jpg';
+
+
 // URLs de los assets para los botones de las tiendas
 const googlePlayUrl = 'https://play.google.com/intl/en_us/badges/static/images/badges/es_badge_web_generic.png';
 const appStoreUrl = 'https://developer.apple.com/assets/elements/badges/download-on-the-app-store.svg';
@@ -12,7 +15,7 @@ const Home = () => {
       {/* --- SECCIÓN PRINCIPAL CON IMAGEN DE FONDO --- */}
       <div 
         style={{
-          backgroundImage: "url('../assets/home-background.jpg')", 
+          backgroundImage: `url(${homeBackground})`,
           backgroundSize: 'cover',
           backgroundPosition: 'center',
           height: '600px', // Ajusta esta altura según prefieras
