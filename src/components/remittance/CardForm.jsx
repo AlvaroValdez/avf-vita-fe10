@@ -122,26 +122,29 @@ const CardForm = ({ onNext }) => {
           </Row>
 
           {/* Detalles de la Cotización */}
-          {quoteData && !error && (
-            <div className="mt-4 p-3 bg-light rounded" style={{ fontSize: '0.9rem' }}>
-              <div className="d-flex justify-content-between mb-1">
-                <span className="text-muted">Tasa de cambio (Vita):</span>
-                <span>1 {currentDestCurrency} = {formatRate(1 / quoteData.baseRate)} {currentOriginCurrency}</span>
+          {quote && (
+            <>
+              {/* --- SECCIÓN DE DETALLES CON ESTILO ARMONIZADO --- */}
+              <div className="mt-3 p-3 bg-light rounded" style={{ fontSize: '0.9rem' }}>
+                <div className="d-flex justify-content-between mb-1">
+                  <span className="text-muted">Tasa de cambio (Vita):</span>
+                  <span>1 {quote.destCurrency} = {formatRate(1 / quote.baseRate)} {quote.origin}</span>
+                </div>
+                <div className="d-flex justify-content-between mb-1">
+                  <span className="text-muted">Comisión AVF:</span>
+                  <span>{quote.markupPercent}%</span>
+                </div>
+                <div className="d-flex justify-content-between fw-bold">
+                  <span>Nuestra Tasa (Tasa Final):</span>
+                  <span>1 {quote.destCurrency} = {formatRate(1 / quote.rateWithMarkup)} {quote.origin}</span>
+                </div>
+                <hr className="my-2" /> {/* Línea separadora */}
+                <div className="d-flex justify-content-between fw-bold fs-6" style={{ color: 'var(--avf-primary)' }}>
+                  <span>Total a pagar:</span>
+                  <span>{formatNumberForDisplay(quote.amountIn)} {quote.origin} *</span>
+                </div>
               </div>
-              <div className="d-flex justify-content-between mb-1">
-                <span className="text-muted">Comisión AVF:</span>
-                <span>{quoteData.markupPercent}%</span>
-              </div>
-              <div className="d-flex justify-content-between fw-bold">
-                <span>Nuestra Tasa (Tasa Final):</span>
-                <span>1 {currentDestCurrency} = {formatRate(1 / quoteData.rateWithMarkup)} {currentOriginCurrency}</span>
-              </div>
-              <hr className="my-2" />
-              <div className="d-flex justify-content-between fw-bold fs-5" style={{ color: 'var(--avf-primary)' }}>
-                <span>Total a pagar:</span>
-                <span>{formatNumberForDisplay(amountIn)} {currentOriginCurrency} *</span>
-              </div>
-            </div>
+            </>
           )}
 
           {error && <Alert variant="danger" className="mt-4 text-center">{error}</Alert>}

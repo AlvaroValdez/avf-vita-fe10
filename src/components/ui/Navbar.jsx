@@ -17,7 +17,7 @@ const AppNavbar = () => {
     <Navbar bg="white" expand="lg" className="mb-4 shadow-sm py-3">
       <Container>
         <Navbar.Brand as={Link} to="/" style={{ color: 'var(--avf-primary)', fontWeight: 'bold', fontSize: '1.5rem' }}>
-          AVF Remesas
+          Alyto
         </Navbar.Brand>
         <Navbar.Toggle aria-controls="basic-navbar-nav" />
         <Navbar.Collapse id="basic-navbar-nav">
