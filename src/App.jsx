@@ -1,65 +1,62 @@
 import React from 'react';
 import { Routes, Route, Navigate, Outlet } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
-import AdminRoute from './components/auth/AdminRoute.jsx'; 
-import AdminMarkup from './pages/AdminMarkup.jsx'; 
 
-// Importación de las páginas
+// Pages
 import Home from './pages/Home.jsx';
 import Transactions from './pages/Transactions.jsx';
 import Login from './pages/Login.jsx';
 import PaymentSuccess from './pages/PaymentSuccess.jsx';
+import AdminMarkup from './pages/AdminMarkup.jsx';
 
-// Importación de componentes de la interfaz
+// Components
 import AppNavbar from './components/ui/Navbar.jsx';
+import Footer from './components/ui/Footer.jsx'; // <-- IMPORT MISSING HERE
+import AdminRoute from './components/auth/AdminRoute.jsx';
+import ProtectedRoute from './components/auth/ProtectedRoute.jsx'; // Assuming you created this
 
-/**
- * Componente de orden superior para proteger rutas.
- * Si el usuario no está autenticado (no hay token), lo redirige a la página de login.
- * Si está autenticado, renderiza la ruta solicitada.
- */
-const ProtectedRoute = () => {
+// Helper component for protected routes
+const ProtectedRouteWrapper = () => {
   const { token } = useAuth();
-  // <Outlet /> es un marcador de posición para los componentes hijos de la ruta
   return token ? <Outlet /> : <Navigate to="/login" replace />;
 };
 
-/**
- * Componente que contiene el layout principal y la lógica de enrutamiento.
- * Se separa para que pueda acceder al contexto de autenticación.
- */
+// Helper component for admin routes
+const AdminRouteWrapper = () => {
+    const { user, token } = useAuth();
+    if (!token) return <Navigate to="/login" replace />;
+    if (user?.role !== 'admin') return <Navigate to="/" replace />;
+    return <Outlet />;
+};
+
+
 function AppContent() {
   return (
-    <>
+    <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
       <AppNavbar />
-      <main>
+      <main className="flex-grow-1">
         <Routes>
-          {/* Rutas Públicas */}
+          {/* Public Routes */}
           <Route path="/" element={<Home />} />
           <Route path="/login" element={<Login />} />
           <Route path="/payment-success" element={<PaymentSuccess />} />
-          
-          {/* Rutas de usuario logueado */}
-          <Route element={<ProtectedRoute />}>
+
+          {/* Protected User Routes */}
+          <Route element={<ProtectedRouteWrapper />}>
             <Route path="/transactions" element={<Transactions />} />
           </Route>
 
-          {/* Rutas solo para administradores */}
-          <Route element={<AdminRoute />}>
+          {/* Protected Admin Routes */}
+          <Route element={<AdminRouteWrapper />}>
             <Route path="/admin/markup" element={<AdminMarkup />} />
           </Route>
-
         </Routes>
       </main>
-      <Footer /> 
-    </>
+      <Footer /> {/* This line needs the import to work */}
+    </div>
   );
 }
 
-/**
- * Componente raíz de la aplicación.
- * Su única responsabilidad es proveer los contextos globales.
- */
 function App() {
   return (
     <AuthProvider>
