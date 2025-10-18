@@ -8,28 +8,34 @@ const appStoreUrl = 'https://developer.apple.com/assets/elements/badges/download
 
 const Home = () => {
   return (
-    <Container className="my-5">
+    // Añadimos padding vertical más generoso
+    <Container className="my-5 py-5">
       <Row className="align-items-center">
-        {/* --- Columna Izquierda: Título y Descarga de App --- */}
-        <Col lg={6}>
-          <h1 className="display-4 fw-bold" style={{ color: 'var(--avf-primary)' }}>
+        {/* --- Columna Izquierda: Título, Descarga y Placeholder Gráfico --- */}
+        <Col lg={6} className="pe-lg-5"> {/* Añadimos padding a la derecha */}
+          <h1 className="display-4 fw-bold mb-4" style={{ color: 'var(--avf-primary)' }}>
             Envía dinero totalmente Online con <span style={{ color: 'var(--avf-secondary)' }}>AVF Remesas</span>
           </h1>
-          <p className="lead my-4">
-            Desde nuestra web, envía dinero 100% online.
+          <p className="lead mb-5">
+            Desde nuestra web, envía dinero 100% online con la seguridad.
           </p>
 
-          {/* --- NUEVA SECCIÓN: DESCARGA DE APP --- */}
-          <div className="mt-5">
+          {/* Sección Descarga de App (sin cambios) */}
+          <div className="mb-5">
             <h5 style={{ color: 'var(--avf-primary)' }}>Descarga nuestra App</h5>
             <div className="d-flex align-items-center mt-3">
               <a href="#" className="me-3">
-                <Image src={googlePlayUrl} alt="Descargar en Google Play" style={{ height: '50px' }} />
+                <Image src={googlePlayUrl} alt="Descargar en Google Play" style={{ height: '45px' }} />
               </a>
               <a href="#">
-                <Image src={appStoreUrl} alt="Descargar en App Store" style={{ height: '50px' }} />
+                <Image src={appStoreUrl} alt="Descargar en App Store" style={{ height: '45px' }} />
               </a>
             </div>
+          </div>
+
+          {/* Placeholder para elementos gráficos (simulando Afex) */}
+          <div className="d-none d-lg-block" style={{ height: '100px', backgroundColor: '#e9ecef', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#6c757d' }}>
+            Placeholder Gráfico
           </div>
         </Col>
 
