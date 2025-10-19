@@ -1,6 +1,7 @@
 import React from 'react';
 import { Container, Row, Col, Image } from 'react-bootstrap';
 import RemittanceSteps from '../components/remittance/RemittanceSteps';
+import homeBackground from '../assets/home-background.jpg';
 
 // URLs de los assets para los botones de las tiendas
 const googlePlayUrl = 'https://play.google.com/intl/en_us/badges/static/images/badges/es_badge_web_generic.png';
@@ -13,7 +14,8 @@ const Home = () => {
       <div 
         style={{
           // Imagen de fondo (puedes cambiar la URL si deseas)
-          backgroundImage: 'url("https://images.unsplash.com/photo-1544717305-ad2d0115064e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1974&q=80")', 
+                    backgroundImage: `url(${homeBackground})`,
+
           backgroundSize: 'cover',
           backgroundPosition: 'center',
           minHeight: '450px', // Altura mínima de la sección
