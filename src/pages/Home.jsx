@@ -34,10 +34,10 @@ const Home = () => {
             {/* Columna Izquierda: Texto y Botones */}
             <Col lg={6} className="pe-lg-5"> 
               <h1 className="display-4 fw-bold mb-4">
-                Envía dinero totalmente Online con <span style={{ color: 'var(--avf-secondary)' }}>AVF Remesas</span>
+                Envía dinero totalmente Online con <span style={{ color: 'var(--avf-secondary)' }}>Alyto</span>
               </h1>
               <p className="lead mb-5">
-                Desde nuestra web, envía dinero 100% online con la seguridad y respaldo de Vita Wallet.
+                Desde nuestra web, envía dinero 100% online con la seguridad y respaldo de AV Finance.
               </p>
               <div className="mb-5">
                 <h5 className="text-white">Descarga nuestra App</h5>
