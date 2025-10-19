@@ -1,7 +1,9 @@
+//import homeBackground from '../assets/home-background.jpg';
+//backgroundImage: `url(${homeBackground})`,  
 import React from 'react';
 import { Container, Row, Col, Image } from 'react-bootstrap';
 import RemittanceSteps from '../components/remittance/RemittanceSteps';
-import homeBackground from '../assets/home-background.jpg';
+
 // URLs de los assets (sin cambios)
 const googlePlayUrl = 'https://play.google.com/intl/en_us/badges/static/images/badges/es_badge_web_generic.png';
 const appStoreUrl = 'https://developer.apple.com/assets/elements/badges/download-on-the-app-store.svg';
@@ -9,15 +11,15 @@ const appStoreUrl = 'https://developer.apple.com/assets/elements/badges/download
 const Home = () => {
   return (
     <>
-      {/* --- SECCIÓN HERO CON IMAGEN DE FONDO Y FORMULARIO INTEGRADO --- */}
+      {/* --- SECCIÓN HERO CON IMAGEN DE FONDO Y LAYOUT CORREGIDO --- */}
       <div 
         style={{
-          backgroundImage: `url(${homeBackground})`,  
+          backgroundImage: 'url("https://images.unsplash.com/photo-1544717305-ad2d0115064e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1974&q=80")', 
           backgroundSize: 'cover',
           backgroundPosition: 'center',
-          minHeight: '600px', // Aumentamos un poco la altura para dar espacio
+          minHeight: '600px', // Altura suficiente para el contenido
           display: 'flex',
-          alignItems: 'center',
+          alignItems: 'center', // Centra verticalmente el Container
           position: 'relative', 
           color: 'white' 
         }}
@@ -27,10 +29,11 @@ const Home = () => {
 
         {/* Contenido sobre la imagen y el overlay */}
         <Container className="py-5 position-relative" style={{ zIndex: 1 }}>
-          <Row className="align-items-center"> {/* Alineación vertical */}
+          {/* --- ÚNICA ROW PARA AMBAS COLUMNAS --- */}
+          <Row className="align-items-center"> 
             
             {/* Columna Izquierda: Texto y Botones */}
-            <Col lg={6} className="pe-lg-5"> {/* Ocupa la mitad izquierda */}
+            <Col lg={6} className="pe-lg-5"> 
               <h1 className="display-4 fw-bold mb-4">
                 Envía dinero totalmente Online con <span style={{ color: 'var(--avf-secondary)' }}>AVF Remesas</span>
               </h1>
@@ -46,12 +49,12 @@ const Home = () => {
               </div>
             </Col>
 
-            {/* --- CORRECCIÓN: Columna Derecha: Formulario de Remesas --- */}
-            <Col lg={6}> {/* Ocupa la mitad derecha */}
-              <RemittanceSteps /> {/* El formulario ahora está aquí */}
+            {/* Columna Derecha: Formulario de Remesas */}
+            <Col lg={6}> 
+              <RemittanceSteps /> {/* El formulario está aquí */}
             </Col>
 
-          </Row>
+          </Row> {/* Fin de la Row principal */}
         </Container>
       </div>
 
