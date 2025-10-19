@@ -132,3 +132,32 @@ export const updateMarkup = async (newMarkup) => {
     throw error.response?.data || error;
   }
 };
+
+/**
+ * Obtiene la lista de comisiones específicas por par de divisas.
+ * @returns {Promise<object>}
+ */
+export const getMarkupPairs = async () => {
+  try {
+    const response = await apiClient.get('/admin/markup/pairs');
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching markup pairs:', error.response?.data || error.message);
+    throw error.response?.data || error;
+  }
+};
+
+/**
+ * Añade o actualiza una comisión específica por par de divisas.
+ * @param {object} pairData - { originCurrency, destCountry, percent }
+ * @returns {Promise<object>}
+ */
+export const updateMarkupPair = async (pairData) => {
+  try {
+    const response = await apiClient.put('/admin/markup/pairs', pairData);
+    return response.data;
+  } catch (error) {
+    console.error('Error updating markup pair:', error.response?.data || error.message);
+    throw error.response?.data || error;
+  }
+};
