@@ -9,14 +9,13 @@ const appStoreUrl = 'https://developer.apple.com/assets/elements/badges/download
 const Home = () => {
   return (
     <>
-      {/* --- SECCIÓN HERO CON IMAGEN DE FONDO RESTAURADA --- */}
+      {/* --- SECCIÓN HERO CON IMAGEN DE FONDO Y OVERLAY RESTAURADOS --- */}
       <div 
         style={{
-          // Imagen de fondo (puedes cambiar la URL si deseas)
-          backgroundImage: 'url("https://images.unsplash.com/photo-1544717305-ad2d0115064e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1974&q=80")', 
+          backgroundImage: 'url("https://images.unsplash.com/photo-1544717305-ad2d0115064e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1974&q=80")', // URL de la imagen de fondo
           backgroundSize: 'cover',
           backgroundPosition: 'center',
-          minHeight: '450px', // Altura mínima para la sección
+          minHeight: '450px', // Altura mínima de la sección
           display: 'flex',
           alignItems: 'center',
           position: 'relative', // Necesario para el overlay
@@ -35,6 +34,7 @@ const Home = () => {
           }}
         ></div>
 
+        {/* Contenido sobre la imagen y el overlay */}
         <Container className="py-5 position-relative" style={{ zIndex: 1 }}>
           <Row>
             {/* Columna Izquierda: Texto y Botones */}
@@ -61,7 +61,7 @@ const Home = () => {
       {/* --- SECCIÓN SEPARADA PARA EL FORMULARIO DE REMESAS --- */}
       <Container className="my-5">
         <Row className="justify-content-center">
-            {/* El formulario se renderiza aquí, fuera de la sección con fondo */}
+            {/* El formulario se renderiza aquí */}
             <Col lg={6}>
               <RemittanceSteps />
             </Col>
