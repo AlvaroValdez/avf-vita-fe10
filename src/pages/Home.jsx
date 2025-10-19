@@ -9,10 +9,11 @@ const appStoreUrl = 'https://developer.apple.com/assets/elements/badges/download
 const Home = () => {
   return (
     <>
-      {/* --- SECCIÓN HERO CON IMAGEN DE FONDO Y OVERLAY RESTAURADOS --- */}
+      {/* --- SECCIÓN HERO CON IMAGEN DE FONDO Y OVERLAY CORRECTOS --- */}
       <div 
         style={{
-          backgroundImage: 'url("https://images.unsplash.com/photo-1544717305-ad2d0115064e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1974&q=80")', // URL de la imagen de fondo
+          // Imagen de fondo (puedes cambiar la URL si deseas)
+          backgroundImage: 'url("https://images.unsplash.com/photo-1544717305-ad2d0115064e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1974&q=80")', 
           backgroundSize: 'cover',
           backgroundPosition: 'center',
           minHeight: '450px', // Altura mínima de la sección
