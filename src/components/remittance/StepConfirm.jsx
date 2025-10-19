@@ -10,7 +10,7 @@ const StepConfirm = ({ formData, fields, onBack }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [transactionResult, setTransactionResult] = useState(null);
-  
+
   // Estados para el temporizador
   const [remainingTime, setRemainingTime] = useState(QUOTE_VALIDITY_DURATION);
   const [isExpired, setIsExpired] = useState(false);
@@ -19,9 +19,9 @@ const StepConfirm = ({ formData, fields, onBack }) => {
   useEffect(() => {
     // Si no recibimos el timestamp (error en paso anterior), marca como expirado
     if (!quoteTimestamp) {
-        setIsExpired(true);
-        setRemainingTime(0);
-        return;
+      setIsExpired(true);
+      setRemainingTime(0);
+      return;
     }
 
     const interval = setInterval(() => {
@@ -47,7 +47,7 @@ const StepConfirm = ({ formData, fields, onBack }) => {
   };
 
   const getFieldDetails = (key) => fields.find(f => f.key === key);
-  
+
   const getDisplayValue = (field, value) => {
     if (field?.type === 'select' && field.options) {
       const option = field.options.find(opt => opt.value === value);
@@ -57,7 +57,7 @@ const StepConfirm = ({ formData, fields, onBack }) => {
   };
 
   const handleConfirm = async () => { /* ... (sin cambios) */ };
-  
+
   // --- RENDERIZADO DEL COMPONENTE ---
 
   if (transactionResult) { /* ... (código sin cambios) */ }
@@ -79,7 +79,7 @@ const StepConfirm = ({ formData, fields, onBack }) => {
   }
 
   if (!quoteData || !beneficiary) { /* ... (código sin cambios) */ }
-  
+
   const fullName = `${beneficiary.beneficiary_first_name || ''} ${beneficiary.beneficiary_last_name || ''}`.trim();
 
   return (
@@ -123,9 +123,9 @@ const StepConfirm = ({ formData, fields, onBack }) => {
         {error && <Alert variant="danger" className="mt-4">{error}</Alert>}
         <div className="d-flex justify-content-between mt-4">
           <Button variant="outline-secondary" onClick={onBack} disabled={loading}>Atrás</Button>
-          <Button 
-            variant="primary" 
-            onClick={handleConfirm} 
+          <Button
+            variant="primary"
+            onClick={handleConfirm} // <-- CORRECCIÓN: Se añade el onClick
             disabled={loading || isExpired}
             style={{ backgroundColor: 'var(--avf-secondary)', borderColor: 'var(--avf-secondary)' }}
           >
