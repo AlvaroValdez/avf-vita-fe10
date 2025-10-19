@@ -13,8 +13,8 @@ const AppNavbar = () => {
   };
 
   return (
-    // Estilo: fondo blanco, sombra ligera
-    <Navbar bg="white" expand="lg" className="shadow-sm py-3">
+    // Estilo similar al de Afex: fondo blanco, sombra ligera
+    <Navbar bg="white" expand="lg" className="mb-4 shadow-sm py-3">
       <Container>
         <Navbar.Brand as={Link} to="/" style={{ color: 'var(--avf-primary)', fontWeight: 'bold', fontSize: '1.5rem' }}>
           Alyto
