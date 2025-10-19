@@ -9,19 +9,19 @@ import Login from './pages/Login.jsx';
 import PaymentSuccess from './pages/PaymentSuccess.jsx';
 import AdminMarkup from './pages/AdminMarkup.jsx';
 
-// Componentes
+// Componentes de la Interfaz
 import AppNavbar from './components/ui/Navbar.jsx';
-import Footer from './components/ui/Footer.jsx'; // <-- LA IMPORTACIÓN QUE FALTABA
-import AdminRoute from './components/auth/AdminRoute.jsx'; // Asumiendo que existe
-import ProtectedRoute from './components/auth/ProtectedRoute.jsx'; // Asumiendo que existe
+import Footer from './components/ui/Footer.jsx';
+import AdminRoute from './components/auth/AdminRoute.jsx';
+import ProtectedRoute from './components/auth/ProtectedRoute.jsx';
 
-// Componente para proteger rutas de usuario
+// Componente para proteger las rutas de usuario
 const ProtectedRouteWrapper = () => {
   const { token } = useAuth();
   return token ? <Outlet /> : <Navigate to="/login" replace />;
 };
 
-// Componente para proteger rutas de admin
+// Componente para proteger las rutas de administrador
 const AdminRouteWrapper = () => {
     const { user, token } = useAuth();
     if (!token) return <Navigate to="/login" replace />;
@@ -32,6 +32,7 @@ const AdminRouteWrapper = () => {
 
 function AppContent() {
   return (
+    // Se restaura el div con flexbox que asegura el layout correcto (sticky footer)
     <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
       <AppNavbar />
       <main className="flex-grow-1">
@@ -52,7 +53,7 @@ function AppContent() {
           </Route>
         </Routes>
       </main>
-      <Footer /> {/* Esta línea necesita la importación para funcionar */}
+      <Footer />
     </div>
   );
 }

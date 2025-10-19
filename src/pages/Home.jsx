@@ -3,44 +3,30 @@ import { Container, Row, Col, Image } from 'react-bootstrap';
 import RemittanceSteps from '../components/remittance/RemittanceSteps';
 import homeBackground from '../assets/home-background.jpg';
 
-// URLs de los assets para los botones de las tiendas
+
 const googlePlayUrl = 'https://play.google.com/intl/en_us/badges/static/images/badges/es_badge_web_generic.png';
 const appStoreUrl = 'https://developer.apple.com/assets/elements/badges/download-on-the-app-store.svg';
 
 const Home = () => {
   return (
     <>
-      {/* --- SECCIÓN HERO CON IMAGEN DE FONDO Y OVERLAY CORRECTOS --- */}
-      <div 
+      {/* --- SECCIÓN HERO CON ESTILOS EN LÍNEA CORRECTOS --- */}
+      <div
         style={{
-          // Imagen de fondo (puedes cambiar la URL si deseas)
-                    backgroundImage: `url(${homeBackground})`,
+          backgroundImage: `url(${homeBackground})`,
 
           backgroundSize: 'cover',
           backgroundPosition: 'center',
-          minHeight: '450px', // Altura mínima de la sección
+          minHeight: '450px',
           display: 'flex',
           alignItems: 'center',
-          position: 'relative', // Necesario para el overlay
-          color: 'white' // Texto blanco por defecto
+          position: 'relative',
+          color: 'white'
         }}
       >
-        {/* Overlay oscuro para legibilidad */}
-        <div 
-          style={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            width: '100%',
-            height: '100%',
-            backgroundColor: 'rgba(0, 0, 0, 0.4)', // Overlay oscuro
-          }}
-        ></div>
-
-        {/* Contenido sobre la imagen y el overlay */}
+        <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: 'rgba(0, 0, 0, 0.4)' }}></div>
         <Container className="py-5 position-relative" style={{ zIndex: 1 }}>
           <Row>
-            {/* Columna Izquierda: Texto y Botones */}
             <Col lg={7} className="pe-lg-5">
               <h1 className="display-4 fw-bold mb-4">
                 Envía dinero totalmente Online con <span style={{ color: 'var(--avf-secondary)' }}>AVF Remesas</span>
@@ -56,22 +42,20 @@ const Home = () => {
                 </div>
               </div>
             </Col>
-            {/* El formulario ya NO está en esta sección */}
           </Row>
         </Container>
       </div>
 
-      {/* --- SECCIÓN SEPARADA PARA EL FORMULARIO DE REMESAS --- */}
+      {/* --- SECCIÓN FORMULARIO --- */}
       <Container className="my-5">
         <Row className="justify-content-center">
-            {/* El formulario se renderiza aquí */}
-            <Col lg={6}>
-              <RemittanceSteps />
-            </Col>
+          <Col lg={6}>
+            <RemittanceSteps />
+          </Col>
         </Row>
       </Container>
 
-      {/* --- SECCIÓN INFERIOR PLACEHOLDER (sin cambios) --- */}
+      {/* --- SECCIÓN PLACEHOLDER --- */}
       <Container className="my-5">
         <Row className="justify-content-center">
           <Col md={8}>

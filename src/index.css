@@ -2,31 +2,29 @@
 :root {
   --avf-primary: #122533;   /* Color primario institucional (azul oscuro) */
   --avf-secondary: #ef8c20;  /* Color secundario institucional (naranja) */
-
-  /* Variable requerida por Bootstrap 5 para componentes como botones */
   --bs-primary-rgb: 18, 37, 51; 
 }
 
 /* Estilos base para todo el cuerpo de la página */
 body {
-  /* Fuente sugerida para un look moderno y legible, similar a Afex */
   font-family: 'Poppins', sans-serif;
-  background-color: #f8f9fa; /* Un fondo gris muy claro para dar contraste a las tarjetas */
+  /* Se elimina el background-color: #f8f9fa; de aquí */
 }
 
 /* Regla para asegurar que el contenedor principal de React ocupe todo el ancho */
-/* Esto es crucial para que los componentes como el Navbar se expandan correctamente */
 #root {
   width: 100%;
   max-width: 100%;
   margin: 0;
   padding: 0;
+  display: flex; /* Asegura que #root pueda usar flexbox para App.jsx */
+  flex-direction: column;
+  min-height: 100vh;
 }
 
-/* Estilo global para todas las tarjetas (componente <Card>) */
-/* Proporciona una apariencia consistente en toda la aplicación */
+/* Estilo global para todas las tarjetas */
 .card {
-  border-radius: 0.75rem; /* Esquinas más redondeadas */
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08); /* Sombra suave para un efecto de elevación */
-  border: none; /* Elimina el borde por defecto de Bootstrap */
+  border-radius: 0.75rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  border: none;
 }
