@@ -4,21 +4,27 @@ import { getMarkup, updateMarkup, getMarkupPairs, updateMarkupPair } from '../se
 import { useAppContext } from '../context/AppContext';
 
 const AdminMarkup = () => {
-  const { countries, loading: loadingCountries } = useAppContext();
+  const { countries, loading: loadingCountries } = useAppContext(); // Obtenemos la lista de países
   const [defaultMarkup, setDefaultMarkup] = useState('');
   const [pairs, setPairs] = useState([]);
-  const [loadingDefault, setLoadingDefault] = useState(true); // Loading para default
-  const [loadingPairs, setLoadingPairs] = useState(true); // Loading para pairs
-  const [savingDefault, setSavingDefault] = useState(false); // Saving para default
-  const [savingPair, setSavingPair] = useState(false); // Saving para pair
+  const [loadingDefault, setLoadingDefault] = useState(true);
+  const [loadingPairs, setLoadingPairs] = useState(true);
+  const [savingDefault, setSavingDefault] = useState(false);
+  const [savingPair, setSavingPair] = useState(false);
   const [error, setError] = useState('');
   const [successDefault, setSuccessDefault] = useState('');
   const [successPair, setSuccessPair] = useState('');
 
-  // Estados para el formulario de nuevo par
   const [newOrigin, setNewOrigin] = useState('CLP');
   const [newDest, setNewDest] = useState('');
   const [newPercent, setNewPercent] = useState('');
+
+  // --- NUEVA FUNCIÓN HELPER ---
+  // Busca el nombre del país en la lista del contexto usando su código ISO
+  const getCountryNameByCode = (code) => {
+    const country = countries.find(c => c.code.toUpperCase() === code.toUpperCase());
+    return country ? country.name : code; // Devuelve el nombre o el código si no se encuentra
+  };
 
   // Carga inicial de datos (separada para mejor manejo de errores)
   useEffect(() => {
@@ -125,6 +131,36 @@ const AdminMarkup = () => {
             {successDefault && <Alert variant="success" className="py-2 mt-2">{successDefault}</Alert>}
             <Form.Text>Esta comisión se aplica si no existe una regla específica.</Form.Text>
           </Form>
+          {successPair && <Alert variant="success" className="py-2">{successPair}</Alert>}
+          {error && <Alert variant="danger" className="py-2">{error}</Alert>}
+
+          <h5>Pares Existentes</h5>
+          <Table striped bordered hover responsive size="sm">
+            <thead>
+              <tr>
+                <th>Origen</th>
+                <th>Destino</th>
+                <th>Comisión (%)</th>
+              </tr>
+            </thead>
+            <tbody>
+              {loadingPairs ? (
+                 <tr><td colSpan="3" className="text-center"><Spinner size="sm"/> Cargando...</td></tr>
+              ) : pairs.length === 0 ? (
+                <tr><td colSpan="3" className="text-center text-muted">No hay pares específicos.</td></tr>
+              ) : (
+                // --- MODIFICACIÓN AQUÍ ---
+                // Se usa la función helper para mostrar el nombre del país
+                pairs.map((pair, index) => (
+                  <tr key={index}>
+                    <td>{pair.originCurrency}</td>
+                    <td>{getCountryNameByCode(pair.destCountry)} ({pair.destCountry})</td> {/* Muestra Nombre (Código) */}
+                    <td>{pair.percent}%</td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </Table>
         </Card.Body>
       </Card>
 
