@@ -6,15 +6,14 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 import Home from './pages/Home.jsx';
 import Transactions from './pages/Transactions.jsx';
 import Login from './pages/Login.jsx';
+import Register from './pages/Register.jsx'; // Assuming you added Register page
 import PaymentSuccess from './pages/PaymentSuccess.jsx';
 import AdminMarkup from './pages/AdminMarkup.jsx';
 
 // Componentes
 import AppNavbar from './components/ui/Navbar.jsx';
 import Footer from './components/ui/Footer.jsx';
-// Importa los wrappers directamente si no existen como archivos separados
-// import AdminRoute from './components/auth/AdminRoute.jsx'; 
-// import ProtectedRoute from './components/auth/ProtectedRoute.jsx'; 
+// No necesitas importar AdminRoute/ProtectedRoute si defines los wrappers aquí
 
 // Componente para proteger rutas de usuario
 const ProtectedRouteWrapper = () => {
@@ -22,11 +21,13 @@ const ProtectedRouteWrapper = () => {
   return token ? <Outlet /> : <Navigate to="/login" replace />;
 };
 
-// Componente para proteger rutas de admin (CORREGIDO)
+// Componente para proteger rutas de admin (VERIFICADO)
 const AdminRouteWrapper = () => {
-    const { user, token } = useAuth(); // Se obtienen user y token
+    // Asegúrate de que user y token se extraen aquí
+    const { user, token } = useAuth();
     if (!token) return <Navigate to="/login" replace />;
-    if (user?.role !== 'admin') return <Navigate to="/" replace />; // Ahora 'user' está definido
+    // Verifica el rol del usuario (ahora 'user' está definido)
+    if (user?.role !== 'admin') return <Navigate to="/" replace />;
     return <Outlet />;
 };
 
@@ -39,6 +40,7 @@ function AppContent() {
           {/* Rutas Públicas */}
           <Route path="/" element={<Home />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} /> {/* Ruta de registro */}
           <Route path="/payment-success" element={<PaymentSuccess />} />
 
           {/* Rutas Protegidas (Usuario) */}
