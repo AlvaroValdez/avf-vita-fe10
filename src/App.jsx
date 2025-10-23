@@ -8,33 +8,30 @@ import Transactions from './pages/Transactions.jsx';
 import Login from './pages/Login.jsx';
 import PaymentSuccess from './pages/PaymentSuccess.jsx';
 import AdminMarkup from './pages/AdminMarkup.jsx';
-import Register from './pages/Register.jsx';
 
-// Componentes de la Interfaz
+// Componentes
 import AppNavbar from './components/ui/Navbar.jsx';
 import Footer from './components/ui/Footer.jsx';
-//import AdminRoute from './components/auth/AdminRoute.jsx';
-//import ProtectedRoute from './components/auth/ProtectedRoute.jsx';
+// Importa los wrappers directamente si no existen como archivos separados
+// import AdminRoute from './components/auth/AdminRoute.jsx'; 
+// import ProtectedRoute from './components/auth/ProtectedRoute.jsx'; 
 
-// Componente para proteger las rutas de usuario
+// Componente para proteger rutas de usuario
 const ProtectedRouteWrapper = () => {
   const { token } = useAuth();
   return token ? <Outlet /> : <Navigate to="/login" replace />;
 };
 
-// Componente para proteger rutas de admin
+// Componente para proteger rutas de admin (CORREGIDO)
 const AdminRouteWrapper = () => {
-    // Se extrae 'user' y 'token' del contexto
-    const { user, token } = useAuth(); 
+    const { user, token } = useAuth(); // Se obtienen user y token
     if (!token) return <Navigate to="/login" replace />;
-    if (user?.role !== 'admin') return <Navigate to="/" replace />;
+    if (user?.role !== 'admin') return <Navigate to="/" replace />; // Ahora 'user' está definido
     return <Outlet />;
 };
 
-
 function AppContent() {
   return (
-    // Se restaura el div con flexbox que asegura el layout correcto (sticky footer)
     <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
       <AppNavbar />
       <main className="flex-grow-1">
@@ -42,7 +39,6 @@ function AppContent() {
           {/* Rutas Públicas */}
           <Route path="/" element={<Home />} />
           <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} /> 
           <Route path="/payment-success" element={<PaymentSuccess />} />
 
           {/* Rutas Protegidas (Usuario) */}
