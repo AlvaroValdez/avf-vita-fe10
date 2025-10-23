@@ -6,29 +6,33 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 import Home from './pages/Home.jsx';
 import Transactions from './pages/Transactions.jsx';
 import Login from './pages/Login.jsx';
-import Register from './pages/Register.jsx'; // Assuming you added Register page
+import Register from './pages/Register.jsx'; // Asegúrate que esta página exista
 import PaymentSuccess from './pages/PaymentSuccess.jsx';
 import AdminMarkup from './pages/AdminMarkup.jsx';
 
 // Componentes
 import AppNavbar from './components/ui/Navbar.jsx';
 import Footer from './components/ui/Footer.jsx';
-// No necesitas importar AdminRoute/ProtectedRoute si defines los wrappers aquí
 
-// Componente para proteger rutas de usuario
+// Wrapper para Rutas Protegidas de Usuario
 const ProtectedRouteWrapper = () => {
-  const { token } = useAuth();
+  const { token } = useAuth(); // Obtiene solo el token
   return token ? <Outlet /> : <Navigate to="/login" replace />;
 };
 
-// Componente para proteger rutas de admin (VERIFICADO)
+// Wrapper para Rutas Protegidas de Administrador (VERIFICADO)
 const AdminRouteWrapper = () => {
-    // Asegúrate de que user y token se extraen aquí
-    const { user, token } = useAuth();
-    if (!token) return <Navigate to="/login" replace />;
-    // Verifica el rol del usuario (ahora 'user' está definido)
-    if (user?.role !== 'admin') return <Navigate to="/" replace />;
-    return <Outlet />;
+    const { user, token } = useAuth(); // Obtiene user y token
+    if (!token) {
+        console.log("AdminRouteWrapper: No token, redirecting to login");
+        return <Navigate to="/login" replace />;
+    }
+    if (user?.role !== 'admin') {
+        console.log("AdminRouteWrapper: User is not admin, redirecting to home. User:", user);
+        return <Navigate to="/" replace />;
+    }
+    console.log("AdminRouteWrapper: Access granted. User:", user);
+    return <Outlet />; // Permite el acceso
 };
 
 function AppContent() {
@@ -40,7 +44,7 @@ function AppContent() {
           {/* Rutas Públicas */}
           <Route path="/" element={<Home />} />
           <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} /> {/* Ruta de registro */}
+          <Route path="/register" element={<Register />} />
           <Route path="/payment-success" element={<PaymentSuccess />} />
 
           {/* Rutas Protegidas (Usuario) */}
