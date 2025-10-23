@@ -4,7 +4,6 @@ import { loginUser, apiClient } from '../services/api';
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
-  // --- CORRECCIÓN: Lee el usuario y el token desde localStorage al iniciar ---
   const [user, setUser] = useState(() => JSON.parse(localStorage.getItem('user')) || null);
   const [token, setToken] = useState(() => localStorage.getItem('token') || null);
 
@@ -20,16 +19,16 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (email, password) => {
     try {
-      const response = await loginUser({ email, password });
+      const response = await loginUser({ email, password }); // Llama a la API (simulada)
       if (response.ok) {
-        const userWithRole = { ...response.user, role: 'admin' }; // Simulación de rol
-
-        // --- CORRECCIÓN: Guarda el usuario y el token ---
+        // El rol ahora viene de la respuesta simulada de loginUser
+        const userData = response.user; 
+        
         localStorage.setItem('token', response.token);
-        localStorage.setItem('user', JSON.stringify(userWithRole));
+        localStorage.setItem('user', JSON.stringify(userData));
         
         setToken(response.token);
-        setUser(userWithRole);
+        setUser(userData); 
         return true;
       }
       throw new Error(response.error || 'Login failed.');

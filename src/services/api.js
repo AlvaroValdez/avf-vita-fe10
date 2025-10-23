@@ -10,31 +10,59 @@ export const apiClient = axios.create({
   },
 });
 
-// --- NEW LOGIN FUNCTION ---
 export const loginUser = async (credentials) => {
   try {
-    // In the future, this will be the real API call:
-    // const response = await apiClient.post('/auth/login', credentials);
-    // return response.data;
-
-    // --- TEMPORARY SIMULATION ---
-    console.log("Simulating login with:", credentials);
+    // Llama al endpoint real del backend (que es un placeholder)
+    const response = await apiClient.post('/auth/login', credentials);
+    
+    // --- SIMULACIÓN DE RESPUESTA DEL BACKEND ---
+    // En un backend real, la respuesta vendría de response.data
+    // Aquí simulamos una respuesta exitosa si las credenciales no están vacías
     if (credentials.email && credentials.password) {
-      // Simulate a successful response from the backend
-      return Promise.resolve({
-        ok: true,
-        token: 'fake-jwt-token-for-testing-purposes',
-        user: { name: 'Test User', email: credentials.email }
-      });
+        return {
+            ok: true,
+            token: 'fake-jwt-token-from-placeholder',
+            user: { name: 'Usuario Placeholder', email: credentials.email, role: 'admin' } // Simulamos admin
+        };
     } else {
-      // Simulate a failed response
-      return Promise.reject({ ok: false, error: 'Invalid credentials' });
+         throw new Error("Credenciales inválidas (simulado)");
     }
-    // --- END SIMULATION ---
+    // --- FIN SIMULACIÓN ---
+    
   } catch (error) {
-    console.error('Login error:', error.response?.data || error.message);
-    throw error.response?.data || error;
+    console.error('Error en loginUser:', error.response?.data || error);
+    throw { 
+        ok: false, 
+        error: error.response?.data?.message || error.message || 'Error al iniciar sesión.' 
+    };
   }
+};
+
+// --- NUEVA FUNCIÓN DE REGISTRO ---
+export const registerUser = async (userData) => {
+    try {
+        // Llama al endpoint real del backend (que es un placeholder)
+        const response = await apiClient.post('/auth/register', userData);
+
+        // --- SIMULACIÓN DE RESPUESTA DEL BACKEND ---
+        console.log("Simulando registro con:", userData);
+         if (userData.email && userData.password && userData.name) {
+            return {
+                ok: true,
+                message: "Registro exitoso (simulado)"
+            };
+        } else {
+             throw new Error("Datos de registro incompletos (simulado)");
+        }
+        // --- FIN SIMULACIÓN ---
+
+    } catch (error) {
+        console.error('Error en registerUser:', error.response?.data || error);
+        throw { 
+            ok: false, 
+            error: error.response?.data?.message || error.message || 'Error al registrar usuario.' 
+        };
+    }
 };
 
 export const getQuote = async (params) => {

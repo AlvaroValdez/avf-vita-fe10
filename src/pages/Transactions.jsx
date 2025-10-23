@@ -40,9 +40,14 @@ const Transactions = () => {
           setTransactions(response.transactions);
           // El backend nos da el total para calcular el número de páginas
           setTotalPages(Math.ceil(response.total / TRANSACTIONS_PER_PAGE));
+        } else {
+          // Si la respuesta no es 'ok', lanzamos un error
+           throw new Error(response.error || 'Error al obtener transacciones del backend.');
         }
       } catch (err) {
-        setError('No se pudieron cargar las transacciones.');
+        setError(err.message || 'No se pudieron cargar las transacciones.');
+        setTransactions([]); // Limpia las transacciones en caso de error
+        setTotalPages(0);
       } finally {
         setLoading(false);
       }
@@ -58,6 +63,8 @@ const Transactions = () => {
   };
 
   const handlePageChange = (pageNumber) => {
+    // Evita ir a páginas inválidas
+    if (pageNumber < 1 || pageNumber > totalPages) return; 
     setCurrentPage(pageNumber);
   };
 
@@ -66,7 +73,7 @@ const Transactions = () => {
       case 'succeeded': return <Badge bg="success">Completado</Badge>;
       case 'pending': return <Badge bg="warning">Pendiente</Badge>;
       case 'failed': return <Badge bg="danger">Fallido</Badge>;
-      default: return <Badge bg="secondary">{status}</Badge>;
+      default: return <Badge bg="secondary">{status || 'Desconocido'}</Badge>;
     }
   };
 
@@ -85,11 +92,15 @@ const Transactions = () => {
         {transactions.map(tx => (
           <ListGroup.Item key={tx._id} className="d-flex justify-content-between align-items-center flex-wrap">
             <div>
-              <span className="fw-bold">{tx.beneficiary_first_name} {tx.beneficiary_last_name}</span>
+              {/* Muestra nombre o compañía si existe */}
+              <span className="fw-bold">{tx.company_name || `${tx.beneficiary_first_name || ''} ${tx.beneficiary_last_name || ''}`.trim()}</span>
               <small className="d-block text-muted">{new Date(tx.createdAt).toLocaleString()}</small>
             </div>
             <div className="text-end">
-              <span className="me-3 fw-medium">{new Intl.NumberFormat('es-CL').format(tx.amount)} {tx.currency}</span>
+              {/* Formatea el monto según la moneda */}
+              <span className="me-3 fw-medium">
+                {new Intl.NumberFormat('es-CL', { style: 'currency', currency: tx.currency || 'CLP' }).format(tx.amount || 0)}
+              </span>
               {getStatusBadge(tx.status)}
             </div>
           </ListGroup.Item>
@@ -103,6 +114,7 @@ const Transactions = () => {
       <Card>
         <Card.Header as="h4">Historial de Transacciones</Card.Header>
         <Card.Body>
+          {/* Formulario de Filtros */}
           <Form className="mb-4">
             <Row>
               <Col md={4}>
@@ -132,14 +144,15 @@ const Transactions = () => {
 
           {renderContent()}
 
-          {/* --- COMPONENTE DE PAGINACIÓN --- */}
-          {totalPages > 1 && (
+          {/* Componente de Paginación */}
+          {!loading && totalPages > 1 && (
             <div className="d-flex justify-content-center mt-4">
               <Pagination>
                 <Pagination.Prev 
                   onClick={() => handlePageChange(currentPage - 1)} 
                   disabled={currentPage === 1} 
                 />
+                {/* Genera los items de página */}
                 {[...Array(totalPages).keys()].map(number => (
                   <Pagination.Item 
                     key={number + 1} 

@@ -112,7 +112,7 @@ const CardForm = ({ onQuoteSuccess }) => {
             </Col>
           </Row>
 
-          {loading && <div className="text-center my-2"><Spinner size="sm" /> Cotizando...</div>}
+          {loading && <div className="text-center my-2"><Spinner size="sm" /></div>}
           
           {quote && (
             <div className="mt-3 p-3 bg-light rounded" style={{ fontSize: '0.9rem' }}>
@@ -148,7 +148,15 @@ const CardForm = ({ onQuoteSuccess }) => {
               style={{ backgroundColor: 'var(--avf-secondary)', borderColor: 'var(--avf-secondary)', color: 'white', borderRadius: '10px' }}
               className="py-3 fw-bold fs-6"
             >
-              Continuar
+              {/* --- SPINNER AQUÍ --- */}
+                {loading ? (
+                  <>
+                    <Spinner as="span" animation="border" size="sm" role="status" aria-hidden="true" className="me-2"/>
+                    Cotizando...
+                  </>
+                ) : (
+                  'Continuar'
+                )}
             </Button>
           </div>
         </Form>

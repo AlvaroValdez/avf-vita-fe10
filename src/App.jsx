@@ -8,6 +8,7 @@ import Transactions from './pages/Transactions.jsx';
 import Login from './pages/Login.jsx';
 import PaymentSuccess from './pages/PaymentSuccess.jsx';
 import AdminMarkup from './pages/AdminMarkup.jsx';
+import Register from './pages/Register.jsx';
 
 // Componentes de la Interfaz
 import AppNavbar from './components/ui/Navbar.jsx';
@@ -40,6 +41,7 @@ function AppContent() {
           {/* Rutas Públicas */}
           <Route path="/" element={<Home />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} /> 
           <Route path="/payment-success" element={<PaymentSuccess />} />
 
           {/* Rutas Protegidas (Usuario) */}
