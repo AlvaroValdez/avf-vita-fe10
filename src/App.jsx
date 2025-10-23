@@ -13,8 +13,8 @@ import Register from './pages/Register.jsx';
 // Componentes de la Interfaz
 import AppNavbar from './components/ui/Navbar.jsx';
 import Footer from './components/ui/Footer.jsx';
-import AdminRoute from './components/auth/AdminRoute.jsx';
-import ProtectedRoute from './components/auth/ProtectedRoute.jsx';
+//import AdminRoute from './components/auth/AdminRoute.jsx';
+//import ProtectedRoute from './components/auth/ProtectedRoute.jsx';
 
 // Componente para proteger las rutas de usuario
 const ProtectedRouteWrapper = () => {
@@ -22,9 +22,10 @@ const ProtectedRouteWrapper = () => {
   return token ? <Outlet /> : <Navigate to="/login" replace />;
 };
 
-// Componente para proteger las rutas de administrador
+// Componente para proteger rutas de admin
 const AdminRouteWrapper = () => {
-    const { user, token } = useAuth();
+    // Se extrae 'user' y 'token' del contexto
+    const { user, token } = useAuth(); 
     if (!token) return <Navigate to="/login" replace />;
     if (user?.role !== 'admin') return <Navigate to="/" replace />;
     return <Outlet />;
