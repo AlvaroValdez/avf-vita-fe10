@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 //const API_URL = 'http://localhost:5000/api';
-const API_URL = 'https://remesas-avf1-0.onrender.com/api';
+const API_URL = 'https://remesas-avf1-0.onrender.com/api' || 'http://localhost:5000/api';
 
 export const apiClient = axios.create({
   baseURL: API_URL,
@@ -64,6 +64,38 @@ export const registerUser = async (userData) => {
         };
     }
 };
+
+/**
+ * Obtiene la lista de todos los usuarios (requiere token de admin).
+ * @returns {Promise<object>}
+ */
+export const getUsers = async () => {
+  try {
+    const response = await apiClient.get('/admin/users');
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching users:', error.response?.data || error.message);
+    throw error.response?.data || error;
+  }
+};
+
+/**
+ * Actualiza el rol de un usuario específico (requiere token de admin).
+ * @param {string} userId - El ID del usuario a modificar.
+ * @param {string} role - El nuevo rol ('user' o 'admin').
+ * @returns {Promise<object>}
+ */
+export const updateUserRole = async (userId, role) => {
+  try {
+    const response = await apiClient.put(`/admin/users/${userId}/role`, { role });
+    return response.data;
+  } catch (error) {
+    console.error('Error updating user role:', error.response?.data || error.message);
+    throw error.response?.data || error;
+  }
+};
+
+//------------------------------------------------------------------------------
 
 export const getQuote = async (params) => {
   try {

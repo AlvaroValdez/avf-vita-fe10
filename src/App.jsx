@@ -9,6 +9,7 @@ import Login from './pages/Login.jsx';
 import Register from './pages/Register.jsx'; // Asegúrate que esta página exista
 import PaymentSuccess from './pages/PaymentSuccess.jsx';
 import AdminMarkup from './pages/AdminMarkup.jsx';
+import AdminUsers from './pages/AdminUsers.jsx';
 
 // Componentes
 import AppNavbar from './components/ui/Navbar.jsx';
@@ -55,6 +56,7 @@ function AppContent() {
           {/* Rutas Protegidas (Admin) */}
           <Route element={<AdminRouteWrapper />}>
             <Route path="/admin/markup" element={<AdminMarkup />} />
+            <Route path="/admin/users" element={<AdminUsers />} />
           </Route>
         </Routes>
       </main>

@@ -30,7 +30,10 @@ const AppNavbar = () => {
                 <Nav.Link as={Link} to="/transactions" className="me-3">Mis Transacciones</Nav.Link>
                 {/* Mostramos link a Admin si es admin */}
                 {user?.role === 'admin' && ( // Verifica el rol usando 'user'
-                   <Nav.Link as={Link} to="/admin/markup" className="me-3">Admin Markup</Nav.Link> 
+                   <>
+                     <Nav.Link as={Link} to="/admin/markup" className="me-3">Admin Markup</Nav.Link> 
+                     <Nav.Link as={Link} to="/admin/users" className="me-3">Admin Usuarios</Nav.Link> 
+                   </>
                 )}
                 <Button variant="outline-secondary" size="sm" onClick={handleLogout}>
                   Cerrar Sesión
