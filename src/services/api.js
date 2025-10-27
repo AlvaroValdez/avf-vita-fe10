@@ -16,7 +16,6 @@ export const loginUser = async (credentials) => {
     const response = await apiClient.post('/auth/login', credentials);
     
     // --- SIMULACIÓN DE RESPUESTA DEL BACKEND ---
-    // En un backend real, la respuesta vendría de response.data
     // Aquí simulamos una respuesta exitosa si las credenciales no están vacías
     if (credentials.email && credentials.password) {
         return {
