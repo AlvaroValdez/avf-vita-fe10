@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 //const API_URL = 'http://localhost:5000/api';
-const API_URL = 'https://remesas-avf1-0.onrender.com/api' || 'http://localhost:5000/api';
+const API_URL = 'https://remesas-avf1-0.onrender.com/api';// || 'http://localhost:5000/api';
 
 export const apiClient = axios.create({
   baseURL: API_URL,
