@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Card, Table, Spinner, Alert, Button, Form } from 'react-bootstrap';
+import { Container, Card, Table, Spinner, Alert, Button, Form, Badge } from 'react-bootstrap';
 import { getUsers, updateUserRole } from '../services/api';
 import { useAuth } from '../context/AuthContext'; // Para obtener el ID del usuario actual
 
