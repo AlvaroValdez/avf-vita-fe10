@@ -1,52 +1,50 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Card, Spinner, Alert, ListGroup, Badge, Form, Row, Col, Pagination } from 'react-bootstrap';
+import { Container, Card, Spinner, Alert, ListGroup, Badge, Form, Row, Col, Pagination, Table } from 'react-bootstrap';
 import { getTransactions } from '../services/api';
 import { useAppContext } from '../context/AppContext';
-import { useAuth } from '../context/AuthContext'; 
+import { useAuth } from '../context/AuthContext';
 
-const TRANSACTIONS_PER_PAGE = 10; // Define cuántas transacciones mostrar por página
+const TRANSACTIONS_PER_PAGE = 10; // Número de transacciones por página
 
 const Transactions = () => {
   const { countries, loading: loadingCountries } = useAppContext();
-  const { user } = useAuth(); // 2. Obtenemos el usuario actual
-  const isAdmin = user?.role === 'admin'; // 3. Verificamos si es admin
+  const { user } = useAuth(); // Obtiene el usuario actual para verificar rol
+  const isAdmin = user?.role === 'admin'; // Determina si es administrador
 
+  // Estados del componente
   const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-
-    // --- ESTADOS PARA LA PAGINACIÓN ---
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(0);
   const [filters, setFilters] = useState({ status: '', country: '' });
-  
-  // El useEffect ahora también depende de 'currentPage'
+
+  // Efecto para cargar las transacciones cuando cambian los filtros o la página
   useEffect(() => {
     const fetchTransactions = async () => {
       try {
         setLoading(true);
+        setError(''); // Limpia errores anteriores
         const activeFilters = { ...filters };
+        // Limpia filtros vacíos para no enviarlos a la API
         if (!activeFilters.status) delete activeFilters.status;
         if (!activeFilters.country) delete activeFilters.country;
 
-        // Se incluyen los parámetros de paginación en la llamada a la API
-        const response = await getTransactions({ 
-          page: currentPage, 
+        const response = await getTransactions({
+          page: currentPage,
           limit: TRANSACTIONS_PER_PAGE,
-          ...activeFilters 
+          ...activeFilters
         });
 
         if (response.ok) {
           setTransactions(response.transactions);
-          // El backend nos da el total para calcular el número de páginas
           setTotalPages(Math.ceil(response.total / TRANSACTIONS_PER_PAGE));
         } else {
-          // Si la respuesta no es 'ok', lanzamos un error
            throw new Error(response.error || 'Error al obtener transacciones del backend.');
         }
       } catch (err) {
         setError(err.message || 'No se pudieron cargar las transacciones.');
-        setTransactions([]); // Limpia las transacciones en caso de error
+        setTransactions([]); // Limpia en caso de error
         setTotalPages(0);
       } finally {
         setLoading(false);
@@ -54,20 +52,22 @@ const Transactions = () => {
     };
 
     fetchTransactions();
-  }, [filters, currentPage]);
+  }, [filters, currentPage]); // Dependencias: se ejecuta si cambian filtros o página
 
+  // Manejador para cambios en los selectores de filtro
   const handleFilterChange = (e) => {
-    setCurrentPage(1); // Resetea a la primera página al cambiar un filtro
+    setCurrentPage(1); // Vuelve a la primera página al aplicar un nuevo filtro
     const { name, value } = e.target;
     setFilters(prevFilters => ({ ...prevFilters, [name]: value }));
   };
 
+  // Manejador para cambios de página en la paginación
   const handlePageChange = (pageNumber) => {
-    // Evita ir a páginas inválidas
-    if (pageNumber < 1 || pageNumber > totalPages) return; 
+    if (pageNumber < 1 || pageNumber > totalPages) return;
     setCurrentPage(pageNumber);
   };
 
+  // Función auxiliar para obtener el estilo del Badge según el estado
   const getStatusBadge = (status) => {
     switch (status) {
       case 'succeeded': return <Badge bg="success">Completado</Badge>;
@@ -77,13 +77,19 @@ const Transactions = () => {
     }
   };
 
-  // --- RENDERIZADO CONDICIONAL ---
+  // Función principal para renderizar el contenido (lista o tabla)
   const renderContent = () => {
-    if (loading) return <div className="text-center p-5"><Spinner /></div>;
-    if (error) return <Alert variant="danger">{error}</Alert>;
-    if (transactions.length === 0) return <Alert variant="info">No hay transacciones.</Alert>;
+    if (loading) {
+      return <div className="text-center p-5"><Spinner animation="border" /></div>;
+    }
+    if (error) {
+      return <Alert variant="danger">{error}</Alert>;
+    }
+    if (transactions.length === 0) {
+      return <Alert variant="info">No se encontraron transacciones con los filtros actuales.</Alert>;
+    }
 
-    // 4. Si es Admin, muestra una tabla detallada
+    // --- Renderizado Condicional: Tabla para Admin, Lista para Usuario ---
     if (isAdmin) {
       return (
         <Table striped bordered hover responsive size="sm" className="mt-3">
@@ -105,18 +111,17 @@ const Transactions = () => {
                 <td>{tx.order}</td>
                 <td>{tx.company_name || `${tx.beneficiary_first_name || ''} ${tx.beneficiary_last_name || ''}`.trim()}</td>
                 <td>{tx.country}</td>
-                <td>{new Intl.NumberFormat('es-CL').format(tx.amount || 0)} {tx.currency}</td>
+                {/* Asegurarse de formatear el monto y moneda correctamente */}
+                <td>{new Intl.NumberFormat('es-CL', { style: 'currency', currency: tx.currency || 'CLP', minimumFractionDigits: 0 }).format(tx.amount || 0)}</td>
                 <td>{getStatusBadge(tx.status)}</td>
-                {/* Intentamos mostrar el ID de Vita si existe */}
                 <td>{tx.vitaResponse?.id || tx.vitaResponse?.transaction?.id || 'N/A'}</td>
               </tr>
             ))}
           </tbody>
         </Table>
       );
-    } 
-    // 5. Si es Usuario normal, muestra la lista simple
-    else {
+    } else {
+      // Vista simple para usuarios normales
       return (
         <ListGroup variant="flush">
           {transactions.map(tx => (
@@ -126,7 +131,9 @@ const Transactions = () => {
                 <small className="d-block text-muted">{new Date(tx.createdAt).toLocaleString()}</small>
               </div>
               <div className="text-end">
-                <span className="me-3 fw-medium">{new Intl.NumberFormat('es-CL', { style: 'currency', currency: tx.currency || 'CLP' }).format(tx.amount || 0)}</span>
+                <span className="me-3 fw-medium">
+                  {new Intl.NumberFormat('es-CL', { style: 'currency', currency: tx.currency || 'CLP', minimumFractionDigits: 0 }).format(tx.amount || 0)}
+                </span>
                 {getStatusBadge(tx.status)}
               </div>
             </ListGroup.Item>
@@ -139,11 +146,66 @@ const Transactions = () => {
   return (
     <Container className="my-5">
       <Card>
-        <Card.Header as="h4">Historial de Transacciones {isAdmin && <Badge bg="primary" className="ms-2">Admin</Badge>}</Card.Header>
+        <Card.Header as="h4">
+          Historial de Transacciones {isAdmin && <Badge bg="primary" className="ms-2">Admin</Badge>}
+        </Card.Header>
         <Card.Body>
-          {/* ... (Formulario de filtros y Paginación sin cambios) ... */}
+          {/* --- Formulario de Filtros --- */}
+          <Form className="mb-4">
+            <Row>
+              <Col md={4}>
+                <Form.Group>
+                  <Form.Label>Filtrar por Estado</Form.Label>
+                  <Form.Select name="status" value={filters.status} onChange={handleFilterChange}>
+                    <option value="">Todos</option>
+                    <option value="pending">Pendiente</option>
+                    <option value="succeeded">Completado</option>
+                    <option value="failed">Fallido</option>
+                  </Form.Select>
+                </Form.Group>
+              </Col>
+              <Col md={4}>
+                <Form.Group>
+                  <Form.Label>Filtrar por País</Form.Label>
+                  <Form.Select name="country" value={filters.country} onChange={handleFilterChange} disabled={loadingCountries}>
+                    <option value="">Todos</option>
+                    {loadingCountries ? <option>Cargando...</option> : countries.map(country => (
+                      <option key={country.code} value={country.code}>{country.name}</option>
+                    ))}
+                  </Form.Select>
+                </Form.Group>
+              </Col>
+              {/* Se podría añadir un filtro por Order ID aquí si fuera necesario */}
+            </Row>
+          </Form>
+
+          {/* Renderiza la lista o la tabla */}
           {renderContent()}
-          {/* ... */}
+
+          {/* --- Paginación --- */}
+          {!loading && totalPages > 1 && (
+            <div className="d-flex justify-content-center mt-4">
+              <Pagination>
+                <Pagination.Prev 
+                  onClick={() => handlePageChange(currentPage - 1)} 
+                  disabled={currentPage === 1} 
+                />
+                {[...Array(totalPages).keys()].map(number => (
+                  <Pagination.Item 
+                    key={number + 1} 
+                    active={number + 1 === currentPage} 
+                    onClick={() => handlePageChange(number + 1)}
+                  >
+                    {number + 1}
+                  </Pagination.Item>
+                ))}
+                <Pagination.Next 
+                  onClick={() => handlePageChange(currentPage + 1)} 
+                  disabled={currentPage === totalPages} 
+                />
+              </Pagination>
+            </div>
+          )}
         </Card.Body>
       </Card>
     </Container>
