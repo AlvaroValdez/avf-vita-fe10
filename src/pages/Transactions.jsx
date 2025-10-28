@@ -97,6 +97,7 @@ const Transactions = () => {
             <tr>
               <th>Fecha</th>
               <th>Orden ID</th>
+              <th>Remitente</th>
               <th>Beneficiario</th>
               <th>País</th>
               <th>Monto</th>
@@ -109,6 +110,7 @@ const Transactions = () => {
               <tr key={tx._id}>
                 <td>{new Date(tx.createdAt).toLocaleString()}</td>
                 <td>{tx.order}</td>
+                <td>{tx.createdBy?.name || tx.createdBy?.email || 'N/A'}</td>
                 <td>{tx.company_name || `${tx.beneficiary_first_name || ''} ${tx.beneficiary_last_name || ''}`.trim()}</td>
                 <td>{tx.country}</td>
                 {/* Asegurarse de formatear el monto y moneda correctamente */}
