@@ -12,58 +12,45 @@ export const apiClient = axios.create({
 
 export const loginUser = async (credentials) => {
   try {
-    // Llama al endpoint real del backend (que es un placeholder)
+    // --- CORRECCIÓN: LLAMADA REAL AL BACKEND ---
     const response = await apiClient.post('/auth/login', credentials);
-    
-    // --- SIMULACIÓN DE RESPUESTA DEL BACKEND ---
-    // Aquí simulamos una respuesta exitosa si las credenciales no están vacías
-    if (credentials.email && credentials.password) {
-        return {
-            ok: true,
-            token: 'fake-jwt-token-from-placeholder',
-            user: { name: 'Usuario Placeholder', email: credentials.email, role: 'admin' } // Simulamos admin
-        };
+
+    // Verifica si la respuesta del backend fue exitosa (status 2xx)
+    // y si contiene los datos esperados (token y user)
+    if (response.data && response.data.ok && response.data.token && response.data.user) {
+        return response.data; // Devuelve la respuesta REAL del backend
     } else {
-         throw new Error("Credenciales inválidas (simulado)");
+        // Si la respuesta no tiene el formato esperado, lanza un error
+        throw new Error(response.data.error || 'Respuesta inesperada del servidor.');
     }
-    // --- FIN SIMULACIÓN ---
-    
+
   } catch (error) {
     console.error('Error en loginUser:', error.response?.data || error);
+    // Propaga el error para que el componente lo maneje
     throw { 
         ok: false, 
-        error: error.response?.data?.message || error.message || 'Error al iniciar sesión.' 
+        error: error.response?.data?.error || 'Error de red o servidor al iniciar sesión.' 
     };
   }
 };
 
-// --- NUEVA FUNCIÓN DE REGISTRO ---
+// --- NUEVA FUNCIÓN DE REGISTRO REAL NO SIMULADA ---
 export const registerUser = async (userData) => {
     try {
-        // Llama al endpoint real del backend (que es un placeholder)
         const response = await apiClient.post('/auth/register', userData);
-
-        // --- SIMULACIÓN DE RESPUESTA DEL BACKEND ---
-        console.log("Simulando registro con:", userData);
-         if (userData.email && userData.password && userData.name) {
-            return {
-                ok: true,
-                message: "Registro exitoso (simulado)"
-            };
+        if (response.data && response.data.ok) {
+            return response.data;
         } else {
-             throw new Error("Datos de registro incompletos (simulado)");
+            throw new Error(response.data.error || 'Error en el registro');
         }
-        // --- FIN SIMULACIÓN ---
-
     } catch (error) {
-        console.error('Error en registerUser:', error.response?.data || error);
+         console.error('Error en registerUser:', error.response?.data || error);
         throw { 
             ok: false, 
-            error: error.response?.data?.message || error.message || 'Error al registrar usuario.' 
+            error: error.response?.data?.error || 'Error de red o servidor al registrar.' 
         };
     }
 };
-
 /**
  * Obtiene la lista de todos los usuarios (requiere token de admin).
  * @returns {Promise<object>}
