@@ -8,10 +8,21 @@ export const AuthProvider = ({ children }) => {
   const [token, setToken] = useState(() => localStorage.getItem('token') || null);
 
   useEffect(() => {
+// --- LOGGING DETALLADO ---
+    console.log('[AuthContext] useEffect ejecutado. Token actual:', token);
     if (token) {
-      apiClient.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-      localStorage.setItem('token', token);
+      // Verifica que el token tenga el formato JWT esperado (tres partes separadas por puntos)
+      if (typeof token === 'string' && token.split('.').length === 3) {
+          console.log('[AuthContext] Token válido detectado, estableciendo cabecera Authorization.');
+          apiClient.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+          localStorage.setItem('token', token); // Guarda solo si es válido
+      } else {
+          console.error('[AuthContext] ¡ERROR! Token inválido o malformado detectado en estado:', token);
+          // Opcional: Limpiar token inválido
+          // logout();
+      }
     } else {
+      console.log('[AuthContext] No hay token, eliminando cabecera Authorization.');
       delete apiClient.defaults.headers.common['Authorization'];
       localStorage.removeItem('token');
     }
@@ -19,16 +30,17 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (email, password) => {
     try {
-      const response = await loginUser({ email, password }); // Llama a la API (simulada)
+      const response = await loginUser({ email, password });
       if (response.ok) {
-        // El rol ahora viene de la respuesta simulada de loginUser
-        const userData = response.user; 
-        
-        localStorage.setItem('token', response.token);
+        // --- LOGGING DETALLADO ---
+        console.log('[AuthContext] Login exitoso. Token recibido:', response.token);
+        console.log('[AuthContext] Datos de usuario recibidos:', response.user);
+
+        const userData = response.user;
+        localStorage.setItem('token', response.token); // Guarda ANTES de actualizar estado
         localStorage.setItem('user', JSON.stringify(userData));
-        
-        setToken(response.token);
-        setUser(userData); 
+        setUser(userData);
+        setToken(response.token); // Actualiza estado DESPUÉS de guardar
         return true;
       }
       throw new Error(response.error || 'Login failed.');
