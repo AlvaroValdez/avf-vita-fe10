@@ -9,7 +9,7 @@ const Register = () => {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
+  const [success, setSuccess] = useState(''); // Estado para el mensaje de éxito
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
@@ -31,9 +31,14 @@ const Register = () => {
     try {
       const response = await registerUser({ name, email, password });
       if (response.ok) {
-        setSuccess('¡Registro exitoso! Ahora puedes iniciar sesión.');
-        // Opcional: Redirigir al login después de unos segundos
-        setTimeout(() => navigate('/login'), 2000); 
+        // --- CORRECCIÓN AQUÍ ---
+        // Muestra el mensaje de éxito enviado por el backend
+        setSuccess(response.message || '¡Registro exitoso! Por favor, revisa tu correo para verificar tu cuenta.');
+        // Opcionalmente, deshabilita el formulario o limpia los campos
+        setName('');
+        setEmail('');
+        setPassword('');
+        setConfirmPassword('');
       }
     } catch (err) {
       setError(err.error || 'No se pudo completar el registro.');
@@ -49,36 +54,46 @@ const Register = () => {
           <Card.Title as="h3" className="text-center mb-4" style={{ color: 'var(--avf-primary)' }}>
             Crear Cuenta
           </Card.Title>
-          <Form onSubmit={handleSubmit}>
-            <Form.Group className="mb-3">
-              <Form.Label>Nombre Completo</Form.Label>
-              <Form.Control type="text" value={name} onChange={(e) => setName(e.target.value)} required />
-            </Form.Group>
-            <Form.Group className="mb-3">
-              <Form.Label>Correo Electrónico</Form.Label>
-              <Form.Control type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
-            </Form.Group>
-            <Form.Group className="mb-3">
-              <Form.Label>Contraseña</Form.Label>
-              <Form.Control type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
-            </Form.Group>
-             <Form.Group className="mb-3">
-              <Form.Label>Confirmar Contraseña</Form.Label>
-              <Form.Control type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} required />
-            </Form.Group>
+          
+          {/* Si el registro fue exitoso, muestra el mensaje y oculta el formulario */}
+          {success ? (
+            <Alert variant="success">
+              {success}
+              <div className="text-center mt-3">
+                <Link to="/login">Ir a Iniciar Sesión</Link>
+              </div>
+            </Alert>
+          ) : (
+            <Form onSubmit={handleSubmit}>
+              <Form.Group className="mb-3">
+                <Form.Label>Nombre Completo</Form.Label>
+                <Form.Control type="text" value={name} onChange={(e) => setName(e.target.value)} required />
+              </Form.Group>
+              <Form.Group className="mb-3">
+                <Form.Label>Correo Electrónico</Form.Label>
+                <Form.Control type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+              </Form.Group>
+              <Form.Group className="mb-3">
+                <Form.Label>Contraseña</Form.Label>
+                <Form.Control type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
+              </Form.Group>
+              <Form.Group className="mb-3">
+                <Form.Label>Confirmar Contraseña</Form.Label>
+                <Form.Control type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} required />
+              </Form.Group>
 
-            {error && <Alert variant="danger" className="py-2">{error}</Alert>}
-            {success && <Alert variant="success" className="py-2">{success}</Alert>}
+              {error && <Alert variant="danger" className="py-2">{error}</Alert>}
 
-            <div className="d-grid">
-              <Button type="submit" disabled={loading} style={{ backgroundColor: 'var(--avf-primary)' }}>
-                {loading ? <Spinner as="span" size="sm" /> : 'Registrarse'}
-              </Button>
-            </div>
-            <div className="text-center mt-3">
-               <Link to="/login">¿Ya tienes cuenta? Inicia Sesión</Link>
-            </div>
-          </Form>
+              <div className="d-grid">
+                <Button type="submit" disabled={loading} style={{ backgroundColor: 'var(--avf-primary)' }}>
+                  {loading ? <Spinner as="span" size="sm" /> : 'Registrarse'}
+                </Button>
+              </div>
+              <div className="text-center mt-3">
+                <Link to="/login">¿Ya tienes cuenta? Inicia Sesión</Link>
+              </div>
+            </Form>
+          )}
         </Card.Body>
       </Card>
     </Container>
