@@ -6,34 +6,28 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 import Home from './pages/Home.jsx';
 import Transactions from './pages/Transactions.jsx';
 import Login from './pages/Login.jsx';
-import Register from './pages/Register.jsx'; // Asegúrate que esta página exista
+import Register from './pages/Register.jsx';
 import PaymentSuccess from './pages/PaymentSuccess.jsx';
 import AdminMarkup from './pages/AdminMarkup.jsx';
-import AdminUsers from './pages/AdminUsers.jsx';
+import AdminUsers from './pages/AdminUsers.jsx'; // Asumiendo que esta página existe
+import VerifyEmail from './pages/VerifyEmail.jsx'; // <-- LA IMPORTACIÓN QUE FALTABA
 
 // Componentes
 import AppNavbar from './components/ui/Navbar.jsx';
 import Footer from './components/ui/Footer.jsx';
 
-// Wrapper para Rutas Protegidas de Usuario
+// Componente para proteger rutas de usuario
 const ProtectedRouteWrapper = () => {
-  const { token } = useAuth(); // Obtiene solo el token
+  const { token } = useAuth();
   return token ? <Outlet /> : <Navigate to="/login" replace />;
 };
 
-// Wrapper para Rutas Protegidas de Administrador (VERIFICADO)
+// Componente para proteger rutas de admin
 const AdminRouteWrapper = () => {
-    const { user, token } = useAuth(); // Obtiene user y token
-    if (!token) {
-        console.log("AdminRouteWrapper: No token, redirecting to login");
-        return <Navigate to="/login" replace />;
-    }
-    if (user?.role !== 'admin') {
-        console.log("AdminRouteWrapper: User is not admin, redirecting to home. User:", user);
-        return <Navigate to="/" replace />;
-    }
-    console.log("AdminRouteWrapper: Access granted. User:", user);
-    return <Outlet />; // Permite el acceso
+    const { user, token } = useAuth();
+    if (!token) return <Navigate to="/login" replace />;
+    if (user?.role !== 'admin') return <Navigate to="/" replace />;
+    return <Outlet />;
 };
 
 function AppContent() {
@@ -47,7 +41,7 @@ function AppContent() {
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/payment-success" element={<PaymentSuccess />} />
-          <Route path="/verify-email" element={<VerifyEmail />} /> 
+          <Route path="/verify-email" element={<VerifyEmail />} /> {/* Esta línea necesita la importación */}
 
           {/* Rutas Protegidas (Usuario) */}
           <Route element={<ProtectedRouteWrapper />}>
