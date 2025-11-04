@@ -51,6 +51,22 @@ export const registerUser = async (userData) => {
         };
     }
 };
+
+/**
+ * Envía el token de verificación al backend para validar un email.
+ * @param {string} token - El token de verificación de la URL.
+ * @returns {Promise<object>}
+ */
+export const verifyEmailToken = async (token) => {
+  try {
+    const response = await apiClient.get(`/auth/verify-email?token=${token}`);
+    return response.data;
+  } catch (error) {
+    console.error('Error verifying email token:', error.response?.data || error.message);
+    throw error.response?.data || error;
+  }
+};
+
 /**
  * Obtiene la lista de todos los usuarios (requiere token de admin).
  * @returns {Promise<object>}
