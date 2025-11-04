@@ -9,8 +9,8 @@ import Login from './pages/Login.jsx';
 import Register from './pages/Register.jsx';
 import PaymentSuccess from './pages/PaymentSuccess.jsx';
 import AdminMarkup from './pages/AdminMarkup.jsx';
-import AdminUsers from './pages/AdminUsers.jsx'; // Asumiendo que esta página existe
-import VerifyEmail from './pages/VerifyEmail.jsx'; // <-- LA IMPORTACIÓN QUE FALTABA
+import AdminUsers from './pages/AdminUsers.jsx'; 
+import VerifyEmail from './pages/VerifyEmail.jsx'; 
 
 // Componentes
 import AppNavbar from './components/ui/Navbar.jsx';
