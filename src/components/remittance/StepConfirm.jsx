@@ -3,7 +3,8 @@ import { Card, Button, Row, Col, Spinner, Alert, ListGroup } from 'react-bootstr
 import { createWithdrawal, createPaymentOrder } from '../../services/api';
 import { formatNumberForDisplay, formatRate } from '../../utils/formatting';
 
-const QUOTE_VALIDITY_DURATION = 2 * 60 * 1000; // 2 minutos
+//const QUOTE_VALIDITY_DURATION = 2 * 60 * 1000; // 2 minutos
+const QUOTE_VALIDITY_DURATION = 1.5 * 60 * 1000;
 
 const StepConfirm = ({ formData, fields, onBack }) => {
   const { quoteData, beneficiary, destCountry, quoteTimestamp } = formData;

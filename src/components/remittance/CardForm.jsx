@@ -4,6 +4,8 @@ import { useAppContext } from '../../context/AppContext';
 import { getQuote } from '../../services/api';
 import { formatNumberForDisplay, parseFormattedNumber, formatRate } from '../../utils/formatting';
 
+const QUOTE_VALIDITY_DURATION = 1.5 * 60 * 1000;
+
 const CardForm = ({ onQuoteSuccess }) => {
   const { countries, loading: loadingCountries } = useAppContext();
   const [amount, setAmount] = useState(0);
