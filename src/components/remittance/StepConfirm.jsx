@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Card, Button, Row, Col, Spinner, Alert, ListGroup } from 'react-bootstrap'; // Asegúrate de importar ListGroup
+import { Card, Button, Row, Col, Spinner, Alert, ListGroup } from 'react-bootstrap'; 
 import { createWithdrawal, createPaymentOrder } from '../../services/api';
 import { formatNumberForDisplay, formatRate } from '../../utils/formatting';
 
-//const QUOTE_VALIDITY_DURATION = 2 * 60 * 1000; // 2 minutos
-const QUOTE_VALIDITY_DURATION = 1.5 * 60 * 1000;
+const QUOTE_VALIDITY_DURATION = 2 * 60 * 1000; // 2 minutos
+//const QUOTE_VALIDITY_DURATION = 1.5 * 60 * 1000;
 
 const StepConfirm = ({ formData, fields, onBack }) => {
   const { quoteData, beneficiary, destCountry, quoteTimestamp } = formData;
@@ -14,6 +14,7 @@ const StepConfirm = ({ formData, fields, onBack }) => {
 
   const [remainingTime, setRemainingTime] = useState(QUOTE_VALIDITY_DURATION);
   const [isExpired, setIsExpired] = useState(false);
+  const [saveAsFavorite, setSaveAsFavorite] = useState(false); 
 
   useEffect(() => {
     if (!quoteTimestamp) {
@@ -66,8 +67,20 @@ const StepConfirm = ({ formData, fields, onBack }) => {
       });
 
       if (withdrawalResult.ok) {
+        // --- PASO 2: GUARDAR BENEFICIARIO FAVORITO ---
+        if (saveAsFavorite) {
+          const nickname = `${beneficiary.beneficiary_first_name || ''} ${beneficiary.beneficiary_last_name || ''}`.trim() || 'Nuevo Contacto';
+          
+          await saveBeneficiary({
+            nickname: `${nickname} - ${destCountry}`, // Nombre descriptivo
+            country: destCountry,
+            beneficiaryData: beneficiary,
+          });
+        }
+        
+        // Paso 3: Crear Orden de Pago (Pay-in) y Redirigir
         const paymentOrderResult = await createPaymentOrder({
-          amount: quoteData.amountIn,
+          amount: currentQuote.amountIn,
           country: 'CL',
           orderId: withdrawalResult.data.order,
         });
@@ -140,8 +153,6 @@ const StepConfirm = ({ formData, fields, onBack }) => {
     <Card className="p-4">
       <Card.Body>
         <h4 className="mb-4">Resumen de la transacción</h4>
-
-        {/* --- JSX DEL RESUMEN RESTAURADO --- */}
         <Row>
           <Col md={6} className="mb-4 mb-md-0">
             <h5>Detalles:</h5>
@@ -177,6 +188,16 @@ const StepConfirm = ({ formData, fields, onBack }) => {
             })}
           </Col>
         </Row>
+
+        {/* --- CHECKBOX DE FAVORITOS --- */}
+        <Form.Group className="mb-3 mt-3">
+          <Form.Check
+            type="checkbox"
+            label="Agregar a favoritos para futuros envíos"
+            checked={saveAsFavorite}
+            onChange={(e) => setSaveAsFavorite(e.target.checked)}
+          />
+        </Form.Group>
 
         {error && <Alert variant="danger" className="mt-4">{error}</Alert>}
 

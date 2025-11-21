@@ -1,15 +1,65 @@
 import React, { useState, useEffect } from 'react';
 import { Card, Form, Button, Col, Row } from 'react-bootstrap';
+import { getBeneficiaries } from '../../services/api'; // 1. Importa la función
+import { useAuth } from '../../context/AuthContext'
 
 // Expresión regular estándar para la validación de email.
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 const StepBeneficiary = ({ formData, fields, onBack, onComplete }) => {
+  const { token } = useAuth();
   const [beneficiaryData, setBeneficiaryData] = useState({});
   const [errors, setErrors] = useState({});
   const [fieldsToRender, setFieldsToRender] = useState([]);
 
+  const [favorites, setFavorites] = useState([]); // Estado para favoritos
+  const [loadingFavorites, setLoadingFavorites] = useState(true); // Nuevo estado
+  const [selectedFavorite, setSelectedFavorite] = useState('');
+
   const countryFields = fields || [];
+
+  // Efecto para cargar los favoritos al inicio
+  useEffect(() => {
+    if (token) {
+      const loadFavorites = async () => {
+        setLoadingFavorites(true);
+        try {
+          const response = await getBeneficiaries();
+          if (response.ok) {
+            setFavorites(response.beneficiaries || []);
+          }
+        } catch (err) {
+          console.error("Error al cargar favoritos: ", err);
+          // Si hay un 401, no hacemos nada, si no es 401 mostramos un error
+        } finally {
+          setLoadingFavorites(false);
+        }
+      };
+      loadFavorites();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Lógica para autocompletar cuando se selecciona un favorito
+  const handleFavoriteSelect = (e) => {
+    const selectedId = e.target.value;
+    setSelectedFavorite(selectedId);
+
+    if (selectedId) {
+      const favorite = favorites.find(f => f._id === selectedId);
+      if (favorite) {
+        // Autocompleta el estado con los datos del Map
+        setBeneficiaryData(favorite.beneficiaryData); 
+        // Nota: Si el país del favorito (favorite.country) es diferente al país de la cotización,
+        // esto podría causar problemas de validación al avanzar. Por ahora, asumimos que
+        // el usuario solo guardará favoritos para el país de la cotización actual o que cambiará el país si carga el favorito.
+        setErrors({}); 
+      }
+    } else {
+      // Limpia el formulario si selecciona la opción "Cargar..."
+      setBeneficiaryData({}); 
+    }
+  };
 
   // Efectos para inicializar y mostrar campos (sin cambios)
   useEffect(() => {
@@ -30,7 +80,7 @@ const StepBeneficiary = ({ formData, fields, onBack, onComplete }) => {
     }
   }, [beneficiaryData, countryFields]);
 
-  // --- VALIDACIÓN PROFESIONAL BASADA EN TODAS LAS REGLAS DE VITA ---
+  // --- VALIDACIÓN BASADA EN REGLAS VITA ---
   const validateField = (name, value) => {
     const rule = countryFields.find(f => f.key === name);
     if (!rule) return null;
@@ -148,6 +198,28 @@ const StepBeneficiary = ({ formData, fields, onBack, onComplete }) => {
     <Card className="p-4">
       <Card.Body>
         <Card.Title as="h5" className="mb-4">Datos del Beneficiario</Card.Title>
+
+        {/* --- SELECTOR DE FAVORITOS --- */}
+        {token && (
+          <Form.Group className="mb-4">
+            <Form.Label>Cargar Beneficiario Favorito</Form.Label>
+            <Form.Select 
+              value={selectedFavorite} 
+              onChange={handleFavoriteSelect} 
+              disabled={loadingFavorites}
+              className="border-0 bg-light py-2 px-3"
+            >
+              <option value="">{loadingFavorites ? 'Cargando favoritos...' : 'Selecciona un contacto'}</option>
+              {favorites.map(fav => (
+                <option key={fav._id} value={fav._id}>
+                  {fav.nickname}
+                </option>
+              ))}
+            </Form.Select>
+          </Form.Group>
+        )}
+
+
         <Form noValidate>
           <Row>
             {fieldsToRender.map((field) => (

@@ -223,3 +223,14 @@ export const updateMarkupPair = async (pairData) => {
     throw error.response?.data || error;
   }
 };
+
+// Guarda Beneficiario Favorito.
+export const saveBeneficiary = async (data) => {
+  try {
+    const response = await apiClient.post('/beneficiaries', data);
+    return response.data;
+  } catch (error) {
+    // ...
+    throw error.response?.data || error;
+  }
+};
