@@ -1,27 +1,54 @@
 import React, { useState, useEffect } from 'react';
-import { Card, Button, Row, Col, Spinner, Alert, ListGroup } from 'react-bootstrap'; 
-import { createWithdrawal, createPaymentOrder } from '../../services/api';
+// --- CORRECCIÓN: Se añade 'Form' a los imports ---
+import { Card, Button, Row, Col, Spinner, Alert, ListGroup, Form } from 'react-bootstrap';
+import { createWithdrawal, createPaymentOrder, getQuote, saveBeneficiary } from '../../services/api';
 import { formatNumberForDisplay, formatRate } from '../../utils/formatting';
 
 const QUOTE_VALIDITY_DURATION = 2 * 60 * 1000; // 2 minutos
-//const QUOTE_VALIDITY_DURATION = 1.5 * 60 * 1000;
 
 const StepConfirm = ({ formData, fields, onBack }) => {
   const { quoteData, beneficiary, destCountry, quoteTimestamp } = formData;
+  
+  // Estado para la cotización (refrescada)
+  const [currentQuote, setCurrentQuote] = useState(formData.quoteData);
+  const [loadingQuote, setLoadingQuote] = useState(true);
+
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [transactionResult, setTransactionResult] = useState(null);
-
-  const [remainingTime, setRemainingTime] = useState(QUOTE_VALIDITY_DURATION);
+  
+  const [remainingTime, setRemainingTime] = useState(null);
   const [isExpired, setIsExpired] = useState(false);
-  const [saveAsFavorite, setSaveAsFavorite] = useState(false); 
+  const [saveAsFavorite, setSaveAsFavorite] = useState(false); // Estado para el checkbox
 
+  // Efecto para refrescar la cotización
   useEffect(() => {
-    if (!quoteTimestamp) {
-        setIsExpired(true);
-        setRemainingTime(0);
-        return;
-    }
+    const refreshQuote = async () => {
+      try {
+        setLoadingQuote(true);
+        const response = await getQuote({ amount: formData.quoteData.amountIn, destCountry });
+        if (response.ok) {
+          setCurrentQuote(response.data);
+        } else {
+          setError('No se pudo actualizar la cotización. Los precios pueden ser inexactos.');
+        }
+      } catch (err) {
+        setError('Error de red al actualizar la cotización.');
+      } finally {
+        setLoadingQuote(false);
+      }
+    };
+    
+    refreshQuote();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Efecto para el temporizador
+  useEffect(() => {
+    if (!currentQuote || loadingQuote) return;
+
+    const quoteTimestamp = Date.now();
+    setRemainingTime(QUOTE_VALIDITY_DURATION);
 
     const interval = setInterval(() => {
       const elapsedTime = Date.now() - quoteTimestamp;
@@ -34,8 +61,9 @@ const StepConfirm = ({ formData, fields, onBack }) => {
         setRemainingTime(timeLeft);
       }
     }, 1000);
+
     return () => clearInterval(interval);
-  }, [quoteTimestamp]);
+  }, [currentQuote, loadingQuote]);
 
   const formatTime = (ms) => {
     if (ms === null || ms <= 0) return '00:00';
@@ -45,8 +73,8 @@ const StepConfirm = ({ formData, fields, onBack }) => {
     return `${minutes}:${seconds}`;
   };
 
-  const getFieldDetails = (key) => fields.find(f => f.key === key);
-
+  const getFieldDetails = (key) => fields?.find(f => f.key === key);
+  
   const getDisplayValue = (field, value) => {
     if (field?.type === 'select' && field.options) {
       const option = field.options.find(opt => opt.value === value);
@@ -61,24 +89,27 @@ const StepConfirm = ({ formData, fields, onBack }) => {
     try {
       const withdrawalResult = await createWithdrawal({
         country: destCountry,
-        currency: quoteData.origin,
-        amount: quoteData.amountIn,
+        currency: currentQuote.origin,
+        amount: currentQuote.amountIn,
         ...beneficiary,
       });
 
       if (withdrawalResult.ok) {
-        // --- PASO 2: GUARDAR BENEFICIARIO FAVORITO ---
+        // --- GUARDAR FAVORITO ---
         if (saveAsFavorite) {
           const nickname = `${beneficiary.beneficiary_first_name || ''} ${beneficiary.beneficiary_last_name || ''}`.trim() || 'Nuevo Contacto';
-          
-          await saveBeneficiary({
-            nickname: `${nickname} - ${destCountry}`, // Nombre descriptivo
-            country: destCountry,
-            beneficiaryData: beneficiary,
-          });
+          try {
+             await saveBeneficiary({
+              nickname: `${nickname} - ${destCountry}`,
+              country: destCountry,
+              beneficiaryData: beneficiary,
+            });
+            console.log('Beneficiario guardado correctamente');
+          } catch (favError) {
+             console.warn('Error al guardar favorito (no bloqueante):', favError);
+          }
         }
-        
-        // Paso 3: Crear Orden de Pago (Pay-in) y Redirigir
+
         const paymentOrderResult = await createPaymentOrder({
           amount: currentQuote.amountIn,
           country: 'CL',
@@ -91,39 +122,14 @@ const StepConfirm = ({ formData, fields, onBack }) => {
           throw new Error('No se pudo generar el link de pago.');
         }
       } else {
-        // Lanza un error con el detalle si el withdrawal falla
-        throw new Error(withdrawalResult.details || withdrawalResult.error || 'No se pudo crear la transacción inicial.');
+         throw new Error(withdrawalResult.details || withdrawalResult.error || 'No se pudo crear la transacción inicial.');
       }
     } catch (err) {
-      const errorDetails = err.details ? (typeof err.details === 'object' ? JSON.stringify(err.details) : err.details) : (err.message || err.error || 'Error desconocido');
-      setError(`Error al procesar el envío: ${errorDetails}`);
-      setLoading(false);
+       const errorDetails = err.details ? (typeof err.details === 'object' ? JSON.stringify(err.details) : err.details) : (err.message || err.error || 'Error desconocido');
+       setError(`Error al procesar el envío: ${errorDetails}`);
+       setLoading(false);
     }
   };
-
-  // --- RENDERIZADO DEL COMPONENTE ---
-
-  if (transactionResult) {
-     const txId = transactionResult.id || transactionResult.uuid || 'N/A';
-     return (
-       <Card className="p-4 text-center border-0 shadow-sm">
-         <Card.Body>
-           <div style={{ width: '80px', height: '80px', borderRadius: '50%', backgroundColor: '#28a745', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px auto', fontSize: '40px' }}>✓</div>
-           <h3 style={{ color: 'var(--avf-primary)' }}>¡Envío Realizado con Éxito!</h3>
-           <p className="text-muted">Tu envío ha sido procesado y está en camino.</p>
-           <div className="bg-light p-3 rounded mt-4">
-             <span className="d-block text-muted">ID de Transacción</span>
-             <strong style={{ color: 'var(--avf-primary)', fontSize: '1.1rem' }}>{txId}</strong>
-           </div>
-           <div className="d-grid mt-4">
-             <Button variant="primary" onClick={() => window.location.reload()} style={{ backgroundColor: 'var(--avf-secondary)', borderColor: 'var(--avf-secondary)' }}>
-               Realizar otro envío
-             </Button>
-           </div>
-         </Card.Body>
-       </Card>
-     );
-  }
 
   if (isExpired) {
     return (
@@ -131,7 +137,7 @@ const StepConfirm = ({ formData, fields, onBack }) => {
         <Card.Body>
           <Alert variant="danger">
             <Alert.Heading>¡Tu cotización ha expirado!</Alert.Heading>
-            <p>Para asegurar la mejor tasa de cambio, las cotizaciones son válidas por un tiempo limitado. Por favor, vuelve para obtener una nueva tasa.</p>
+            <p>Por favor, vuelve para obtener una nueva tasa de cambio.</p>
           </Alert>
           <Button variant="outline-primary" onClick={onBack}>
             Volver
@@ -140,73 +146,74 @@ const StepConfirm = ({ formData, fields, onBack }) => {
       </Card>
     );
   }
-
-  if (!quoteData || !beneficiary) {
-    return (
-      <Card className="p-4"><Card.Body><Alert variant="warning">Faltan datos para confirmar.</Alert></Card.Body></Card>
-    );
-  }
-
+  
   const fullName = `${beneficiary.beneficiary_first_name || ''} ${beneficiary.beneficiary_last_name || ''}`.trim();
 
   return (
     <Card className="p-4">
       <Card.Body>
         <h4 className="mb-4">Resumen de la transacción</h4>
-        <Row>
-          <Col md={6} className="mb-4 mb-md-0">
-            <h5>Detalles:</h5>
-            <div className="p-3 rounded" style={{ backgroundColor: '#f8f9fa' }}>
-              <div className="d-flex justify-content-between align-items-center mb-2">
-                <span>Total a enviar:</span>
-                <span className="fw-bold fs-5">{`$ ${formatNumberForDisplay(quoteData.amountIn)} ${quoteData.origin}`}</span>
-              </div>
-              <small className="text-muted d-block text-center mb-2">
-                Tasa de cambio: 1 {quoteData.destCurrency} = ${formatRate(1 / quoteData.rateWithMarkup)} {quoteData.origin}
-              </small>
-              <div className="d-flex justify-content-between align-items-center fw-bold">
-                <span>Total a recibir:</span>
-                <span className="fs-5">{`$ ${formatNumberForDisplay(quoteData.amountOut)} ${quoteData.destCurrency}`}</span>
-              </div>
-            </div>
-          </Col>
-
-          <Col md={6}>
-            <h5>Beneficiario:</h5>
-            <div className="mb-2"><small className="text-muted d-block">Nombre</small><span className="fw-medium">{fullName}</span></div>
-            {Object.entries(beneficiary).map(([key, value]) => {
-              if (!value || key.includes('name')) return null;
-              const fieldDetails = getFieldDetails(key);
-              const label = fieldDetails ? fieldDetails.name : key;
-              const displayValue = getDisplayValue(fieldDetails, value);
-              return (
-                <div key={key} className="mb-2">
-                  <small className="text-muted d-block">{label}:</small>
-                  <span className="fw-medium">{displayValue}</span>
+        
+        {loadingQuote ? (
+          <div className="text-center p-5"><Spinner animation="border" /> <p>Actualizando cotización...</p></div>
+        ) : (
+          <>
+            <Row>
+                <Col md={6} className="mb-4 mb-md-0">
+                <h5>Detalles:</h5>
+                <div className="p-3 rounded" style={{ backgroundColor: '#f8f9fa' }}>
+                    <div className="d-flex justify-content-between align-items-center mb-2">
+                    <span>Total a enviar:</span>
+                    <span className="fw-bold fs-5">{`$ ${formatNumberForDisplay(currentQuote.amountIn)} ${currentQuote.origin}`}</span>
+                    </div>
+                    <small className="text-muted d-block text-center mb-2">
+                    Tasa de cambio: 1 {currentQuote.destCurrency} = ${formatRate(1 / currentQuote.rateWithMarkup)} {currentQuote.origin}
+                    </small>
+                    <div className="d-flex justify-content-between align-items-center fw-bold">
+                    <span>Total a recibir:</span>
+                    <span className="fs-5">{`$ ${formatNumberForDisplay(currentQuote.amountOut)} ${currentQuote.destCurrency}`}</span>
+                    </div>
                 </div>
-              );
-            })}
-          </Col>
-        </Row>
+                </Col>
+                <Col md={6}>
+                <h5>Beneficiario:</h5>
+                <div className="mb-2"><small className="text-muted d-block">Nombre</small><span className="fw-medium">{fullName}</span></div>
+                {Object.entries(beneficiary).map(([key, value]) => {
+                    if (!value || key.includes('name')) return null;
+                    const fieldDetails = getFieldDetails(key);
+                    const label = fieldDetails ? fieldDetails.name : key;
+                    const displayValue = getDisplayValue(fieldDetails, value);
+                    return (
+                    <div key={key} className="mb-2">
+                        <small className="text-muted d-block">{label}:</small>
+                        <span className="fw-medium">{displayValue}</span>
+                    </div>
+                    );
+                })}
+                </Col>
+            </Row>
 
-        {/* --- CHECKBOX DE FAVORITOS --- */}
-        <Form.Group className="mb-3 mt-3">
-          <Form.Check
-            type="checkbox"
-            label="Agregar a favoritos para futuros envíos"
-            checked={saveAsFavorite}
-            onChange={(e) => setSaveAsFavorite(e.target.checked)}
-          />
-        </Form.Group>
-
+            {/* --- CHECKBOX DE FAVORITOS --- */}
+            <Form.Group className="mb-3 mt-4 pt-3 border-top">
+                <Form.Check
+                    type="checkbox"
+                    id="save-favorite-check"
+                    label="Guardar este beneficiario en mis favoritos para futuros envíos"
+                    checked={saveAsFavorite}
+                    onChange={(e) => setSaveAsFavorite(e.target.checked)}
+                />
+            </Form.Group>
+          </>
+        )}
+        
         {error && <Alert variant="danger" className="mt-4">{error}</Alert>}
 
         <div className="d-flex justify-content-between mt-4">
           <Button variant="outline-secondary" onClick={onBack} disabled={loading}>Atrás</Button>
-          <Button
-            variant="primary"
-            onClick={handleConfirm} // <-- ACCIÓN DEL BOTÓN RESTAURADA
-            disabled={loading || isExpired}
+          <Button 
+            variant="primary" 
+            onClick={handleConfirm} 
+            disabled={loading || loadingQuote || isExpired}
             style={{ backgroundColor: 'var(--avf-secondary)', borderColor: 'var(--avf-secondary)' }}
           >
             {loading ? <Spinner as="span" size="sm" /> : `Confirmar envío (${formatTime(remainingTime)})`}
