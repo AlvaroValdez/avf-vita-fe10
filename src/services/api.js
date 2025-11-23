@@ -1,7 +1,7 @@
 import axios from 'axios';
 
-//const API_URL = 'http://localhost:5000/api';
-const API_URL = 'https://remesas-avf1-0.onrender.com/api';// || 'http://localhost:5000/api';
+// URL del backend en producción
+const API_URL = 'https://remesas-avf1-0.onrender.com/api';
 
 export const apiClient = axios.create({
   baseURL: API_URL,
@@ -10,53 +10,38 @@ export const apiClient = axios.create({
   },
 });
 
+// --- FUNCIONES DE AUTENTICACIÓN ---
+
 export const loginUser = async (credentials) => {
   try {
-    // --- CORRECCIÓN: LLAMADA REAL AL BACKEND ---
     const response = await apiClient.post('/auth/login', credentials);
-
-    // Verifica si la respuesta del backend fue exitosa (status 2xx)
-    // y si contiene los datos esperados (token y user)
-    if (response.data && response.data.ok && response.data.token && response.data.user) {
-        return response.data; // Devuelve la respuesta REAL del backend
+    if (response.data.ok) {
+        return response.data; 
     } else {
-        // Si la respuesta no tiene el formato esperado, lanza un error
-        throw new Error(response.data.error || 'Respuesta inesperada del servidor.');
+        throw new Error(response.data.message || 'Error en el login');
     }
-
   } catch (error) {
-    console.error('Error en loginUser:', error.response?.data || error);
-    // Propaga el error para que el componente lo maneje
+    console.error('Error en loginUser:', error.response?.data || error.message);
     throw { 
         ok: false, 
-        error: error.response?.data?.error || 'Error de red o servidor al iniciar sesión.' 
+        error: error.response?.data?.message || error.message || 'Error al iniciar sesión.' 
     };
   }
 };
 
-// --- NUEVA FUNCIÓN DE REGISTRO REAL NO SIMULADA ---
 export const registerUser = async (userData) => {
     try {
         const response = await apiClient.post('/auth/register', userData);
-        if (response.data && response.data.ok) {
-            return response.data;
-        } else {
-            throw new Error(response.data.error || 'Error en el registro');
-        }
+        return response.data; 
     } catch (error) {
-         console.error('Error en registerUser:', error.response?.data || error);
+        console.error('Error en registerUser:', error.response?.data || error.message);
         throw { 
             ok: false, 
-            error: error.response?.data?.error || 'Error de red o servidor al registrar.' 
+            error: error.response?.data?.message || error.message || 'Error al registrar usuario.' 
         };
     }
 };
 
-/**
- * Envía el token de verificación al backend para validar un email.
- * @param {string} token - El token de verificación de la URL.
- * @returns {Promise<object>}
- */
 export const verifyEmailToken = async (token) => {
   try {
     const response = await apiClient.get(`/auth/verify-email?token=${token}`);
@@ -67,79 +52,7 @@ export const verifyEmailToken = async (token) => {
   }
 };
 
-/**
- * Obtiene la lista de todos los usuarios (requiere token de admin).
- * @returns {Promise<object>}
- */
-export const getUsers = async () => {
-  try {
-    const response = await apiClient.get('/admin/users');
-    return response.data;
-  } catch (error) {
-    console.error('Error fetching users:', error.response?.data || error.message);
-    throw error.response?.data || error;
-  }
-};
-
-/**
- * Actualiza el rol de un usuario específico (requiere token de admin).
- * @param {string} userId - El ID del usuario a modificar.
- * @param {string} role - El nuevo rol ('user' o 'admin').
- * @returns {Promise<object>}
- */
-export const updateUserRole = async (userId, role) => {
-  try {
-    const response = await apiClient.put(`/admin/users/${userId}/role`, { role });
-    return response.data;
-  } catch (error) {
-    console.error('Error updating user role:', error.response?.data || error.message);
-    throw error.response?.data || error;
-  }
-};
-
-//------------------------------------------------------------------------------
-
-export const getQuote = async (params) => {
-  try {
-    const response = await apiClient.get('/fx/quote', { params });
-    return response.data;
-  } catch (error) {
-    console.error('Error fetching quote:', error.response?.data || error.message);
-    throw error.response?.data || error;
-  }
-};
-
-// --- obtener reglas de retiro ---
-export const getWithdrawalRules = async (params) => {
-  try {
-    // Asegúrate de que la ruta NO tenga '/info'
-    const response = await apiClient.get('/withdrawal-rules', { params });
-    return response.data;
-  } catch (error) {
-    console.error('Error fetching withdrawal rules:', error.response?.data || error.message);
-    throw error.response?.data || error;
-  }
-};
-
-export const createWithdrawal = async (payload) => {
-  try {
-    const response = await apiClient.post('/withdrawals', payload);
-    return response.data;
-  } catch (error) {
-    console.error('Error creating withdrawal:', error.response?.data || error.message);
-    throw new Error(error.response?.data?.message || 'Error en el servidor. Intente más tarde.');
-  }
-};
-
-export const getTransactions = async (params) => {
-  try {
-    const response = await apiClient.get('/transactions', { params });
-    return response.data;
-  } catch (error) {
-    console.error('Error fetching transactions:', error.response?.data || error.message);
-    throw error.response?.data || error;
-  }
-};
+// --- FUNCIONES DE REMESAS (Cotización y Reglas) ---
 
 export const getPrices = async () => {
   try {
@@ -151,11 +64,38 @@ export const getPrices = async () => {
   }
 };
 
-/**
- * Solicita la creación de una orden de pago al backend.
- * @param {object} orderData - Datos necesarios para la orden (amount, country, orderId).
- * @returns {Promise<object>} La respuesta del backend con la URL de pago de Vita.
- */
+export const getQuote = async (params) => {
+  try {
+    const response = await apiClient.get('/fx/quote', { params });
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching quote:', error.response?.data || error.message);
+    throw error.response?.data || error;
+  }
+};
+
+export const getWithdrawalRules = async (params) => {
+  try {
+    const response = await apiClient.get('/withdrawal-rules', { params });
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching withdrawal rules:', error.response?.data || error.message);
+    throw error.response?.data || error;
+  }
+};
+
+// --- FUNCIONES DE ENVÍO Y PAGO ---
+
+export const createWithdrawal = async (payload) => {
+  try {
+    const response = await apiClient.post('/withdrawals', payload);
+    return response.data;
+  } catch (error) {
+    console.error('Error creating withdrawal:', error.response?.data || error.message);
+    throw error.response?.data || error;
+  }
+};
+
 export const createPaymentOrder = async (orderData) => {
   try {
     const response = await apiClient.post('/payment-orders', orderData);
@@ -166,10 +106,42 @@ export const createPaymentOrder = async (orderData) => {
   }
 };
 
-/**
- * Obtiene la configuración actual de la comisión (markup).
- * @returns {Promise<object>}
- */
+// --- FUNCIONES DE TRANSACCIONES (Historial) ---
+
+export const getTransactions = async (params) => {
+  try {
+    const response = await apiClient.get('/transactions', { params });
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching transactions:', error.response?.data || error.message);
+    throw error.response?.data || error;
+  }
+};
+
+// --- FUNCIONES DE BENEFICIARIOS (Favoritos) ---
+
+export const getBeneficiaries = async () => {
+  try {
+    const response = await apiClient.get('/beneficiaries');
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching beneficiaries:', error.response?.data || error.message);
+    throw error.response?.data || error;
+  }
+};
+
+export const saveBeneficiary = async (data) => {
+  try {
+    const response = await apiClient.post('/beneficiaries', data);
+    return response.data;
+  } catch (error) {
+    console.error('Error saving beneficiary:', error.response?.data || error.message);
+    throw error.response?.data || error;
+  }
+};
+
+// --- FUNCIONES DE ADMINISTRACIÓN ---
+
 export const getMarkup = async () => {
   try {
     const response = await apiClient.get('/admin/markup');
@@ -180,11 +152,6 @@ export const getMarkup = async () => {
   }
 };
 
-/**
- * Actualiza la configuración de la comisión (markup).
- * @param {number} newMarkup - El nuevo porcentaje de comisión.
- * @returns {Promise<object>}
- */
 export const updateMarkup = async (newMarkup) => {
   try {
     const response = await apiClient.put('/admin/markup', { markup: newMarkup });
@@ -195,10 +162,6 @@ export const updateMarkup = async (newMarkup) => {
   }
 };
 
-/**
- * Obtiene la lista de comisiones específicas por par de divisas.
- * @returns {Promise<object>}
- */
 export const getMarkupPairs = async () => {
   try {
     const response = await apiClient.get('/admin/markup/pairs');
@@ -209,11 +172,6 @@ export const getMarkupPairs = async () => {
   }
 };
 
-/**
- * Añade o actualiza una comisión específica por par de divisas.
- * @param {object} pairData - { originCurrency, destCountry, percent }
- * @returns {Promise<object>}
- */
 export const updateMarkupPair = async (pairData) => {
   try {
     const response = await apiClient.put('/admin/markup/pairs', pairData);
@@ -224,13 +182,22 @@ export const updateMarkupPair = async (pairData) => {
   }
 };
 
-// Guarda Beneficiario Favorito.
-export const saveBeneficiary = async (data) => {
+export const getUsers = async () => {
   try {
-    const response = await apiClient.post('/beneficiaries', data);
+    const response = await apiClient.get('/admin/users');
     return response.data;
   } catch (error) {
-    // ...
+    console.error('Error fetching users:', error.response?.data || error.message);
+    throw error.response?.data || error;
+  }
+};
+
+export const updateUserRole = async (userId, role) => {
+  try {
+    const response = await apiClient.put(`/admin/users/${userId}/role`, { role });
+    return response.data;
+  } catch (error) {
+    console.error('Error updating user role:', error.response?.data || error.message);
     throw error.response?.data || error;
   }
 };
