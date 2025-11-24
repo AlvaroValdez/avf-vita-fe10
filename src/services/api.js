@@ -201,3 +201,13 @@ export const updateUserRole = async (userId, role) => {
     throw error.response?.data || error;
   }
 };
+
+export const updateUserProfile = async (profileData) => {
+  try {
+    const response = await apiClient.put('/auth/profile', profileData);
+    return response.data;
+  } catch (error) {
+    console.error('Error updating profile:', error.response?.data || error.message);
+    throw error.response?.data || error;
+  }
+};
