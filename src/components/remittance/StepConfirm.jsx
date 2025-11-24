@@ -95,40 +95,37 @@ const StepConfirm = ({ formData, fields, onBack }) => {
       });
 
       if (withdrawalResult.ok) {
+        // Paso 2: Crear la Orden de Pago (Pay-in)
         const paymentOrderResult = await createPaymentOrder({
           amount: currentQuote.amountIn,
           country: 'CL',
           orderId: withdrawalResult.data.order,
         });
 
-        // --- CORRECCIÓN Y DEBUGGING ---
         console.log('📦 Respuesta completa de Orden de Pago:', paymentOrderResult);
 
         if (paymentOrderResult.ok) {
-          // Extraemos los datos crudos que vienen del backend
-          const responseData = paymentOrderResult.data;
+          const resData = paymentOrderResult.data;
 
-          // Buscamos la URL en las posibles ubicaciones según la estructura de Vita
-          // 1. Directamente en la data (data.payment_url)
-          // 2. Dentro de un objeto data (data.data.payment_url)
-          // 3. Dentro de attributes (data.data.attributes.payment_url) <-- Muy probable
-          const paymentUrl = responseData.payment_url || 
-                             responseData.data?.payment_url || 
-                             responseData.data?.attributes?.payment_url;
+          // --- CORRECCIÓN: Añadimos la ruta exacta 'data.attributes.url' ---
+          const paymentUrl = 
+            resData.data?.attributes?.url ||            // <--- ESTA ES LA CORRECTA SEGÚN TU LOG
+            resData.data?.payment_url ||                
+            resData.payment_url ||
+            resData.url;
 
           if (paymentUrl) {
             console.log('🚀 Redirigiendo a:', paymentUrl);
             window.location.href = paymentUrl;
           } else {
-            console.error('❌ No se encontró la URL de pago en la respuesta:', responseData);
-            throw new Error('La respuesta de Vita Wallet no contiene la URL de pago.');
+            console.error('❌ No se encontró la URL en la respuesta:', resData);
+            throw new Error('La respuesta de Vita Wallet no contiene la URL de pago esperada.');
           }
         } else {
           throw new Error('No se pudo generar el link de pago.');
         }
-      } else {
-        throw new Error(withdrawalResult.details || withdrawalResult.error || 'No se pudo crear la transacción inicial.');
-      }
+      } 
+// ...
     } catch (err) {
        const errorDetails = err.details ? (typeof err.details === 'object' ? JSON.stringify(err.details) : err.details) : (err.message || err.error || 'Error desconocido');
        setError(`Error al procesar el envío: ${errorDetails}`);
