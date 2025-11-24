@@ -52,6 +52,21 @@ export const verifyEmailToken = async (token) => {
   }
 };
 
+/**
+ * Actualiza el perfil del usuario (KYC).
+ * @param {object} profileData - Datos del perfil (nombre, documento, dirección, etc.)
+ * @returns {Promise<object>} Respuesta con el usuario actualizado.
+ */
+export const updateUserProfile = async (profileData) => {
+  try {
+    const response = await apiClient.put('/auth/profile', profileData);
+    return response.data;
+  } catch (error) {
+    console.error('Error updating profile:', error.response?.data || error.message);
+    throw error.response?.data || error;
+  }
+};
+
 // --- FUNCIONES DE REMESAS (Cotización y Reglas) ---
 
 export const getPrices = async () => {
@@ -198,16 +213,6 @@ export const updateUserRole = async (userId, role) => {
     return response.data;
   } catch (error) {
     console.error('Error updating user role:', error.response?.data || error.message);
-    throw error.response?.data || error;
-  }
-};
-
-export const updateUserProfile = async (profileData) => {
-  try {
-    const response = await apiClient.put('/auth/profile', profileData);
-    return response.data;
-  } catch (error) {
-    console.error('Error updating profile:', error.response?.data || error.message);
     throw error.response?.data || error;
   }
 };

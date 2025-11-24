@@ -50,15 +50,20 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  // --- NUEVA FUNCIÓN PARA ACTUALIZAR SESIÓN SIN RELOGIN ---
+  const updateUserSession = (userData) => {
+    setUser(userData);
+    localStorage.setItem('user', JSON.stringify(userData));
+  };
+
   const logout = () => {
-    // --- CORRECCIÓN: Limpia el usuario y el token ---
     localStorage.removeItem('token');
     localStorage.removeItem('user');
     setToken(null);
     setUser(null);
   };
 
-  const value = { token, user, login, logout };
+  const value = { token, user, login, logout, updateUserSession };
 
   return (
     <AuthContext.Provider value={value}>

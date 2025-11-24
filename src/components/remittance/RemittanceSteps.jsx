@@ -1,17 +1,24 @@
 import React, { useState } from 'react';
-import { Spinner } from 'react-bootstrap';
+import { Spinner, Modal } from 'react-bootstrap'; // 1. Importamos Modal
 import CardForm from './CardForm';
 import StepBeneficiary from './StepBeneficiary';
 import StepConfirm from './StepConfirm';
+import KycForm from '../auth/KycForm'; // 2. Importamos el formulario
 import { getWithdrawalRules } from '../../services/api';
+import { useAuth } from '../../context/AuthContext'; // 3. Importamos el contexto
 
 const RemittanceSteps = () => {
+  const { user } = useAuth(); // Accedemos al usuario
   const [step, setStep] = useState(1);
   const [formData, setFormData] = useState({});
   const [beneficiaryFields, setBeneficiaryFields] = useState([]);
   const [isLoadingRules, setIsLoadingRules] = useState(false);
 
-  const handleQuoteSuccess = async (quotePayload) => {
+  // --- ESTADOS PARA EL BLOQUEO DE KYC ---
+  const [showKycModal, setShowKycModal] = useState(false);
+  const [pendingQuote, setPendingQuote] = useState(null); // Guarda la cotización mientras se hace el KYC
+
+  const processQuoteAndAdvance = async (quotePayload) => {
     setFormData(prev => ({ ...prev, ...quotePayload }));
     setIsLoadingRules(true);
     try {
@@ -36,6 +43,29 @@ const RemittanceSteps = () => {
     }
   };
 
+  const handleQuoteSuccess = (quotePayload) => {
+    // --- VALIDACIÓN DE KYC ---
+    // Si el usuario no ha completado su perfil, mostramos el modal
+    if (user && !user.isProfileComplete) {
+      setPendingQuote(quotePayload); // Guardamos los datos para usarlos después
+      setShowKycModal(true);
+      return; // Detenemos el flujo aquí
+    }
+
+    // Si ya tiene KYC, procesamos normalmente
+    processQuoteAndAdvance(quotePayload);
+  };
+
+  // Callback para cuando el KYC se completa exitosamente
+  const handleKycSuccess = () => {
+    setShowKycModal(false);
+    if (pendingQuote) {
+      // Retomamos el flujo automáticamente donde lo dejamos
+      processQuoteAndAdvance(pendingQuote);
+      setPendingQuote(null);
+    }
+  };
+  
   const handleBeneficiaryComplete = (beneficiaryData) => {
     setFormData(prev => ({ ...prev, beneficiary: beneficiaryData }));
     setStep(3);
@@ -78,7 +108,28 @@ const RemittanceSteps = () => {
     }
   };
 
-  return <div>{renderStep()}</div>;
+  return (
+    <div>
+      {renderStep()}
+
+      {/* --- MODAL DE KYC --- */}
+      <Modal 
+        show={showKycModal} 
+        onHide={() => setShowKycModal(false)} 
+        backdrop="static" // Evita cerrar al hacer clic fuera
+        keyboard={false}  // Evita cerrar con ESC
+        centered
+      >
+        <Modal.Header closeButton>
+          <Modal.Title className="h5 text-primary">Falta un paso importante</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+           {/* Reutilizamos el formulario que creamos */}
+           <KycForm onSuccess={handleKycSuccess} />
+        </Modal.Body>
+      </Modal>
+    </div>
+  );
 };
 
 export default RemittanceSteps;
