@@ -1,27 +1,22 @@
 import React, { useState, useEffect } from 'react';
-// --- CORRECCIÓN: Se añade 'Form' a los imports ---
-import { Card, Button, Row, Col, Spinner, Alert, ListGroup, Form } from 'react-bootstrap';
-import { createWithdrawal, createPaymentOrder, getQuote, saveBeneficiary } from '../../services/api';
+import { Card, Button, Row, Col, Spinner, Alert, ListGroup } from 'react-bootstrap';
+import { createWithdrawal, createPaymentOrder, getQuote } from '../../services/api';
 import { formatNumberForDisplay, formatRate } from '../../utils/formatting';
 
 const QUOTE_VALIDITY_DURATION = 2 * 60 * 1000; // 2 minutos
 
 const StepConfirm = ({ formData, fields, onBack }) => {
-  const { quoteData, beneficiary, destCountry, quoteTimestamp } = formData;
-  
-  // Estado para la cotización (refrescada)
   const [currentQuote, setCurrentQuote] = useState(formData.quoteData);
   const [loadingQuote, setLoadingQuote] = useState(true);
 
+  const { beneficiary, destCountry } = formData;
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [transactionResult, setTransactionResult] = useState(null);
   
   const [remainingTime, setRemainingTime] = useState(null);
   const [isExpired, setIsExpired] = useState(false);
-  const [saveAsFavorite, setSaveAsFavorite] = useState(false); // Estado para el checkbox
 
-  // Efecto para refrescar la cotización
   useEffect(() => {
     const refreshQuote = async () => {
       try {
@@ -43,13 +38,10 @@ const StepConfirm = ({ formData, fields, onBack }) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Efecto para el temporizador
   useEffect(() => {
     if (!currentQuote || loadingQuote) return;
 
     const quoteTimestamp = Date.now();
-    setRemainingTime(QUOTE_VALIDITY_DURATION);
-
     const interval = setInterval(() => {
       const elapsedTime = Date.now() - quoteTimestamp;
       const timeLeft = QUOTE_VALIDITY_DURATION - elapsedTime;
@@ -64,6 +56,72 @@ const StepConfirm = ({ formData, fields, onBack }) => {
 
     return () => clearInterval(interval);
   }, [currentQuote, loadingQuote]);
+
+  const handleConfirm = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const withdrawalResult = await createWithdrawal({
+        country: destCountry,
+        currency: currentQuote.origin,
+        amount: currentQuote.amountIn,
+        ...beneficiary,
+      });
+
+      if (withdrawalResult.ok) {
+        const paymentOrderResult = await createPaymentOrder({
+          amount: currentQuote.amountIn,
+          country: 'CL',
+          orderId: withdrawalResult.data.order,
+        });
+
+        // Lógica para encontrar la URL de pago
+        const resData = paymentOrderResult.data || paymentOrderResult;
+        const paymentUrl = 
+            resData.payment_url || 
+            resData.data?.payment_url || 
+            resData.data?.attributes?.url || 
+            resData.url;
+
+        if (paymentUrl) {
+          window.location.href = paymentUrl;
+        } else {
+          throw new Error('No se pudo generar el link de pago.');
+        }
+      } else {
+         throw new Error(withdrawalResult.details || withdrawalResult.error || 'No se pudo crear la transacción inicial.');
+      }
+    } catch (err) {
+       // --- MANEJO DE ERRORES MEJORADO Y HUMANIZADO ---
+       console.error("Error original:", err);
+       
+       let userMessage = "Ocurrió un error al procesar el envío.";
+
+       // 1. Intentar extraer mensaje de 'details' si es un objeto (ej: error de Vita)
+       if (err.details && typeof err.details === 'object' && err.details.message) {
+         userMessage = err.details.message;
+       } 
+       // 2. Si 'details' es un string o array
+       else if (err.details) {
+         userMessage = Array.isArray(err.details) ? err.details.join(', ') : String(err.details);
+       }
+       // 3. Mensajes directos
+       else if (err.message) {
+         userMessage = err.message;
+       } else if (err.error) {
+         userMessage = err.error;
+       }
+
+       // 4. Traducción específica para precios caducados
+       if (userMessage.toLowerCase().includes('caducaron') || userMessage.toLowerCase().includes('expired')) {
+           userMessage = "La cotización ha vencido. Por favor, vuelve atrás para actualizar la tasa.";
+           setIsExpired(true); // Activamos la vista de expirado para que el usuario tenga que volver
+       }
+
+       setError(userMessage);
+       setLoading(false);
+    }
+  };
 
   const formatTime = (ms) => {
     if (ms === null || ms <= 0) return '00:00';
@@ -83,66 +141,18 @@ const StepConfirm = ({ formData, fields, onBack }) => {
     return value;
   };
 
-  const handleConfirm = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const withdrawalResult = await createWithdrawal({
-        country: destCountry,
-        currency: currentQuote.origin,
-        amount: currentQuote.amountIn,
-        ...beneficiary,
-      });
-
-      if (withdrawalResult.ok) {
-        // Paso 2: Crear la Orden de Pago (Pay-in)
-        const paymentOrderResult = await createPaymentOrder({
-          amount: currentQuote.amountIn,
-          country: 'CL',
-          orderId: withdrawalResult.data.order,
-        });
-
-        console.log('📦 Respuesta completa de Orden de Pago:', paymentOrderResult);
-
-        if (paymentOrderResult.ok) {
-          const resData = paymentOrderResult.data;
-
-          // --- CORRECCIÓN: Añadimos la ruta exacta 'data.attributes.url' ---
-          const paymentUrl = 
-            resData.data?.attributes?.url ||            // <--- ESTA ES LA CORRECTA SEGÚN TU LOG
-            resData.data?.payment_url ||                
-            resData.payment_url ||
-            resData.url;
-
-          if (paymentUrl) {
-            console.log('🚀 Redirigiendo a:', paymentUrl);
-            window.location.href = paymentUrl;
-          } else {
-            console.error('❌ No se encontró la URL en la respuesta:', resData);
-            throw new Error('La respuesta de Vita Wallet no contiene la URL de pago esperada.');
-          }
-        } else {
-          throw new Error('No se pudo generar el link de pago.');
-        }
-      } 
-// ...
-    } catch (err) {
-       const errorDetails = err.details ? (typeof err.details === 'object' ? JSON.stringify(err.details) : err.details) : (err.message || err.error || 'Error desconocido');
-       setError(`Error al procesar el envío: ${errorDetails}`);
-       setLoading(false);
-    }
-  };
-
+  // Vista de Expiración (se activa por tiempo o por error de backend)
   if (isExpired) {
     return (
-      <Card className="p-4 text-center">
+      <Card className="p-4 text-center shadow-sm border-0">
         <Card.Body>
-          <Alert variant="danger">
-            <Alert.Heading>¡Tu cotización ha expirado!</Alert.Heading>
-            <p>Por favor, vuelve para obtener una nueva tasa de cambio.</p>
-          </Alert>
-          <Button variant="outline-primary" onClick={onBack}>
-            Volver
+          <div className="text-warning mb-3" style={{ fontSize: '3rem' }}>⚠️</div>
+          <h4 className="text-danger mb-3">La cotización ha expirado</h4>
+          <p className="text-muted mb-4">
+            Para asegurar la mejor tasa de cambio y evitar errores, por favor actualiza la cotización.
+          </p>
+          <Button variant="primary" onClick={onBack} style={{ backgroundColor: 'var(--avf-secondary)', borderColor: 'var(--avf-secondary)' }}>
+            Volver y Actualizar
           </Button>
         </Card.Body>
       </Card>
@@ -152,60 +162,50 @@ const StepConfirm = ({ formData, fields, onBack }) => {
   const fullName = `${beneficiary.beneficiary_first_name || ''} ${beneficiary.beneficiary_last_name || ''}`.trim();
 
   return (
-    <Card className="p-4">
+    <Card className="p-4 shadow-sm border-0">
       <Card.Body>
         <h4 className="mb-4">Resumen de la transacción</h4>
         
         {loadingQuote ? (
-          <div className="text-center p-5"><Spinner animation="border" /> <p>Actualizando cotización...</p></div>
+          <div className="text-center p-5">
+            <Spinner animation="border" variant="primary" /> 
+            <p className="mt-3 text-muted">Actualizando la mejor tasa para ti...</p>
+          </div>
         ) : (
-          <>
-            <Row>
-                <Col md={6} className="mb-4 mb-md-0">
-                <h5>Detalles:</h5>
-                <div className="p-3 rounded" style={{ backgroundColor: '#f8f9fa' }}>
-                    <div className="d-flex justify-content-between align-items-center mb-2">
-                    <span>Total a enviar:</span>
-                    <span className="fw-bold fs-5">{`$ ${formatNumberForDisplay(currentQuote.amountIn)} ${currentQuote.origin}`}</span>
-                    </div>
-                    <small className="text-muted d-block text-center mb-2">
-                    Tasa de cambio: 1 {currentQuote.destCurrency} = ${formatRate(1 / currentQuote.rateWithMarkup)} {currentQuote.origin}
-                    </small>
-                    <div className="d-flex justify-content-between align-items-center fw-bold">
-                    <span>Total a recibir:</span>
-                    <span className="fs-5">{`$ ${formatNumberForDisplay(currentQuote.amountOut)} ${currentQuote.destCurrency}`}</span>
-                    </div>
+          <Row>
+            <Col md={6} className="mb-4 mb-md-0">
+              <h5>Detalles:</h5>
+              <div className="p-3 rounded" style={{ backgroundColor: '#f8f9fa' }}>
+                <div className="d-flex justify-content-between align-items-center mb-2">
+                  <span>Total a enviar:</span>
+                  <span className="fw-bold fs-5">{`$ ${formatNumberForDisplay(currentQuote.amountIn)} ${currentQuote.origin}`}</span>
                 </div>
-                </Col>
-                <Col md={6}>
-                <h5>Beneficiario:</h5>
-                <div className="mb-2"><small className="text-muted d-block">Nombre</small><span className="fw-medium">{fullName}</span></div>
-                {Object.entries(beneficiary).map(([key, value]) => {
-                    if (!value || key.includes('name')) return null;
-                    const fieldDetails = getFieldDetails(key);
-                    const label = fieldDetails ? fieldDetails.name : key;
-                    const displayValue = getDisplayValue(fieldDetails, value);
-                    return (
-                    <div key={key} className="mb-2">
-                        <small className="text-muted d-block">{label}:</small>
-                        <span className="fw-medium">{displayValue}</span>
-                    </div>
-                    );
-                })}
-                </Col>
-            </Row>
-
-            {/* --- CHECKBOX DE FAVORITOS --- */}
-            <Form.Group className="mb-3 mt-4 pt-3 border-top">
-                <Form.Check
-                    type="checkbox"
-                    id="save-favorite-check"
-                    label="Guardar este beneficiario en mis favoritos para futuros envíos"
-                    checked={saveAsFavorite}
-                    onChange={(e) => setSaveAsFavorite(e.target.checked)}
-                />
-            </Form.Group>
-          </>
+                <small className="text-muted d-block text-center mb-2">
+                  Tasa de cambio: 1 {currentQuote.destCurrency} = ${formatRate(1 / currentQuote.rateWithMarkup)} {currentQuote.origin}
+                </small>
+                <div className="d-flex justify-content-between align-items-center fw-bold">
+                  <span>Total a recibir:</span>
+                  <span className="fs-5">{`$ ${formatNumberForDisplay(currentQuote.amountOut)} ${currentQuote.destCurrency}`}</span>
+                </div>
+              </div>
+            </Col>
+            <Col md={6}>
+              <h5>Beneficiario:</h5>
+              <div className="mb-2"><small className="text-muted d-block">Nombre</small><span className="fw-medium">{fullName}</span></div>
+              {Object.entries(beneficiary).map(([key, value]) => {
+                if (!value || key.includes('name')) return null;
+                const fieldDetails = getFieldDetails(key);
+                const label = fieldDetails ? fieldDetails.name : key;
+                const displayValue = getDisplayValue(fieldDetails, value);
+                return (
+                  <div key={key} className="mb-2">
+                    <small className="text-muted d-block">{label}:</small>
+                    <span className="fw-medium">{displayValue}</span>
+                  </div>
+                );
+              })}
+            </Col>
+          </Row>
         )}
         
         {error && <Alert variant="danger" className="mt-4">{error}</Alert>}
