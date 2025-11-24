@@ -95,34 +95,39 @@ const StepConfirm = ({ formData, fields, onBack }) => {
       });
 
       if (withdrawalResult.ok) {
-        // --- GUARDAR FAVORITO ---
-        if (saveAsFavorite) {
-          const nickname = `${beneficiary.beneficiary_first_name || ''} ${beneficiary.beneficiary_last_name || ''}`.trim() || 'Nuevo Contacto';
-          try {
-             await saveBeneficiary({
-              nickname: `${nickname} - ${destCountry}`,
-              country: destCountry,
-              beneficiaryData: beneficiary,
-            });
-            console.log('Beneficiario guardado correctamente');
-          } catch (favError) {
-             console.warn('Error al guardar favorito (no bloqueante):', favError);
-          }
-        }
-
         const paymentOrderResult = await createPaymentOrder({
           amount: currentQuote.amountIn,
           country: 'CL',
           orderId: withdrawalResult.data.order,
         });
 
+        // --- CORRECCIÓN Y DEBUGGING ---
+        console.log('📦 Respuesta completa de Orden de Pago:', paymentOrderResult);
+
         if (paymentOrderResult.ok) {
-          window.location.href = paymentOrderResult.data.data.payment_url;
+          // Extraemos los datos crudos que vienen del backend
+          const responseData = paymentOrderResult.data;
+
+          // Buscamos la URL en las posibles ubicaciones según la estructura de Vita
+          // 1. Directamente en la data (data.payment_url)
+          // 2. Dentro de un objeto data (data.data.payment_url)
+          // 3. Dentro de attributes (data.data.attributes.payment_url) <-- Muy probable
+          const paymentUrl = responseData.payment_url || 
+                             responseData.data?.payment_url || 
+                             responseData.data?.attributes?.payment_url;
+
+          if (paymentUrl) {
+            console.log('🚀 Redirigiendo a:', paymentUrl);
+            window.location.href = paymentUrl;
+          } else {
+            console.error('❌ No se encontró la URL de pago en la respuesta:', responseData);
+            throw new Error('La respuesta de Vita Wallet no contiene la URL de pago.');
+          }
         } else {
           throw new Error('No se pudo generar el link de pago.');
         }
       } else {
-         throw new Error(withdrawalResult.details || withdrawalResult.error || 'No se pudo crear la transacción inicial.');
+        throw new Error(withdrawalResult.details || withdrawalResult.error || 'No se pudo crear la transacción inicial.');
       }
     } catch (err) {
        const errorDetails = err.details ? (typeof err.details === 'object' ? JSON.stringify(err.details) : err.details) : (err.message || err.error || 'Error desconocido');
