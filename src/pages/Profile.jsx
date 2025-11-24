@@ -1,0 +1,74 @@
+import React from 'react';
+import { Container, Row, Col, Card, ListGroup, Badge } from 'react-bootstrap';
+import { useAuth } from '../context/AuthContext';
+import KycLevel2Form from '../components/auth/KycLevel2Form';
+
+const Profile = () => {
+  const { user } = useAuth();
+
+  const getKycStatusBadge = (status) => {
+    switch (status) {
+      case 'approved': return <Badge bg="success">Verificado</Badge>;
+      case 'pending': return <Badge bg="warning" text="dark">En Revisión</Badge>;
+      case 'rejected': return <Badge bg="danger">Rechazado</Badge>;
+      default: return <Badge bg="secondary">No Verificado</Badge>;
+    }
+  };
+
+  return (
+    <Container className="my-5">
+      <h2 className="mb-4" style={{ color: 'var(--avf-primary)' }}>Mi Perfil</h2>
+      <Row>
+        {/* --- Columna Izquierda: Datos Personales --- */}
+        <Col lg={4} className="mb-4">
+          <Card className="shadow-sm border-0">
+            <Card.Body>
+              <div className="text-center mb-3">
+                {/* Avatar Placeholder */}
+                <div style={{ width: '80px', height: '80px', borderRadius: '50%', backgroundColor: '#e9ecef', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '32px', margin: '0 auto', color: '#6c757d' }}>
+                  {user?.name?.charAt(0).toUpperCase()}
+                </div>
+                <h5 className="mt-3">{user?.name}</h5>
+                <p className="text-muted small">{user?.email}</p>
+                
+                <div className="mb-2">
+                    Nivel KYC: <strong className="fs-5">{user?.kyc?.level || 1}</strong>
+                </div>
+                <div>{getKycStatusBadge(user?.kyc?.status)}</div>
+              </div>
+              
+              <hr />
+              
+              <ListGroup variant="flush" className="small">
+                <ListGroup.Item className="px-0">
+                  <strong>Teléfono:</strong> <br/> {user?.phoneNumber || 'No registrado'}
+                </ListGroup.Item>
+                <ListGroup.Item className="px-0">
+                  <strong>Documento ({user?.documentType}):</strong> <br/> {user?.documentNumber || 'No registrado'}
+                </ListGroup.Item>
+                <ListGroup.Item className="px-0">
+                  <strong>Dirección:</strong> <br/> {user?.address || 'No registrado'}
+                </ListGroup.Item>
+              </ListGroup>
+            </Card.Body>
+          </Card>
+        </Col>
+
+        {/* --- Columna Derecha: Verificación de Identidad --- */}
+        <Col lg={8}>
+          <Card className="shadow-sm border-0">
+             <Card.Header className="bg-white border-bottom-0 pt-4 pb-0">
+                <h4 style={{ color: 'var(--avf-primary)' }}>Aumentar Límites (Nivel 2)</h4>
+             </Card.Header>
+             <Card.Body>
+                {/* Aquí renderizamos el componente que creamos anteriormente */}
+                <KycLevel2Form />
+             </Card.Body>
+          </Card>
+        </Col>
+      </Row>
+    </Container>
+  );
+};
+
+export default Profile;

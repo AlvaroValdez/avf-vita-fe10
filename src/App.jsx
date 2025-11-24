@@ -46,6 +46,7 @@ function AppContent() {
           {/* Rutas Protegidas (Usuario) */}
           <Route element={<ProtectedRouteWrapper />}>
             <Route path="/transactions" element={<Transactions />} />
+            <Route path="/profile" element={<Profile />} />
           </Route>
 
           {/* Rutas Protegidas (Admin) */}

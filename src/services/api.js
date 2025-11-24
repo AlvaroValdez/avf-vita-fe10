@@ -67,6 +67,23 @@ export const updateUserProfile = async (profileData) => {
   }
 };
 
+/**
+ * Sube los documentos para el Nivel 2 de KYC.
+ * @param {FormData} formData - Objeto FormData con las imágenes.
+ * @returns {Promise<object>} Respuesta del backend.
+ */
+export const uploadKycDocuments = async (formData) => {
+  try {
+    // Nota: No necesitamos establecer 'Content-Type' manualmente,
+    // Axios lo detecta y lo configura correctamente para multipart/form-data
+    const response = await apiClient.post('/auth/kyc-documents', formData);
+    return response.data;
+  } catch (error) {
+    console.error('Error uploading documents:', error.response?.data || error.message);
+    throw error.response?.data || error;
+  }
+};
+
 // --- FUNCIONES DE REMESAS (Cotización y Reglas) ---
 
 export const getPrices = async () => {

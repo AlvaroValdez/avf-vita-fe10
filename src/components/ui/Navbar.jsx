@@ -28,6 +28,7 @@ const AppNavbar = () => {
             {token ? (
               <> {/* Usuario logueado */}
                 <Nav.Link as={Link} to="/transactions" className="me-3">Mis Transacciones</Nav.Link>
+                <Nav.Link as={Link} to="/profile" className="me-3 fw-bold" style={{ color: 'var(--avf-secondary)' }}>Mi Perfil</Nav.Link>
                 {/* Mostramos link a Admin si es admin */}
                 {user?.role === 'admin' && ( // Verifica el rol usando 'user'
                    <>
