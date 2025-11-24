@@ -11,6 +11,7 @@ import PaymentSuccess from './pages/PaymentSuccess.jsx';
 import AdminMarkup from './pages/AdminMarkup.jsx';
 import AdminUsers from './pages/AdminUsers.jsx'; 
 import VerifyEmail from './pages/VerifyEmail.jsx'; 
+import Profile from './pages/Profile.jsx';
 
 // Componentes
 import AppNavbar from './components/ui/Navbar.jsx';
