@@ -74,9 +74,12 @@ export const updateUserProfile = async (profileData) => {
  */
 export const uploadKycDocuments = async (formData) => {
   try {
-    // Nota: No necesitamos establecer 'Content-Type' manualmente,
-    // Axios lo detecta y lo configura correctamente para multipart/form-data
-    const response = await apiClient.post('/auth/kyc-documents', formData);
+    const response = await apiClient.post('/auth/kyc-documents', formData, {
+      headers: {
+        // Importante: Sobrescribimos el header para permitir la subida de archivos
+        'Content-Type': 'multipart/form-data',
+      },
+    });
     return response.data;
   } catch (error) {
     console.error('Error uploading documents:', error.response?.data || error.message);
