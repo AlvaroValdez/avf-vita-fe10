@@ -262,3 +262,34 @@ export const reviewKycUser = async (userId, action, reason = '') => {
     throw error.response?.data || error;
   }
 };
+
+// --- RECUPERACIÓN DE CONTRASEÑA ---
+
+/**
+ * Solicita el correo de recuperación de contraseña.
+ * @param {string} email - Correo del usuario.
+ */
+export const requestPasswordReset = async (email) => {
+  try {
+    const response = await apiClient.post('/auth/forgotpassword', { email });
+    return response.data;
+  } catch (error) {
+    console.error('Error requesting password reset:', error.response?.data || error.message);
+    throw error.response?.data || error;
+  }
+};
+
+/**
+ * Restablece la contraseña usando el token recibido por correo.
+ * @param {string} token - Token de la URL.
+ * @param {string} password - Nueva contraseña.
+ */
+export const resetPassword = async (token, password) => {
+  try {
+    const response = await apiClient.put(`/auth/resetpassword/${token}`, { password });
+    return response.data;
+  } catch (error) {
+    console.error('Error resetting password:', error.response?.data || error.message);
+    throw error.response?.data || error;
+  }
+};
