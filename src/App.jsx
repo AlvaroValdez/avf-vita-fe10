@@ -12,6 +12,7 @@ import AdminMarkup from './pages/AdminMarkup.jsx';
 import AdminUsers from './pages/AdminUsers.jsx'; 
 import VerifyEmail from './pages/VerifyEmail.jsx'; 
 import Profile from './pages/Profile.jsx';
+import AdminKyc from './pages/AdminKyc.jsx'; 
 
 // Componentes
 import AppNavbar from './components/ui/Navbar.jsx';
@@ -54,6 +55,7 @@ function AppContent() {
           <Route element={<AdminRouteWrapper />}>
             <Route path="/admin/markup" element={<AdminMarkup />} />
             <Route path="/admin/users" element={<AdminUsers />} />
+            <Route path="/admin/kyc" element={<AdminKyc />} />
           </Route>
         </Routes>
       </main>

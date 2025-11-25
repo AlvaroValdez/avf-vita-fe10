@@ -239,3 +239,26 @@ export const updateUserRole = async (userId, role) => {
     throw error.response?.data || error;
   }
 };
+
+// --- FUNCIONES DE ADMIN KYC (CUMPLIMIENTO) ---
+
+export const getPendingKycUsers = async () => {
+  try {
+    const response = await apiClient.get('/admin/kyc/pending');
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching pending KYC:', error.response?.data || error.message);
+    throw error.response?.data || error;
+  }
+};
+
+export const reviewKycUser = async (userId, action, reason = '') => {
+  try {
+    // action debe ser 'approve' o 'reject'
+    const response = await apiClient.put(`/admin/kyc/${userId}/review`, { action, reason });
+    return response.data;
+  } catch (error) {
+    console.error('Error reviewing KYC:', error.response?.data || error.message);
+    throw error.response?.data || error;
+  }
+};
