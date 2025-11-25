@@ -74,21 +74,15 @@ export const updateUserProfile = async (profileData) => {
  */
 export const uploadKycDocuments = async (formData) => {
   try {
-    const response = await apiClient.post('/auth/kyc-documents', formData, {
-      headers: {
-        // Importante: Sobrescribimos el header para permitir la subida de archivos
-        'Content-Type': 'multipart/form-data',
-      },
-    });
+    // CORRECCIÓN: NO envíes el header 'Content-Type'. Borra esa línea.
+    // Axios lo detectará automáticamente al ver que 'data' es un objeto FormData
+    // y añadirá el 'boundary' necesario.
+    const response = await apiClient.post('/auth/kyc-documents', formData);
     return response.data;
   } catch (error) {
-      // --- MEJORA DE LOG ---
-      // Imprime el mensaje de error y el objeto completo formateado
-      console.error('[auth/kyc-documents] Error:', error.message); 
-      console.error(JSON.stringify(error, null, 2)); 
-      
-      res.status(500).json({ ok: false, error: 'Error al procesar los documentos.' });
-    }
+    console.error('Error uploading documents:', error.response?.data || error.message);
+    throw error.response?.data || error;
+  }
 };
 
 // --- FUNCIONES DE REMESAS (Cotización y Reglas) ---
