@@ -74,10 +74,15 @@ export const updateUserProfile = async (profileData) => {
  */
 export const uploadKycDocuments = async (formData) => {
   try {
-    // CORRECCIÓN: NO envíes el header 'Content-Type'. Borra esa línea.
-    // Axios lo detectará automáticamente al ver que 'data' es un objeto FormData
-    // y añadirá el 'boundary' necesario.
-    const response = await apiClient.post('/auth/kyc-documents', formData);
+    const response = await apiClient.post('/auth/kyc-documents', formData, {
+      headers: {
+        // CORRECCIÓN CLAVE:
+        // Establecemos Content-Type en undefined para sobrescribir el default 'application/json'.
+        // Esto obliga al navegador a detectar que es un FormData y configurar 
+        // correctamente 'multipart/form-data; boundary=...'
+        'Content-Type': undefined, 
+      },
+    });
     return response.data;
   } catch (error) {
     console.error('Error uploading documents:', error.response?.data || error.message);
