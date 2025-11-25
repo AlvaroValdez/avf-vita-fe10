@@ -1,11 +1,10 @@
 import React from 'react';
 import { Navbar, Container, Nav, Button } from 'react-bootstrap';
 import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '../../context/AuthContext'; // Importa el hook
+import { useAuth } from '../../context/AuthContext';
 
 const AppNavbar = () => {
-  // Asegúrate de extraer 'user' y 'token' aquí
-  const { token, user, logout } = useAuth(); 
+  const { token, user, logout } = useAuth();
   const navigate = useNavigate();
 
   const handleLogout = () => {
@@ -21,21 +20,29 @@ const AppNavbar = () => {
         </Navbar.Brand>
         <Navbar.Toggle aria-controls="basic-navbar-nav" />
         <Navbar.Collapse id="basic-navbar-nav">
-          <Nav className="me-auto"></Nav> {/* Placeholder para links izquierdos */}
+          <Nav className="me-auto"></Nav>
           <Nav className="ms-auto align-items-center">
             <Nav.Link as={Link} to="/" className="me-3">Enviar Dinero</Nav.Link>
             
             {token ? (
               <> {/* Usuario logueado */}
                 <Nav.Link as={Link} to="/transactions" className="me-3">Mis Transacciones</Nav.Link>
-                <Nav.Link as={Link} to="/profile" className="me-3 fw-bold" style={{ color: 'var(--avf-secondary)' }}>Mi Perfil</Nav.Link>
-                {/* Mostramos link a Admin si es admin */}
-                {user?.role === 'admin' && ( // Verifica el rol usando 'user'
+                <Nav.Link as={Link} to="/profile" className="me-3 fw-bold" style={{ color: 'var(--avf-secondary)' }}>
+                    Mi Perfil
+                </Nav.Link>
+
+                {/* Links visibles solo para Admin */}
+                {user?.role === 'admin' && (
                    <>
                      <Nav.Link as={Link} to="/admin/markup" className="me-3">Admin Markup</Nav.Link> 
-                     <Nav.Link as={Link} to="/admin/users" className="me-3">Admin Usuarios</Nav.Link> 
+                     <Nav.Link as={Link} to="/admin/users" className="me-3">Admin Usuarios</Nav.Link>
+                     {/* --- NUEVO ENLACE --- */}
+                     <Nav.Link as={Link} to="/admin/kyc" className="me-3 fw-bold text-warning">
+                        Revisar KYC
+                     </Nav.Link> 
                    </>
                 )}
+
                 <Button variant="outline-secondary" size="sm" onClick={handleLogout}>
                   Cerrar Sesión
                 </Button>
