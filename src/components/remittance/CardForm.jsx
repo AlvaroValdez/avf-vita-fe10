@@ -1,10 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Card, Form, Row, Col, InputGroup, Button, Spinner, ListGroup, Alert } from 'react-bootstrap';
+import { Card, Form, Row, Col, InputGroup, Button, Spinner, Alert } from 'react-bootstrap';
 import { useAppContext } from '../../context/AppContext';
 import { getQuote } from '../../services/api';
 import { formatNumberForDisplay, parseFormattedNumber, formatRate } from '../../utils/formatting';
-
-const QUOTE_VALIDITY_DURATION = 1.5 * 60 * 1000;
 
 const CardForm = ({ onQuoteSuccess }) => {
   const { countries, loading: loadingCountries } = useAppContext();
@@ -58,7 +56,6 @@ const CardForm = ({ onQuoteSuccess }) => {
       alert("Por favor, obtenga una cotización válida antes de continuar.");
       return;
     }
-    // Pasa la cotización Y la marca de tiempo actual al padre
     onQuoteSuccess({ quoteData: quote, destCountry, quoteTimestamp: Date.now() });
   };
 
@@ -114,23 +111,19 @@ const CardForm = ({ onQuoteSuccess }) => {
             </Col>
           </Row>
 
-          {loading && <div className="text-center my-2"><Spinner size="sm" /></div>}
+          {loading && <div className="text-center my-2"><Spinner size="sm" /> Cotizando...</div>}
           
           {quote && (
             <div className="mt-3 p-3 bg-light rounded" style={{ fontSize: '0.9rem' }}>
-              <div className="d-flex justify-content-between mb-1">
-                <span className="text-muted">Tasa de cambio (Vita):</span>
-                <span>1 {quote.destCurrency} = {formatRate(1 / quote.baseRate)} {quote.origin}</span>
+              {/* --- SOLO MOSTRAMOS LA TASA FINAL Y EL TOTAL --- */}
+              <div className="d-flex justify-content-between align-items-center mb-2">
+                <span className="text-muted">Tasa de cambio:</span>
+                {/* Usamos rateWithMarkup que ya incluye tu ganancia */}
+                <span className="fw-bold">1 {quote.destCurrency} = {formatRate(1 / quote.rateWithMarkup)} {quote.origin}</span>
               </div>
-              <div className="d-flex justify-content-between mb-1">
-                <span className="text-muted">Comisión AVF:</span>
-                <span>{quote.markupPercent}%</span>
-              </div>
-              <div className="d-flex justify-content-between fw-bold">
-                <span>Nuestra Tasa (Tasa Final):</span>
-                <span>1 {quote.destCurrency} = {formatRate(1 / quote.rateWithMarkup)} {quote.origin}</span>
-              </div>
+              
               <hr className="my-2" />
+              
               <div className="d-flex justify-content-between fw-bold fs-6" style={{ color: 'var(--avf-primary)' }}>
                 <span>Total a pagar:</span>
                 <span>{formatNumberForDisplay(quote.amountIn)} {quote.origin} *</span>
@@ -140,18 +133,14 @@ const CardForm = ({ onQuoteSuccess }) => {
 
           {error && <Alert variant="danger" className="text-center small py-2 mt-3">{error}</Alert>}
 
-          {/* SIN temporizador visible aquí */}
-
           <div className="d-grid mt-4">
-            {/* Solo el botón Continuar */}
             <Button 
               onClick={handleNextStep} 
               disabled={!quote || loading}
               style={{ backgroundColor: 'var(--avf-secondary)', borderColor: 'var(--avf-secondary)', color: 'white', borderRadius: '10px' }}
               className="py-3 fw-bold fs-6"
             >
-              {/* --- SPINNER AQUÍ --- */}
-                {loading ? (
+              {loading ? (
                   <>
                     <Spinner as="span" animation="border" size="sm" role="status" aria-hidden="true" className="me-2"/>
                     Cotizando...
