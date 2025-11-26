@@ -1,10 +1,13 @@
-import React from 'react';
-import { Container, Row, Col, Card, ListGroup, Badge } from 'react-bootstrap';
+import React, { useState, useRef } from 'react';
+import { Container, Row, Col, Card, ListGroup, Badge, Spinner, Button } from 'react-bootstrap';
 import { useAuth } from '../context/AuthContext';
 import KycLevel2Form from '../components/auth/KycLevel2Form';
+import { uploadAvatar } from '../services/api';
 
 const Profile = () => {
-  const { user } = useAuth();
+  const { user, updateUserSession } = useAuth();
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const fileInputRef = useRef(null);
 
   const getKycStatusBadge = (status) => {
     switch (status) {
@@ -12,6 +15,37 @@ const Profile = () => {
       case 'pending': return <Badge bg="warning" text="dark">En Revisión</Badge>;
       case 'rejected': return <Badge bg="danger">Rechazado</Badge>;
       default: return <Badge bg="secondary">No Verificado</Badge>;
+    }
+  };
+
+  const handleAvatarClick = () => {
+    fileInputRef.current.click(); // Simula clic en el input oculto
+  };
+
+  const handleFileChange = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    if (file.size > 2 * 1024 * 1024) { // Límite 2MB
+      alert("La imagen es muy pesada (máx 2MB).");
+      return;
+    }
+
+    setUploadingAvatar(true);
+    const formData = new FormData();
+    formData.append('avatar', file);
+
+    try {
+      const response = await uploadAvatar(formData);
+      if (response.ok) {
+        // Actualizar la sesión con la nueva URL del avatar
+        updateUserSession({ ...user, avatar: response.avatar });
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Error al subir la imagen.");
+    } finally {
+      setUploadingAvatar(false);
     }
   };
 
@@ -24,10 +58,41 @@ const Profile = () => {
           <Card className="shadow-sm border-0">
             <Card.Body>
               <div className="text-center mb-3">
-                {/* Avatar Placeholder */}
-                <div style={{ width: '80px', height: '80px', borderRadius: '50%', backgroundColor: '#e9ecef', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '32px', margin: '0 auto', color: '#6c757d' }}>
-                  {user?.name?.charAt(0).toUpperCase()}
+                
+                {/* --- AVATAR INTERACTIVO --- */}
+                <div 
+                  onClick={handleAvatarClick}
+                  style={{ 
+                    width: '100px', height: '100px', borderRadius: '50%', 
+                    backgroundColor: '#e9ecef', margin: '0 auto', 
+                    position: 'relative', cursor: 'pointer', overflow: 'hidden',
+                    backgroundImage: user?.avatar ? `url(${user.avatar})` : 'none',
+                    backgroundSize: 'cover', backgroundPosition: 'center',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    border: '3px solid var(--avf-secondary)'
+                  }}
+                >
+                  {/* Input oculto */}
+                  <input 
+                    type="file" 
+                    ref={fileInputRef} 
+                    onChange={handleFileChange} 
+                    style={{ display: 'none' }} 
+                    accept="image/*"
+                  />
+
+                  {uploadingAvatar ? (
+                    <Spinner animation="border" size="sm" />
+                  ) : (
+                    !user?.avatar && <span style={{ fontSize: '32px', color: '#6c757d' }}>{user?.name?.charAt(0).toUpperCase()}</span>
+                  )}
+                  
+                  {/* Overlay al hacer hover (opcional, visual) */}
+                  <div className="avatar-overlay" style={{ position: 'absolute', bottom: 0, width: '100%', background: 'rgba(0,0,0,0.5)', color: 'white', fontSize: '10px' }}>
+                    EDITAR
+                  </div>
                 </div>
+
                 <h5 className="mt-3">{user?.name}</h5>
                 <p className="text-muted small">{user?.email}</p>
                 
@@ -61,7 +126,6 @@ const Profile = () => {
                 <h4 style={{ color: 'var(--avf-primary)' }}>Aumentar Límites (Nivel 2)</h4>
              </Card.Header>
              <Card.Body>
-                {/* Aquí renderizamos el componente que creamos anteriormente */}
                 <KycLevel2Form />
              </Card.Body>
           </Card>

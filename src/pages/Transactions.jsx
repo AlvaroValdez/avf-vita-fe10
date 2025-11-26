@@ -40,7 +40,7 @@ const Transactions = () => {
           setTransactions(response.transactions);
           setTotalPages(Math.ceil(response.total / TRANSACTIONS_PER_PAGE));
         } else {
-           throw new Error(response.error || 'Error al obtener transacciones del backend.');
+          throw new Error(response.error || 'Error al obtener transacciones del backend.');
         }
       } catch (err) {
         setError(err.message || 'No se pudieron cargar las transacciones.');
@@ -117,6 +117,11 @@ const Transactions = () => {
                 <td>{new Intl.NumberFormat('es-CL', { style: 'currency', currency: tx.currency || 'CLP', minimumFractionDigits: 0 }).format(tx.amount || 0)}</td>
                 <td>{getStatusBadge(tx.status)}</td>
                 <td>{tx.vitaResponse?.id || tx.vitaResponse?.transaction?.id || 'N/A'}</td>
+                <td>
+                  <Button size="sm" variant="outline-primary" as={Link} to={`/transactions/${tx._id}`}>
+                    Ver Detalle
+                  </Button>
+                </td>
               </tr>
             ))}
           </tbody>
@@ -127,7 +132,13 @@ const Transactions = () => {
       return (
         <ListGroup variant="flush">
           {transactions.map(tx => (
-            <ListGroup.Item key={tx._id} className="d-flex justify-content-between align-items-center flex-wrap">
+            <ListGroup.Item
+              key={tx._id}
+              action
+              as={Link}
+              to={`/transactions/${tx._id}`}
+              className="d-flex justify-content-between align-items-center flex-wrap"
+            >
               <div>
                 <span className="fw-bold">{tx.company_name || `${tx.beneficiary_first_name || ''} ${tx.beneficiary_last_name || ''}`.trim()}</span>
                 <small className="d-block text-muted">{new Date(tx.createdAt).toLocaleString()}</small>
@@ -188,22 +199,22 @@ const Transactions = () => {
           {!loading && totalPages > 1 && (
             <div className="d-flex justify-content-center mt-4">
               <Pagination>
-                <Pagination.Prev 
-                  onClick={() => handlePageChange(currentPage - 1)} 
-                  disabled={currentPage === 1} 
+                <Pagination.Prev
+                  onClick={() => handlePageChange(currentPage - 1)}
+                  disabled={currentPage === 1}
                 />
                 {[...Array(totalPages).keys()].map(number => (
-                  <Pagination.Item 
-                    key={number + 1} 
-                    active={number + 1 === currentPage} 
+                  <Pagination.Item
+                    key={number + 1}
+                    active={number + 1 === currentPage}
                     onClick={() => handlePageChange(number + 1)}
                   >
                     {number + 1}
                   </Pagination.Item>
                 ))}
-                <Pagination.Next 
-                  onClick={() => handlePageChange(currentPage + 1)} 
-                  disabled={currentPage === totalPages} 
+                <Pagination.Next
+                  onClick={() => handlePageChange(currentPage + 1)}
+                  disabled={currentPage === totalPages}
                 />
               </Pagination>
             </div>

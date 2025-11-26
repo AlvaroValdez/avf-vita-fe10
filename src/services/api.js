@@ -156,6 +156,16 @@ export const getTransactions = async (params) => {
   }
 };
 
+export const getTransactionById = async (id) => {
+  try {
+    const response = await apiClient.get(`/transactions/${id}`);
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching transaction detail:', error.response?.data || error.message);
+    throw error.response?.data || error;
+  }
+};
+
 // --- FUNCIONES DE BENEFICIARIOS (Favoritos) ---
 
 export const getBeneficiaries = async () => {
@@ -290,6 +300,19 @@ export const resetPassword = async (token, password) => {
     return response.data;
   } catch (error) {
     console.error('Error resetting password:', error.response?.data || error.message);
+    throw error.response?.data || error;
+  }
+};
+
+
+// --- UPLOAD DE AVATAR DE USUARIO ---
+export const uploadAvatar = async (formData) => {
+  try {
+    // Axios configurará el Content-Type multipart/form-data automáticamente
+    const response = await apiClient.post('/auth/avatar', formData);
+    return response.data;
+  } catch (error) {
+    console.error('Error uploading avatar:', error.response?.data || error.message);
     throw error.response?.data || error;
   }
 };

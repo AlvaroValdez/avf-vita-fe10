@@ -15,6 +15,7 @@ import Profile from './pages/Profile.jsx';
 import AdminKyc from './pages/AdminKyc.jsx'; 
 import ForgotPassword from './pages/ForgotPassword.jsx'; 
 import ResetPassword from './pages/ResetPassword.jsx';
+import TransactionDetail from './pages/TransactionDetail.jsx';
 
 // Componentes
 import AppNavbar from './components/ui/Navbar.jsx';
@@ -52,6 +53,7 @@ function AppContent() {
           {/* Rutas Protegidas (Usuario) */}
           <Route element={<ProtectedRouteWrapper />}>
             <Route path="/transactions" element={<Transactions />} />
+            <Route path="/transactions/:id" element={<TransactionDetail />} />
             <Route path="/profile" element={<Profile />} />
           </Route>
 
