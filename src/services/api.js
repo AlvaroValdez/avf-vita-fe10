@@ -308,8 +308,12 @@ export const resetPassword = async (token, password) => {
 // --- UPLOAD DE AVATAR DE USUARIO ---
 export const uploadAvatar = async (formData) => {
   try {
-    // Axios configurará el Content-Type multipart/form-data automáticamente
-    const response = await apiClient.post('/auth/avatar', formData);
+    const response = await apiClient.post('/auth/avatar', formData, {
+      headers: {
+        // CORRECCIÓN: Eliminar el Content-Type JSON para permitir multipart/form-data
+        'Content-Type': undefined, 
+      },
+    });
     return response.data;
   } catch (error) {
     console.error('Error uploading avatar:', error.response?.data || error.message);

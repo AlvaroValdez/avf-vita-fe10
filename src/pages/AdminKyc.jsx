@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Card, Table, Button, Badge, Modal, Form, Row, Col, Image, Spinner, Alert } from 'react-bootstrap';
+import { Container, Card, Table, Button, Badge, Modal, Form, Row, Col, Image, Spinner, Alert, Button } from 'react-bootstrap';
+
 import { getPendingKycUsers, reviewKycUser } from '../services/api';
 
 const AdminKyc = () => {
