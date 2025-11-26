@@ -316,3 +316,25 @@ export const uploadAvatar = async (formData) => {
     throw error.response?.data || error;
   }
 };
+
+// --- FUNCIONES DE REGLAS DE TRANSACCIÓN ---
+
+export const getTransactionRules = async (country = 'CL') => {
+  try {
+    const response = await apiClient.get(`/transaction-rules?country=${country}`);
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching transaction rules:', error.response?.data || error.message);
+    throw error.response?.data || error;
+  }
+};
+
+export const updateTransactionRules = async (rulesData) => {
+  try {
+    const response = await apiClient.put('/transaction-rules', rulesData);
+    return response.data;
+  } catch (error) {
+    console.error('Error updating transaction rules:', error.response?.data || error.message);
+    throw error.response?.data || error;
+  }
+};

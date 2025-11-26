@@ -36,10 +36,8 @@ const AppNavbar = () => {
                    <>
                      <Nav.Link as={Link} to="/admin/markup" className="me-3">Admin Markup</Nav.Link> 
                      <Nav.Link as={Link} to="/admin/users" className="me-3">Admin Usuarios</Nav.Link>
-                     {/* --- NUEVO ENLACE --- */}
-                     <Nav.Link as={Link} to="/admin/kyc" className="me-3 fw-bold text-warning">
-                        Revisar KYC
-                     </Nav.Link> 
+                     <Nav.Link as={Link} to="/admin/rules" className="me-3">Reglas</Nav.Link>
+                     <Nav.Link as={Link} to="/admin/kyc" className="me-3 fw-bold text-warning">Revisar KYC</Nav.Link> 
                    </>
                 )}
 

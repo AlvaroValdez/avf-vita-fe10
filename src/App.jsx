@@ -16,6 +16,7 @@ import AdminKyc from './pages/AdminKyc.jsx';
 import ForgotPassword from './pages/ForgotPassword.jsx'; 
 import ResetPassword from './pages/ResetPassword.jsx';
 import TransactionDetail from './pages/TransactionDetail.jsx';
+import AdminRules from './pages/AdminRules.jsx';
 
 // Componentes
 import AppNavbar from './components/ui/Navbar.jsx';
@@ -62,6 +63,7 @@ function AppContent() {
             <Route path="/admin/markup" element={<AdminMarkup />} />
             <Route path="/admin/users" element={<AdminUsers />} />
             <Route path="/admin/kyc" element={<AdminKyc />} />
+            <Route path="/admin/rules" element={<AdminRules />} />
           </Route>
         </Routes>
       </main>
