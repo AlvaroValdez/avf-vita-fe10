@@ -362,3 +362,13 @@ export const updateBeneficiary = async (id, data) => {
   const response = await apiClient.put(`/beneficiaries/${id}`, data);
   return response.data;
 };
+
+export const getDirectPaymentRequirements = async () => {
+  try {
+    const response = await apiClient.get('/payment-orders/direct-requirements');
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching payment requirements:', error);
+    throw error.response?.data || error;
+  }
+};
