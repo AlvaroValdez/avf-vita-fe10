@@ -1,122 +1,215 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Card, Table, Spinner, Alert, Button, Form, Badge } from 'react-bootstrap';
-import { getUsers, updateUserRole } from '../services/api';
-import { useAuth } from '../context/AuthContext'; // Para obtener el ID del usuario actual
+import { Container, Card, Table, Spinner, Alert, Button, Form, Badge, Modal, Row, Col } from 'react-bootstrap';
+import { getUsers, updateUserRole, adminUpdateUser } from '../services/api';
+import { useAuth } from '../context/AuthContext';
 
 const AdminUsers = () => {
-  const { user: currentUser } = useAuth(); // Obtiene el usuario logueado actualmente
+  const { user: currentUser } = useAuth();
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
 
-  // Carga la lista de usuarios al montar el componente
-  useEffect(() => {
-    const fetchUsers = async () => {
-      try {
-        setLoading(true);
-        setError('');
-        const response = await getUsers();
-        if (response.ok) {
-          setUsers(response.users);
-        } else {
-          throw new Error(response.error || 'No se pudieron cargar los usuarios.');
-        }
-      } catch (err) {
-        setError(err.message || 'Error al cargar usuarios.');
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchUsers();
-  }, []);
+  // Estados para Modal de Edición
+  const [showModal, setShowModal] = useState(false);
+  const [editingUser, setEditingUser] = useState(null);
+  const [editForm, setEditForm] = useState({});
+  const [saving, setSaving] = useState(false);
 
-  // Manejador para cambiar el rol de un usuario
-  const handleRoleChange = async (userId, newRole) => {
-    // Evita que el admin se quite su propio rol accidentalmente
-    if (currentUser && currentUser.id === userId && newRole !== 'admin') {
-        setError('No puedes quitarte el rol de administrador a ti mismo.');
-        return;
-    }
-
-    setLoading(true); // Podríamos usar un estado de carga por fila en el futuro
-    setError('');
-    setSuccess('');
+  const fetchUsers = async () => {
+    setLoading(true);
     try {
-      const response = await updateUserRole(userId, newRole);
-      if (response.ok) {
-        // Actualiza la lista de usuarios localmente para reflejar el cambio
-        setUsers(prevUsers => 
-          prevUsers.map(u => u._id === userId ? { ...u, role: newRole } : u)
-        );
-        setSuccess(`Rol de ${response.user.name} actualizado.`);
-      } else {
-        throw new Error(response.error || 'No se pudo actualizar el rol.');
-      }
+      const response = await getUsers();
+      if (response.ok) setUsers(response.users);
     } catch (err) {
-      setError(err.message || 'Error al actualizar el rol.');
+      setError('Error al cargar usuarios.');
     } finally {
       setLoading(false);
     }
   };
 
+  useEffect(() => {
+    fetchUsers();
+  }, []);
+
+  const handleRoleChange = async (userId, newRole) => {
+    if (currentUser && currentUser.id === userId && newRole !== 'admin') {
+      alert('No puedes quitarte el rol de administrador a ti mismo.');
+      return;
+    }
+    try {
+      await updateUserRole(userId, newRole);
+      fetchUsers(); // Recargar lista
+    } catch (err) {
+      alert('Error al cambiar rol.');
+    }
+  };
+
+  // Abrir Modal
+  const handleEditClick = (user) => {
+    setEditingUser(user);
+    setEditForm({
+      name: user.name || '',
+      email: user.email || '',
+      firstName: user.firstName || '',
+      lastName: user.lastName || '',
+      documentNumber: user.documentNumber || '',
+      phoneNumber: user.phoneNumber || '',
+      address: user.address || '',
+      isEmailVerified: user.isEmailVerified,
+    });
+    setShowModal(true);
+  };
+
+  // Guardar Cambios del Modal
+  const handleSaveUser = async () => {
+    setSaving(true);
+    try {
+      await adminUpdateUser(editingUser._id, editForm);
+      setShowModal(false);
+      fetchUsers(); // Recargar lista
+    } catch (err) {
+      alert(err.error || 'Error al guardar usuario.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleFormChange = (e) => {
+    const { name, value, type, checked } = e.target;
+    setEditForm(prev => ({ ...prev, [name]: type === 'checkbox' ? checked : value }));
+  };
+
   return (
     <Container className="my-5">
-      <Card>
-        <Card.Header as="h4">Gestión de Usuarios</Card.Header>
+      <Card className="shadow-sm border-0">
+        <Card.Header className="bg-white py-3">
+          <h4 className="mb-0" style={{ color: 'var(--avf-primary)' }}>Gestión de Usuarios</h4>
+        </Card.Header>
         <Card.Body>
           {error && <Alert variant="danger">{error}</Alert>}
-          {success && <Alert variant="success">{success}</Alert>}
-
-          {loading ? (
-            <div className="text-center p-5"><Spinner animation="border" /></div>
-          ) : (
-            <Table striped bordered hover responsive size="sm">
+          {loading ? <div className="text-center p-5"><Spinner animation="border" /></div> : (
+            <Table hover responsive size="sm" className="align-middle">
               <thead>
                 <tr>
-                  <th>Nombre</th>
-                  <th>Correo Electrónico</th>
-                  <th>Rol Actual</th>
-                  <th>Cambiar Rol</th>
+                  <th>Usuario</th>
+                  <th>Email</th>
+                  <th>Doc</th>
+                  <th>Rol</th>
+                  <th>Estado</th>
+                  <th>Acciones</th>
                 </tr>
               </thead>
               <tbody>
-                {users.length === 0 ? (
-                  <tr><td colSpan="4" className="text-center text-muted">No hay usuarios registrados.</td></tr>
-                ) : (
-                  users.map(user => (
-                    <tr key={user._id}>
-                      <td>{user.name}</td>
-                      <td>{user.email}</td>
-                      <td>
-                        <Badge bg={user.role === 'admin' ? 'primary' : 'secondary'}>
-                          {user.role}
-                        </Badge>
-                      </td>
-                      <td>
-                        {/* El selector solo se muestra si NO es el usuario actual */}
-                        {currentUser && currentUser.id !== user._id ? (
-                          <Form.Select 
-                            size="sm"
-                            value={user.role}
-                            onChange={(e) => handleRoleChange(user._id, e.target.value)}
-                            disabled={loading} // Deshabilita mientras se guarda
-                          >
-                            <option value="user">Usuario</option>
-                            <option value="admin">Administrador</option>
-                          </Form.Select>
-                        ) : (
-                           <small className="text-muted"> (Usuario Actual)</small>
-                        )}
-                      </td>
-                    </tr>
-                  ))
-                )}
+                {users.map(u => (
+                  <tr key={u._id}>
+                    <td>
+                      <div className="fw-bold">{u.name}</div>
+                      <small className="text-muted">{u.firstName} {u.lastName}</small>
+                    </td>
+                    <td>{u.email}</td>
+                    <td>{u.documentNumber || '-'}</td>
+                    <td>
+                      <Form.Select
+                        size="sm"
+                        value={u.role}
+                        onChange={(e) => handleRoleChange(u._id, e.target.value)}
+                        disabled={currentUser?.id === u._id}
+                        style={{ width: '120px' }}
+                      >
+                        <option value="user">Usuario</option>
+                        <option value="admin">Admin</option>
+                      </Form.Select>
+                    </td>
+                    <td>
+                      {u.isEmailVerified ? <Badge bg="success">Verificado</Badge> : <Badge bg="warning" text="dark">No Verif.</Badge>}
+                      <div className="mt-1">{u.isProfileComplete ? <Badge bg="info">KYC Completo</Badge> : <Badge bg="secondary">Sin KYC</Badge>}</div>
+                    </td>
+                    <td>
+                      <Button size="sm" variant="outline-primary" onClick={() => handleEditClick(u)}>
+                        Editar Detalles
+                      </Button>
+                    </td>
+                  </tr>
+                ))}
               </tbody>
             </Table>
           )}
         </Card.Body>
       </Card>
+
+      {/* --- MODAL DE EDICIÓN --- */}
+      <Modal show={showModal} onHide={() => setShowModal(false)} size="lg">
+        <Modal.Header closeButton>
+          <Modal.Title>Editar Usuario: {editingUser?.name}</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <Form>
+            <Row className="mb-3">
+              <Col md={6}>
+                <Form.Group>
+                  <Form.Label>Nombre de Usuario</Form.Label>
+                  <Form.Control type="text" name="name" value={editForm.name} onChange={handleFormChange} />
+                </Form.Group>
+              </Col>
+              <Col md={6}>
+                <Form.Group>
+                  <Form.Label>Email</Form.Label>
+                  <Form.Control type="email" name="email" value={editForm.email} onChange={handleFormChange} />
+                </Form.Group>
+              </Col>
+            </Row>
+            <h6 className="mt-4 text-muted">Datos Personales (KYC)</h6>
+            <hr />
+            <Row className="mb-3">
+              <Col md={6}>
+                <Form.Group>
+                  <Form.Label>Nombres Legales</Form.Label>
+                  <Form.Control type="text" name="firstName" value={editForm.firstName} onChange={handleFormChange} />
+                </Form.Group>
+              </Col>
+              <Col md={6}>
+                <Form.Group>
+                  <Form.Label>Apellidos Legales</Form.Label>
+                  <Form.Control type="text" name="lastName" value={editForm.lastName} onChange={handleFormChange} />
+                </Form.Group>
+              </Col>
+            </Row>
+            <Row className="mb-3">
+              <Col md={6}>
+                <Form.Group>
+                  <Form.Label>Número Documento</Form.Label>
+                  <Form.Control type="text" name="documentNumber" value={editForm.documentNumber} onChange={handleFormChange} />
+                </Form.Group>
+              </Col>
+              <Col md={6}>
+                <Form.Group>
+                  <Form.Label>Teléfono</Form.Label>
+                  <Form.Control type="text" name="phoneNumber" value={editForm.phoneNumber} onChange={handleFormChange} />
+                </Form.Group>
+              </Col>
+            </Row>
+            <Form.Group className="mb-3">
+              <Form.Label>Dirección</Form.Label>
+              <Form.Control type="text" name="address" value={editForm.address} onChange={handleFormChange} />
+            </Form.Group>
+
+            <Form.Check
+              type="checkbox"
+              label="Email Verificado Manualmente"
+              name="isEmailVerified"
+              checked={editForm.isEmailVerified}
+              onChange={handleFormChange}
+              className="mt-3 text-primary fw-bold"
+            />
+          </Form>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setShowModal(false)}>Cancelar</Button>
+          <Button variant="primary" onClick={handleSaveUser} disabled={saving}>
+            {saving ? <Spinner size="sm" /> : 'Guardar Cambios'}
+          </Button>
+        </Modal.Footer>
+      </Modal>
     </Container>
   );
 };

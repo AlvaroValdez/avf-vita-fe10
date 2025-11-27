@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Container, Card, Form, Button, Spinner, Alert, Row, Col, InputGroup } from 'react-bootstrap';
 import { getTransactionRules, updateTransactionRules } from '../services/api';
+// 1. Importamos las funciones de formato
+import { formatNumberForDisplay, parseFormattedNumber } from '../utils/formatting';
 
 const AdminRules = () => {
   const [loading, setLoading] = useState(true);
@@ -8,7 +10,6 @@ const AdminRules = () => {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
-  // Estado del formulario
   const [formData, setFormData] = useState({
     originCountry: 'CL',
     minAmount: 5000,
@@ -19,7 +20,6 @@ const AdminRules = () => {
     kycLevel2: 4500000
   });
 
-  // Cargar reglas al iniciar
   useEffect(() => {
     const loadRules = async () => {
       try {
@@ -45,11 +45,23 @@ const AdminRules = () => {
     loadRules();
   }, []);
 
+  // Manejador genérico para textos y switches
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
     setFormData(prev => ({
       ...prev,
       [name]: type === 'checkbox' ? checked : value
+    }));
+  };
+
+  // 2. NUEVO MANEJADOR ESPECÍFICO PARA MONTOS (Aplica formato)
+  const handleAmountChange = (e) => {
+    const { name, value } = e.target;
+    // Convierte el texto con puntos (ej: "100.000") a número puro (100000) para el estado
+    const numericValue = parseFormattedNumber(value);
+    setFormData(prev => ({
+      ...prev,
+      [name]: numericValue
     }));
   };
 
@@ -60,7 +72,6 @@ const AdminRules = () => {
     setSuccess('');
 
     try {
-      // Preparamos el payload con la estructura anidada que espera el backend
       const payload = {
         originCountry: formData.originCountry,
         minAmount: Number(formData.minAmount),
@@ -113,7 +124,14 @@ const AdminRules = () => {
                   <Form.Label>Monto Mínimo de Envío</Form.Label>
                   <InputGroup>
                     <InputGroup.Text>$</InputGroup.Text>
-                    <Form.Control type="number" name="minAmount" value={formData.minAmount} onChange={handleChange} />
+                    {/* 3. Usamos type="text" y value formateado */}
+                    <Form.Control 
+                      type="text" 
+                      inputMode="numeric"
+                      name="minAmount" 
+                      value={formatNumberForDisplay(formData.minAmount)} 
+                      onChange={handleAmountChange} 
+                    />
                   </InputGroup>
                 </Form.Group>
               </Col>
@@ -122,7 +140,13 @@ const AdminRules = () => {
                   <Form.Label>Costo Fijo (Fee) por Envío</Form.Label>
                   <InputGroup>
                     <InputGroup.Text>$</InputGroup.Text>
-                    <Form.Control type="number" name="fixedFee" value={formData.fixedFee} onChange={handleChange} />
+                    <Form.Control 
+                      type="text" 
+                      inputMode="numeric"
+                      name="fixedFee" 
+                      value={formatNumberForDisplay(formData.fixedFee)} 
+                      onChange={handleAmountChange} 
+                    />
                   </InputGroup>
                 </Form.Group>
               </Col>
@@ -135,7 +159,13 @@ const AdminRules = () => {
                   <Form.Label>Límite Nivel 1 (Básico)</Form.Label>
                   <InputGroup>
                     <InputGroup.Text>$</InputGroup.Text>
-                    <Form.Control type="number" name="kycLevel1" value={formData.kycLevel1} onChange={handleChange} />
+                    <Form.Control 
+                      type="text" 
+                      inputMode="numeric"
+                      name="kycLevel1" 
+                      value={formatNumberForDisplay(formData.kycLevel1)} 
+                      onChange={handleAmountChange} 
+                    />
                   </InputGroup>
                   <Form.Text className="text-muted">Máximo por transacción sin verificar.</Form.Text>
                 </Form.Group>
@@ -145,9 +175,15 @@ const AdminRules = () => {
                   <Form.Label>Límite Nivel 2 (Verificado)</Form.Label>
                   <InputGroup>
                     <InputGroup.Text>$</InputGroup.Text>
-                    <Form.Control type="number" name="kycLevel2" value={formData.kycLevel2} onChange={handleChange} />
+                    <Form.Control 
+                      type="text" 
+                      inputMode="numeric"
+                      name="kycLevel2" 
+                      value={formatNumberForDisplay(formData.kycLevel2)} 
+                      onChange={handleAmountChange} 
+                    />
                   </InputGroup>
-                  <Form.Text className="text-muted">Máximo para usuarios con documentos aprobados.</Form.Text>
+                  <Form.Text className="text-muted">Máximo para usuarios aprobados.</Form.Text>
                 </Form.Group>
               </Col>
             </Row>
@@ -163,7 +199,6 @@ const AdminRules = () => {
                 onChange={handleChange} 
                 placeholder="Ej: 'Posibles demoras por feriado bancario...'"
               />
-              <Form.Text className="text-muted">Si escribes algo aquí, aparecerá como aviso en el formulario de cotización.</Form.Text>
             </Form.Group>
 
             {error && <Alert variant="danger">{error}</Alert>}

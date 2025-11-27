@@ -16,30 +16,30 @@ export const loginUser = async (credentials) => {
   try {
     const response = await apiClient.post('/auth/login', credentials);
     if (response.data.ok) {
-        return response.data; 
+      return response.data;
     } else {
-        throw new Error(response.data.message || 'Error en el login');
+      throw new Error(response.data.message || 'Error en el login');
     }
   } catch (error) {
     console.error('Error en loginUser:', error.response?.data || error.message);
-    throw { 
-        ok: false, 
-        error: error.response?.data?.message || error.message || 'Error al iniciar sesión.' 
+    throw {
+      ok: false,
+      error: error.response?.data?.message || error.message || 'Error al iniciar sesión.'
     };
   }
 };
 
 export const registerUser = async (userData) => {
-    try {
-        const response = await apiClient.post('/auth/register', userData);
-        return response.data; 
-    } catch (error) {
-        console.error('Error en registerUser:', error.response?.data || error.message);
-        throw { 
-            ok: false, 
-            error: error.response?.data?.message || error.message || 'Error al registrar usuario.' 
-        };
-    }
+  try {
+    const response = await apiClient.post('/auth/register', userData);
+    return response.data;
+  } catch (error) {
+    console.error('Error en registerUser:', error.response?.data || error.message);
+    throw {
+      ok: false,
+      error: error.response?.data?.message || error.message || 'Error al registrar usuario.'
+    };
+  }
 };
 
 export const verifyEmailToken = async (token) => {
@@ -80,7 +80,7 @@ export const uploadKycDocuments = async (formData) => {
         // Establecemos Content-Type en undefined para sobrescribir el default 'application/json'.
         // Esto obliga al navegador a detectar que es un FormData y configurar 
         // correctamente 'multipart/form-data; boundary=...'
-        'Content-Type': undefined, 
+        'Content-Type': undefined,
       },
     });
     return response.data;
@@ -311,7 +311,7 @@ export const uploadAvatar = async (formData) => {
     const response = await apiClient.post('/auth/avatar', formData, {
       headers: {
         // CORRECCIÓN: Eliminar el Content-Type JSON para permitir multipart/form-data
-        'Content-Type': undefined, 
+        'Content-Type': undefined,
       },
     });
     return response.data;
@@ -341,4 +341,24 @@ export const updateTransactionRules = async (rulesData) => {
     console.error('Error updating transaction rules:', error.response?.data || error.message);
     throw error.response?.data || error;
   }
+};
+
+export const adminUpdateUser = async (userId, userData) => {
+  try {
+    const response = await apiClient.put(`/admin/users/${userId}`, userData);
+    return response.data;
+  } catch (error) {
+    console.error('Error updating user (admin):', error.response?.data || error.message);
+    throw error.response?.data || error;
+  }
+};
+
+export const deleteBeneficiary = async (id) => {
+  const response = await apiClient.delete(`/beneficiaries/${id}`);
+  return response.data;
+};
+
+export const updateBeneficiary = async (id, data) => {
+  const response = await apiClient.put(`/beneficiaries/${id}`, data);
+  return response.data;
 };

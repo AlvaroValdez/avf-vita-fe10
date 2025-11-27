@@ -1,19 +1,19 @@
-// Formatea un número con puntos de miles y sin decimales.
+// src/utils/formatting.js
+
 export const formatNumberForDisplay = (number) => {
-  if (isNaN(number) || number === null) return '';
+  if (number === '' || number === null || number === undefined || isNaN(number)) return '';
+  // Usa formato chileno (puntos para miles)
   return Math.round(number).toLocaleString('es-CL');
 };
 
-// Convierte un string formateado de vuelta a un número (ej: "50.000" -> 50000)
 export const parseFormattedNumber = (formattedString) => {
-  if (typeof formattedString !== 'string') return 0;
+  if (typeof formattedString !== 'string') return formattedString;
+  // Elimina todo lo que no sea número
   const sanitizedString = formattedString.replace(/\D/g, '');
-  return parseInt(sanitizedString, 10) || 0;
+  return sanitizedString === '' ? 0 : parseInt(sanitizedString, 10);
 };
 
-// Formatea una tasa de cambio con 4 decimales para mayor precisión.
 export const formatRate = (rate) => {
   if (isNaN(rate) || rate === null) return '0';
   return rate.toFixed(4);
 };
-

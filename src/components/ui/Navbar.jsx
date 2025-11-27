@@ -23,22 +23,24 @@ const AppNavbar = () => {
           <Nav className="me-auto"></Nav>
           <Nav className="ms-auto align-items-center">
             <Nav.Link as={Link} to="/" className="me-3">Enviar Dinero</Nav.Link>
-            
+
             {token ? (
               <> {/* Usuario logueado */}
                 <Nav.Link as={Link} to="/transactions" className="me-3">Mis Transacciones</Nav.Link>
                 <Nav.Link as={Link} to="/profile" className="me-3 fw-bold" style={{ color: 'var(--avf-secondary)' }}>
-                    Mi Perfil
+                  Mi Perfil
                 </Nav.Link>
+
+                <Nav.Link as={Link} to="/favorites" className="me-3">Favoritos</Nav.Link>
 
                 {/* Links visibles solo para Admin */}
                 {user?.role === 'admin' && (
-                   <>
-                     <Nav.Link as={Link} to="/admin/markup" className="me-3">Admin Markup</Nav.Link> 
-                     <Nav.Link as={Link} to="/admin/users" className="me-3">Admin Usuarios</Nav.Link>
-                     <Nav.Link as={Link} to="/admin/rules" className="me-3">Reglas</Nav.Link>
-                     <Nav.Link as={Link} to="/admin/kyc" className="me-3 fw-bold text-warning">Revisar KYC</Nav.Link> 
-                   </>
+                  <>
+                    <Nav.Link as={Link} to="/admin/markup" className="me-3">Admin Markup</Nav.Link>
+                    <Nav.Link as={Link} to="/admin/users" className="me-3">Admin Usuarios</Nav.Link>
+                    <Nav.Link as={Link} to="/admin/rules" className="me-3">Reglas</Nav.Link>
+                    <Nav.Link as={Link} to="/admin/kyc" className="me-3 fw-bold text-warning">Revisar KYC</Nav.Link>
+                  </>
                 )}
 
                 <Button variant="outline-secondary" size="sm" onClick={handleLogout}>
@@ -48,10 +50,10 @@ const AppNavbar = () => {
             ) : (
               <> {/* Usuario NO logueado */}
                 <Nav.Link as={Link} to="/login" className="me-3">Iniciar Sesión</Nav.Link>
-                <Button 
-                  as={Link} 
-                  to="/register" 
-                  variant="success" 
+                <Button
+                  as={Link}
+                  to="/register"
+                  variant="success"
                   size="sm"
                   style={{ backgroundColor: '#28a745', borderColor: '#28a745' }}
                 >

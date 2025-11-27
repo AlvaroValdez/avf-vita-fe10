@@ -9,11 +9,11 @@ import Login from './pages/Login.jsx';
 import Register from './pages/Register.jsx';
 import PaymentSuccess from './pages/PaymentSuccess.jsx';
 import AdminMarkup from './pages/AdminMarkup.jsx';
-import AdminUsers from './pages/AdminUsers.jsx'; 
-import VerifyEmail from './pages/VerifyEmail.jsx'; 
+import AdminUsers from './pages/AdminUsers.jsx';
+import VerifyEmail from './pages/VerifyEmail.jsx';
 import Profile from './pages/Profile.jsx';
-import AdminKyc from './pages/AdminKyc.jsx'; 
-import ForgotPassword from './pages/ForgotPassword.jsx'; 
+import AdminKyc from './pages/AdminKyc.jsx';
+import ForgotPassword from './pages/ForgotPassword.jsx';
 import ResetPassword from './pages/ResetPassword.jsx';
 import TransactionDetail from './pages/TransactionDetail.jsx';
 import AdminRules from './pages/AdminRules.jsx';
@@ -30,10 +30,10 @@ const ProtectedRouteWrapper = () => {
 
 // Componente para proteger rutas de admin
 const AdminRouteWrapper = () => {
-    const { user, token } = useAuth();
-    if (!token) return <Navigate to="/login" replace />;
-    if (user?.role !== 'admin') return <Navigate to="/" replace />;
-    return <Outlet />;
+  const { user, token } = useAuth();
+  if (!token) return <Navigate to="/login" replace />;
+  if (user?.role !== 'admin') return <Navigate to="/" replace />;
+  return <Outlet />;
 };
 
 function AppContent() {
@@ -47,7 +47,7 @@ function AppContent() {
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/payment-success" element={<PaymentSuccess />} />
-          <Route path="/verify-email" element={<VerifyEmail />} /> 
+          <Route path="/verify-email" element={<VerifyEmail />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/reset-password/:token" element={<ResetPassword />} />
 
@@ -56,6 +56,7 @@ function AppContent() {
             <Route path="/transactions" element={<Transactions />} />
             <Route path="/transactions/:id" element={<TransactionDetail />} />
             <Route path="/profile" element={<Profile />} />
+            <Route path="/favorites" element={<Favorites />} />
           </Route>
 
           {/* Rutas Protegidas (Admin) */}
