@@ -1,43 +1,42 @@
 import React from 'react';
 import { Container, Row, Col, Image } from 'react-bootstrap';
 import RemittanceSteps from '../components/remittance/RemittanceSteps';
-import homeBackground from '../assets/home-background.jpg';
+import homeBackgroundImage from '../assets/home-background.jpg';
 
-// URLs de los assets (sin cambios)
 const googlePlayUrl = 'https://play.google.com/intl/en_us/badges/static/images/badges/es_badge_web_generic.png';
 const appStoreUrl = 'https://developer.apple.com/assets/elements/badges/download-on-the-app-store.svg';
 
 const Home = () => {
   return (
     <>
-      {/* --- SECCIÓN HERO CON IMAGEN DE FONDO Y LAYOUT CORREGIDO --- */}
-      <div 
+      {/* SECCIÓN HERO */}
+      <div
         style={{
-          backgroundImage: `url(${homeBackground})`,
+          backgroundImage: `url(${homeBackgroundImage})`,
           backgroundSize: 'cover',
           backgroundPosition: 'center',
-          minHeight: '600px', // Altura suficiente para el contenido
+          minHeight: '600px',
           display: 'flex',
-          alignItems: 'center', // Centra verticalmente el Container
-          position: 'relative', 
-          color: 'white' 
+          alignItems: 'center',
+          position: 'relative',
+          color: 'white',
+          backgroundRepeat: 'no-repeat'
         }}
       >
-        {/* Overlay oscuro */}
-        <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: 'rgba(0, 0, 0, 0.4)' }}></div>
+        {/* Overlay */}
+        <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: 'rgba(0, 0, 0, 0.4)', zIndex: 0 }}></div>
 
-        {/* Contenido sobre la imagen y el overlay */}
+        {/* Contenido */}
         <Container className="py-5 position-relative" style={{ zIndex: 1 }}>
-          {/* --- ÚNICA ROW PARA AMBAS COLUMNAS --- */}
-          <Row className="align-items-center"> 
-            
-            {/* Columna Izquierda: Texto y Botones */}
-            <Col lg={6} className="pe-lg-5"> 
+          <Row className="align-items-center">
+
+            {/* Columna Izquierda */}
+            <Col lg={6} className="pe-lg-5">
               <h1 className="display-4 fw-bold mb-4">
-                Envía dinero totalmente Online con <span style={{ color: 'var(--avf-secondary)' }}>Alyto</span>
+                Envía dinero totalmente Online con <span style={{ color: 'var(--avf-secondary)' }}>AVF Remesas</span>
               </h1>
               <p className="lead mb-5">
-                Desde nuestra web, envía dinero 100% online con la seguridad y respaldo de AV Finance.
+                Desde nuestra web, envía dinero 100% online con la seguridad y respaldo de Vita Wallet.
               </p>
               <div className="mb-5">
                 <h5 className="text-white">Descarga nuestra App</h5>
@@ -48,16 +47,16 @@ const Home = () => {
               </div>
             </Col>
 
-            {/* Columna Derecha: Formulario de Remesas */}
-            <Col lg={6}> 
-              <RemittanceSteps /> {/* El formulario está aquí */}
+            {/* Columna Derecha: Formulario */}
+            <Col lg={6}>
+              <RemittanceSteps />
             </Col>
 
-          </Row> {/* Fin de la Row principal */}
+          </Row>
         </Container>
       </div>
 
-      {/* --- SECCIÓN INFERIOR PLACEHOLDER (sin cambios) --- */}
+      {/* SECCIÓN INFERIOR */}
       <Container className="my-5">
         <Row className="justify-content-center">
           <Col md={8}>
