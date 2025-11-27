@@ -5,28 +5,27 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 // Páginas
 import Home from './pages/Home.jsx';
 import Transactions from './pages/Transactions.jsx';
+import TransactionDetail from './pages/TransactionDetail.jsx'; // <-- ASEGURAR IMPORTACIÓN
 import Login from './pages/Login.jsx';
 import Register from './pages/Register.jsx';
 import PaymentSuccess from './pages/PaymentSuccess.jsx';
 import AdminMarkup from './pages/AdminMarkup.jsx';
 import AdminUsers from './pages/AdminUsers.jsx';
-import AdminKyc from './pages/AdminKyc.jsx'; // Asumiendo que creamos esto
-import AdminRules from './pages/AdminRules.jsx'; // Asumiendo que creamos esto
+import AdminKyc from './pages/AdminKyc.jsx';
+import AdminRules from './pages/AdminRules.jsx';
 import VerifyEmail from './pages/VerifyEmail.jsx';
 import Profile from './pages/Profile.jsx';
-import Favorites from './pages/Favorites.jsx'; // <-- ESTA ES LA LÍNEA QUE FALTABA
+import Favorites from './pages/Favorites.jsx';
 
-// Componentes
+// Componentes UI
 import AppNavbar from './components/ui/Navbar.jsx';
 import Footer from './components/ui/Footer.jsx';
 
-// Wrapper para Rutas Protegidas de Usuario
 const ProtectedRouteWrapper = () => {
   const { token } = useAuth();
   return token ? <Outlet /> : <Navigate to="/login" replace />;
 };
 
-// Wrapper para Rutas Protegidas de Administrador
 const AdminRouteWrapper = () => {
   const { user, token } = useAuth();
   if (!token) return <Navigate to="/login" replace />;
@@ -50,9 +49,10 @@ function AppContent() {
           {/* Rutas Protegidas (Usuario) */}
           <Route element={<ProtectedRouteWrapper />}>
             <Route path="/transactions" element={<Transactions />} />
-            <Route path="/transactions/:id" element={<Transactions />} /> {/* Detalle (reutiliza componente o crea uno nuevo) */}
+            {/* --- CORRECCIÓN AQUÍ: Apuntar al componente correcto --- */}
+            <Route path="/transactions/:id" element={<TransactionDetail />} />
             <Route path="/profile" element={<Profile />} />
-            <Route path="/favorites" element={<Favorites />} /> {/* Ruta de Favoritos */}
+            <Route path="/favorites" element={<Favorites />} />
           </Route>
 
           {/* Rutas Protegidas (Admin) */}
