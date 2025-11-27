@@ -320,3 +320,27 @@ export const updateTransactionRules = async (rulesData) => {
     throw error.response?.data || error;
   }
 };
+
+// --- FUNCIONES DE PAGO DIRECTO REALES ---
+
+// 1. Obtener métodos disponibles (Khipu, Webpay, etc.)
+export const getPaymentMethods = async (country) => {
+  try {
+    const response = await apiClient.get(`/payment-orders/methods/${country}`);
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching payment methods:', error);
+    throw error.response?.data || error;
+  }
+};
+
+// 2. Ejecutar el pago directo (Paso final)
+export const executeDirectPayment = async (vitaOrderId, paymentData) => {
+  try {
+    const response = await apiClient.post(`/payment-orders/${vitaOrderId}/execute`, { payment_data: paymentData });
+    return response.data;
+  } catch (error) {
+    console.error('Error executing direct payment:', error);
+    throw error.response?.data || error;
+  }
+};
