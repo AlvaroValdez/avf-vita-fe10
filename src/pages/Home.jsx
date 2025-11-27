@@ -3,35 +3,35 @@ import { Container, Row, Col, Image } from 'react-bootstrap';
 import RemittanceSteps from '../components/remittance/RemittanceSteps';
 import homeBackgroundImage from '../assets/home-background.jpg';
 
+// URLs de los assets
 const googlePlayUrl = 'https://play.google.com/intl/en_us/badges/static/images/badges/es_badge_web_generic.png';
 const appStoreUrl = 'https://developer.apple.com/assets/elements/badges/download-on-the-app-store.svg';
 
 const Home = () => {
   return (
     <>
-      {/* SECCIÓN HERO */}
+      {/* --- SECCIÓN HERO: Imagen de fondo que contiene TODO --- */}
       <div
         style={{
           backgroundImage: `url(${homeBackgroundImage})`,
           backgroundSize: 'cover',
           backgroundPosition: 'center',
-          minHeight: '600px',
+          minHeight: '600px', // Altura mínima para que quepa todo
           display: 'flex',
           alignItems: 'center',
           position: 'relative',
-          color: 'white',
-          backgroundRepeat: 'no-repeat'
+          color: 'white'
         }}
       >
-        {/* Overlay */}
-        <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: 'rgba(0, 0, 0, 0.4)', zIndex: 0 }}></div>
+        {/* Overlay oscuro para legibilidad */}
+        <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: 'rgba(0, 0, 0, 0.5)', zIndex: 0 }}></div>
 
-        {/* Contenido */}
+        {/* Contenido PRINCIPAL: Texto + Formulario en la misma fila */}
         <Container className="py-5 position-relative" style={{ zIndex: 1 }}>
           <Row className="align-items-center">
 
-            {/* Columna Izquierda */}
-            <Col lg={6} className="pe-lg-5">
+            {/* Columna Izquierda: Texto Promocional */}
+            <Col lg={6} className="pe-lg-5 mb-5 mb-lg-0">
               <h1 className="display-4 fw-bold mb-4">
                 Envía dinero totalmente Online con <span style={{ color: 'var(--avf-secondary)' }}>AVF Remesas</span>
               </h1>
@@ -47,7 +47,7 @@ const Home = () => {
               </div>
             </Col>
 
-            {/* Columna Derecha: Formulario */}
+            {/* Columna Derecha: FORMULARIO (Flotando sobre la imagen) */}
             <Col lg={6}>
               <RemittanceSteps />
             </Col>
@@ -56,7 +56,7 @@ const Home = () => {
         </Container>
       </div>
 
-      {/* SECCIÓN INFERIOR */}
+      {/* --- SECCIÓN INFERIOR PLACEHOLDER --- */}
       <Container className="my-5">
         <Row className="justify-content-center">
           <Col md={8}>
