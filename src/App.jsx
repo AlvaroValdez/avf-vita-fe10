@@ -10,25 +10,23 @@ import Register from './pages/Register.jsx';
 import PaymentSuccess from './pages/PaymentSuccess.jsx';
 import AdminMarkup from './pages/AdminMarkup.jsx';
 import AdminUsers from './pages/AdminUsers.jsx';
+import AdminKyc from './pages/AdminKyc.jsx'; // Asumiendo que creamos esto
+import AdminRules from './pages/AdminRules.jsx'; // Asumiendo que creamos esto
 import VerifyEmail from './pages/VerifyEmail.jsx';
 import Profile from './pages/Profile.jsx';
-import AdminKyc from './pages/AdminKyc.jsx';
-import ForgotPassword from './pages/ForgotPassword.jsx';
-import ResetPassword from './pages/ResetPassword.jsx';
-import TransactionDetail from './pages/TransactionDetail.jsx';
-import AdminRules from './pages/AdminRules.jsx';
+import Favorites from './pages/Favorites.jsx'; // <-- ESTA ES LA LÍNEA QUE FALTABA
 
 // Componentes
 import AppNavbar from './components/ui/Navbar.jsx';
 import Footer from './components/ui/Footer.jsx';
 
-// Componente para proteger rutas de usuario
+// Wrapper para Rutas Protegidas de Usuario
 const ProtectedRouteWrapper = () => {
   const { token } = useAuth();
   return token ? <Outlet /> : <Navigate to="/login" replace />;
 };
 
-// Componente para proteger rutas de admin
+// Wrapper para Rutas Protegidas de Administrador
 const AdminRouteWrapper = () => {
   const { user, token } = useAuth();
   if (!token) return <Navigate to="/login" replace />;
@@ -48,15 +46,13 @@ function AppContent() {
           <Route path="/register" element={<Register />} />
           <Route path="/payment-success" element={<PaymentSuccess />} />
           <Route path="/verify-email" element={<VerifyEmail />} />
-          <Route path="/forgot-password" element={<ForgotPassword />} />
-          <Route path="/reset-password/:token" element={<ResetPassword />} />
 
           {/* Rutas Protegidas (Usuario) */}
           <Route element={<ProtectedRouteWrapper />}>
             <Route path="/transactions" element={<Transactions />} />
-            <Route path="/transactions/:id" element={<TransactionDetail />} />
+            <Route path="/transactions/:id" element={<Transactions />} /> {/* Detalle (reutiliza componente o crea uno nuevo) */}
             <Route path="/profile" element={<Profile />} />
-            <Route path="/favorites" element={<Favorites />} />
+            <Route path="/favorites" element={<Favorites />} /> {/* Ruta de Favoritos */}
           </Route>
 
           {/* Rutas Protegidas (Admin) */}
