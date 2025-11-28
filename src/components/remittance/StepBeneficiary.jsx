@@ -48,16 +48,14 @@ const StepBeneficiary = ({ formData, fields, onBack, onComplete }) => {
     if (selectedId) {
       const favorite = favorites.find(f => f._id === selectedId);
       if (favorite) {
-        // Autocompleta el estado con los datos del Map
-        setBeneficiaryData(favorite.beneficiaryData); 
-        // Nota: Si el país del favorito (favorite.country) es diferente al país de la cotización,
-        // esto podría causar problemas de validación al avanzar. Por ahora, asumimos que
-        // el usuario solo guardará favoritos para el país de la cotización actual o que cambiará el país si carga el favorito.
-        setErrors({}); 
+        setBeneficiaryData(favorite.beneficiaryData);
+        setErrors({});
+        // Aquí no podemos pasar la bandera directamente a onComplete aún, 
+        // pero podemos guardarla en el estado o pasarla si el usuario avanza inmediatamente.
+        // La mejor opción es pasar una prop extra a onComplete en handleNext
       }
     } else {
-      // Limpia el formulario si selecciona la opción "Cargar..."
-      setBeneficiaryData({}); 
+      setBeneficiaryData({});
     }
   };
 
@@ -69,7 +67,7 @@ const StepBeneficiary = ({ formData, fields, onBack, onComplete }) => {
       setBeneficiaryData(initialData);
     }
   }, [countryFields]);
-  
+
   useEffect(() => {
     if (countryFields.length > 0) {
       const visibleFields = countryFields.filter(field => {
@@ -101,14 +99,14 @@ const StepBeneficiary = ({ formData, fields, onBack, onComplete }) => {
     if (rule.max && value.length > rule.max) {
       return `No puede exceder los ${rule.max} caracteres.`;
     }
-    
+
     // 4. Validar formato con REGEX (si la API lo provee)
     if (rule.regex) {
       const regex = new RegExp(rule.regex);
       if (!regex.test(value)) {
         return rule.helper_text || 'El formato es inválido.';
       }
-    } 
+    }
     // 5. Si no hay REGEX, validar por TIPO (ej: 'email')
     else if (rule.type === 'email') {
       if (!EMAIL_REGEX.test(value)) {
@@ -147,7 +145,8 @@ const StepBeneficiary = ({ formData, fields, onBack, onComplete }) => {
     setErrors(allErrors);
 
     if (isFormValid) {
-      onComplete(cleanData);
+      // Pasamos una bandera extra indicando si vino de un favorito seleccionado
+      onComplete(cleanData, !!selectedFavorite);
     }
   };
 
@@ -158,7 +157,7 @@ const StepBeneficiary = ({ formData, fields, onBack, onComplete }) => {
       setErrors(prev => ({ ...prev, [name]: null }));
     }
   };
-    
+
   const renderField = (field) => {
     switch (field.type) {
       case 'select':
@@ -189,7 +188,7 @@ const StepBeneficiary = ({ formData, fields, onBack, onComplete }) => {
         );
     }
   };
-  
+
   if (countryFields.length === 0) {
     return <Card className="p-4"><Card.Body>Cargando formulario...</Card.Body></Card>;
   }
@@ -203,9 +202,9 @@ const StepBeneficiary = ({ formData, fields, onBack, onComplete }) => {
         {token && (
           <Form.Group className="mb-4">
             <Form.Label>Cargar Beneficiario Favorito</Form.Label>
-            <Form.Select 
-              value={selectedFavorite} 
-              onChange={handleFavoriteSelect} 
+            <Form.Select
+              value={selectedFavorite}
+              onChange={handleFavoriteSelect}
               disabled={loadingFavorites}
               className="border-0 bg-light py-2 px-3"
             >

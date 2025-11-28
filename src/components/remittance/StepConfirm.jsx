@@ -245,9 +245,16 @@ const StepConfirm = ({ formData, fields, onBack }) => {
           )}
         </Form>
 
-        <Form.Group className="mb-3">
-          <Form.Check type="checkbox" label="Guardar favorito" checked={saveAsFavorite} onChange={(e) => setSaveAsFavorite(e.target.checked)} />
-        </Form.Group>
+        {!isFromFavorite && (
+          <Form.Group className="mb-3 mt-3">
+            <Form.Check
+              type="checkbox"
+              label="Agregar a favoritos para futuros envíos"
+              checked={saveAsFavorite}
+              onChange={(e) => setSaveAsFavorite(e.target.checked)}
+            />
+          </Form.Group>
+        )}
 
         {error && <Alert variant="danger">{error}</Alert>}
 

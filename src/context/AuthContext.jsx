@@ -8,18 +8,18 @@ export const AuthProvider = ({ children }) => {
   const [token, setToken] = useState(() => localStorage.getItem('token') || null);
 
   useEffect(() => {
-// --- LOGGING DETALLADO ---
+    // --- LOGGING DETALLADO ---
     console.log('[AuthContext] useEffect ejecutado. Token actual:', token);
     if (token) {
       // Verifica que el token tenga el formato JWT esperado (tres partes separadas por puntos)
       if (typeof token === 'string' && token.split('.').length === 3) {
-          console.log('[AuthContext] Token válido detectado, estableciendo cabecera Authorization.');
-          apiClient.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-          localStorage.setItem('token', token); // Guarda solo si es válido
+        console.log('[AuthContext] Token válido detectado, estableciendo cabecera Authorization.');
+        apiClient.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+        localStorage.setItem('token', token); // Guarda solo si es válido
       } else {
-          console.error('[AuthContext] ¡ERROR! Token inválido o malformado detectado en estado:', token);
-          // Opcional: Limpiar token inválido
-          // logout();
+        console.error('[AuthContext] ¡ERROR! Token inválido o malformado detectado en estado:', token);
+        // Opcional: Limpiar token inválido
+        // logout();
       }
     } else {
       console.log('[AuthContext] No hay token, eliminando cabecera Authorization.');

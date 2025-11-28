@@ -65,9 +65,12 @@ const RemittanceSteps = () => {
       setPendingQuote(null);
     }
   };
-  
-  const handleBeneficiaryComplete = (beneficiaryData) => {
+
+  const [isFromFavorite, setIsFromFavorite] = useState(false); // Nuevo estado
+
+  const handleBeneficiaryComplete = (beneficiaryData, isFav = false) => {
     setFormData(prev => ({ ...prev, beneficiary: beneficiaryData }));
+    setIsFromFavorite(isFav); // Guardamos si es favorito
     setStep(3);
   };
 
@@ -91,18 +94,19 @@ const RemittanceSteps = () => {
       case 1:
         return <CardForm onQuoteSuccess={handleQuoteSuccess} />;
       case 2:
-        return <StepBeneficiary 
-                  formData={formData} 
-                  fields={beneficiaryFields} 
-                  onBack={handleBack} 
-                  onComplete={handleBeneficiaryComplete} 
-               />;
+        return <StepBeneficiary
+          formData={formData}
+          fields={beneficiaryFields}
+          onBack={handleBack}
+          onComplete={handleBeneficiaryComplete}
+        />;
       case 3:
-        return <StepConfirm 
-                  formData={formData} 
-                  fields={beneficiaryFields} 
-                  onBack={handleBack} 
-               />;
+        return <StepConfirm
+          formData={formData}
+          fields={beneficiaryFields}
+          onBack={handleBack}
+          isFromFavorite={isFromFavorite} // Pasamos la prop
+        />;
       default:
         return <CardForm onQuoteSuccess={handleQuoteSuccess} />;
     }
@@ -113,9 +117,9 @@ const RemittanceSteps = () => {
       {renderStep()}
 
       {/* --- MODAL DE KYC --- */}
-      <Modal 
-        show={showKycModal} 
-        onHide={() => setShowKycModal(false)} 
+      <Modal
+        show={showKycModal}
+        onHide={() => setShowKycModal(false)}
         backdrop="static" // Evita cerrar al hacer clic fuera
         keyboard={false}  // Evita cerrar con ESC
         centered
@@ -124,8 +128,8 @@ const RemittanceSteps = () => {
           <Modal.Title className="h5 text-primary">Falta un paso importante</Modal.Title>
         </Modal.Header>
         <Modal.Body>
-           {/* Reutilizamos el formulario que creamos */}
-           <KycForm onSuccess={handleKycSuccess} />
+          {/* Reutilizamos el formulario que creamos */}
+          <KycForm onSuccess={handleKycSuccess} />
         </Modal.Body>
       </Modal>
     </div>

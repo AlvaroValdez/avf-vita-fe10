@@ -38,8 +38,10 @@ const Profile = () => {
     try {
       const response = await uploadAvatar(formData);
       if (response.ok) {
-        // Actualizar la sesión con la nueva URL del avatar
-        updateUserSession({ ...user, avatar: response.avatar });
+        // response.avatar es la URL nueva
+        // Debemos fusionarla con el usuario actual
+        const updatedUser = { ...user, avatar: response.avatar };
+        updateUserSession(updatedUser);
       }
     } catch (err) {
       console.error(err);
@@ -58,13 +60,13 @@ const Profile = () => {
           <Card className="shadow-sm border-0">
             <Card.Body>
               <div className="text-center mb-3">
-                
+
                 {/* --- AVATAR INTERACTIVO --- */}
-                <div 
+                <div
                   onClick={handleAvatarClick}
-                  style={{ 
-                    width: '100px', height: '100px', borderRadius: '50%', 
-                    backgroundColor: '#e9ecef', margin: '0 auto', 
+                  style={{
+                    width: '100px', height: '100px', borderRadius: '50%',
+                    backgroundColor: '#e9ecef', margin: '0 auto',
                     position: 'relative', cursor: 'pointer', overflow: 'hidden',
                     backgroundImage: user?.avatar ? `url(${user.avatar})` : 'none',
                     backgroundSize: 'cover', backgroundPosition: 'center',
@@ -73,11 +75,11 @@ const Profile = () => {
                   }}
                 >
                   {/* Input oculto */}
-                  <input 
-                    type="file" 
-                    ref={fileInputRef} 
-                    onChange={handleFileChange} 
-                    style={{ display: 'none' }} 
+                  <input
+                    type="file"
+                    ref={fileInputRef}
+                    onChange={handleFileChange}
+                    style={{ display: 'none' }}
                     accept="image/*"
                   />
 
@@ -86,7 +88,7 @@ const Profile = () => {
                   ) : (
                     !user?.avatar && <span style={{ fontSize: '32px', color: '#6c757d' }}>{user?.name?.charAt(0).toUpperCase()}</span>
                   )}
-                  
+
                   {/* Overlay al hacer hover (opcional, visual) */}
                   <div className="avatar-overlay" style={{ position: 'absolute', bottom: 0, width: '100%', background: 'rgba(0,0,0,0.5)', color: 'white', fontSize: '10px' }}>
                     EDITAR
@@ -95,24 +97,24 @@ const Profile = () => {
 
                 <h5 className="mt-3">{user?.name}</h5>
                 <p className="text-muted small">{user?.email}</p>
-                
+
                 <div className="mb-2">
-                    Nivel KYC: <strong className="fs-5">{user?.kyc?.level || 1}</strong>
+                  Nivel KYC: <strong className="fs-5">{user?.kyc?.level || 1}</strong>
                 </div>
                 <div>{getKycStatusBadge(user?.kyc?.status)}</div>
               </div>
-              
+
               <hr />
-              
+
               <ListGroup variant="flush" className="small">
                 <ListGroup.Item className="px-0">
-                  <strong>Teléfono:</strong> <br/> {user?.phoneNumber || 'No registrado'}
+                  <strong>Teléfono:</strong> <br /> {user?.phoneNumber || 'No registrado'}
                 </ListGroup.Item>
                 <ListGroup.Item className="px-0">
-                  <strong>Documento ({user?.documentType}):</strong> <br/> {user?.documentNumber || 'No registrado'}
+                  <strong>Documento ({user?.documentType}):</strong> <br /> {user?.documentNumber || 'No registrado'}
                 </ListGroup.Item>
                 <ListGroup.Item className="px-0">
-                  <strong>Dirección:</strong> <br/> {user?.address || 'No registrado'}
+                  <strong>Dirección:</strong> <br /> {user?.address || 'No registrado'}
                 </ListGroup.Item>
               </ListGroup>
             </Card.Body>
@@ -122,12 +124,12 @@ const Profile = () => {
         {/* --- Columna Derecha: Verificación de Identidad --- */}
         <Col lg={8}>
           <Card className="shadow-sm border-0">
-             <Card.Header className="bg-white border-bottom-0 pt-4 pb-0">
-                <h4 style={{ color: 'var(--avf-primary)' }}>Aumentar Límites (Nivel 2)</h4>
-             </Card.Header>
-             <Card.Body>
-                <KycLevel2Form />
-             </Card.Body>
+            <Card.Header className="bg-white border-bottom-0 pt-4 pb-0">
+              <h4 style={{ color: 'var(--avf-primary)' }}>Aumentar Límites (Nivel 2)</h4>
+            </Card.Header>
+            <Card.Body>
+              <KycLevel2Form />
+            </Card.Body>
           </Card>
         </Col>
       </Row>
