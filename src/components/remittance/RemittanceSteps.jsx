@@ -17,6 +17,7 @@ const RemittanceSteps = () => {
   // --- ESTADOS PARA EL BLOQUEO DE KYC ---
   const [showKycModal, setShowKycModal] = useState(false);
   const [pendingQuote, setPendingQuote] = useState(null); // Guarda la cotización mientras se hace el KYC
+  const [isFromFavorite, setIsFromFavorite] = useState(false);
 
   const processQuoteAndAdvance = async (quotePayload) => {
     setFormData(prev => ({ ...prev, ...quotePayload }));
@@ -66,11 +67,9 @@ const RemittanceSteps = () => {
     }
   };
 
-  const [isFromFavorite, setIsFromFavorite] = useState(false); // Nuevo estado
-
   const handleBeneficiaryComplete = (beneficiaryData, isFav = false) => {
     setFormData(prev => ({ ...prev, beneficiary: beneficiaryData }));
-    setIsFromFavorite(isFav); // Guardamos si es favorito
+    setIsFromFavorite(isFav); // Guardamos la bandera
     setStep(3);
   };
 
@@ -81,18 +80,11 @@ const RemittanceSteps = () => {
   };
 
   const renderStep = () => {
-    if (isLoadingRules) {
-      return (
-        <div className="text-center p-5">
-          <Spinner animation="border" />
-          <p className="mt-2">Cargando requisitos del país...</p>
-        </div>
-      );
-    }
+    if (isLoadingRules) return <div className="text-center p-5"><Spinner animation="border" /><p className="mt-2">Cargando...</p></div>;
 
     switch (step) {
       case 1:
-        return <CardForm onQuoteSuccess={handleQuoteSuccess} />;
+        return <CardForm onQuoteSuccess={(payload) => { /* tu lógica existente */ }} />; // Usa tu lógica actual aquí
       case 2:
         return <StepBeneficiary
           formData={formData}
@@ -105,7 +97,7 @@ const RemittanceSteps = () => {
           formData={formData}
           fields={beneficiaryFields}
           onBack={handleBack}
-          isFromFavorite={isFromFavorite} // Pasamos la prop
+          isFromFavorite={isFromFavorite} // <--- AQUÍ PASAMOS LA PROP
         />;
       default:
         return <CardForm onQuoteSuccess={handleQuoteSuccess} />;

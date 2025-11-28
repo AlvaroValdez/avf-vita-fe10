@@ -146,7 +146,7 @@ const StepBeneficiary = ({ formData, fields, onBack, onComplete }) => {
 
     if (isFormValid) {
       // Pasamos una bandera extra indicando si vino de un favorito seleccionado
-      onComplete(cleanData, !!selectedFavorite);
+      onComplete(beneficiaryData, !!selectedFavorite);
     }
   };
 
@@ -238,6 +238,17 @@ const StepBeneficiary = ({ formData, fields, onBack, onComplete }) => {
             <Button variant="primary" style={{ backgroundColor: 'var(--avf-secondary)', borderColor: 'var(--avf-secondary)' }} onClick={handleNext}>Continuar</Button>
           </div>
         </Form>
+
+        <div className="d-flex justify-content-between mt-4">
+          <Button variant="outline-secondary" onClick={onBack}>Volver</Button>
+          <Button
+            variant="primary"
+            style={{ backgroundColor: 'var(--avf-secondary)', borderColor: 'var(--avf-secondary)' }}
+            onClick={handleNext}
+          >
+            Continuar
+          </Button>
+        </div>
       </Card.Body>
     </Card>
   );

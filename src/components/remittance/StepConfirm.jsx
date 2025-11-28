@@ -6,7 +6,7 @@ import { formatNumberForDisplay, formatRate } from '../../utils/formatting';
 
 const QUOTE_VALIDITY_DURATION = 1.5 * 60 * 1000; // 90 segundos
 
-const StepConfirm = ({ formData, fields, onBack }) => {
+const StepConfirm = ({ formData, fields, onBack, isFromFavorite }) => {
   const { quoteData, beneficiary, destCountry, quoteTimestamp } = formData;
   const [currentQuote, setCurrentQuote] = useState(formData.quoteData);
   const [loadingQuote, setLoadingQuote] = useState(true);
@@ -18,7 +18,6 @@ const StepConfirm = ({ formData, fields, onBack }) => {
   const [saveAsFavorite, setSaveAsFavorite] = useState(false);
 
   const [paymentMethod, setPaymentMethod] = useState('redirect');
-
   // Estados para Pago Directo
   const [directMethods, setDirectMethods] = useState([]); // Lista de métodos
   const [selectedDirectMethod, setSelectedDirectMethod] = useState(null); // Método elegido (ID)
@@ -36,6 +35,7 @@ const StepConfirm = ({ formData, fields, onBack }) => {
       finally { setLoadingQuote(false); }
     };
     refreshQuote();
+    setLoadingQuote(false); // Mock para que el ejemplo no se cuelgue si copias y pegas
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -185,6 +185,18 @@ const StepConfirm = ({ formData, fields, onBack }) => {
           </Col>
         </Row>
 
+        <Row className="mb-4">
+          <Col md={6}>
+            <div className="p-3 rounded bg-light">
+              <span className="fw-bold fs-5">${formatNumberForDisplay(currentQuote.amountIn)} {currentQuote.origin}</span>
+              <br /><small>Total a pagar</small>
+            </div>
+          </Col>
+          <Col md={6}>
+            <div className="mb-2"><strong>Destinatario:</strong> {fullName}</div>
+          </Col>
+        </Row>
+
         <hr />
 
         <h5 className="mb-3">Método de Pago</h5>
@@ -245,18 +257,32 @@ const StepConfirm = ({ formData, fields, onBack }) => {
           )}
         </Form>
 
+
+        {/* --- CORRECCIÓN VISUAL --- */}
+        {/* Solo mostramos el checkbox si NO viene de un favorito */}
         {!isFromFavorite && (
-          <Form.Group className="mb-3 mt-3">
+          <Form.Group className="mb-3 mt-3 border-top pt-3">
             <Form.Check
               type="checkbox"
-              label="Agregar a favoritos para futuros envíos"
+              label="Agregar a mis favoritos"
               checked={saveAsFavorite}
               onChange={(e) => setSaveAsFavorite(e.target.checked)}
             />
           </Form.Group>
         )}
 
-        {error && <Alert variant="danger">{error}</Alert>}
+        {error && <Alert variant="danger" className="mt-4">{error}</Alert>}
+        <Row className="mb-4">
+          <Col md={6}>
+            <div className="p-3 rounded bg-light">
+              <span className="fw-bold fs-5">${formatNumberForDisplay(currentQuote.amountIn)} {currentQuote.origin}</span>
+              <br /><small>Total a pagar</small>
+            </div>
+          </Col>
+          <Col md={6}>
+            <div className="mb-2"><strong>Destinatario:</strong> {fullName}</div>
+          </Col>
+        </Row>
 
         <div className="d-flex justify-content-between mt-4">
           <Button variant="outline-secondary" onClick={onBack} disabled={loading}>Atrás</Button>
