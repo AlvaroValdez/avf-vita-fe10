@@ -1,109 +1,104 @@
 import React, { useState, useEffect } from 'react';
 import { Card, Button, Row, Col, Spinner, Alert, Form } from 'react-bootstrap';
-// Importamos getPaymentMethods en lugar de getDirectPaymentRequirements
 import { createWithdrawal, createPaymentOrder, createDirectPaymentOrder, getQuote, saveBeneficiary, getPaymentMethods } from '../../services/api';
 import { formatNumberForDisplay, formatRate } from '../../utils/formatting';
 
-const QUOTE_VALIDITY_DURATION = 1.5 * 60 * 1000; // 90 segundos
+const QUOTE_VALIDITY_DURATION = 2 * 60 * 1000;
 
 const StepConfirm = ({ formData, fields, onBack, isFromFavorite }) => {
-  const { quoteData, beneficiary, destCountry, quoteTimestamp } = formData;
+  const { quoteData, beneficiary, destCountry } = formData;
   const [currentQuote, setCurrentQuote] = useState(formData.quoteData);
   const [loadingQuote, setLoadingQuote] = useState(true);
+
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [transactionResult, setTransactionResult] = useState(null);
   const [remainingTime, setRemainingTime] = useState(null);
   const [isExpired, setIsExpired] = useState(false);
+
   const [saveAsFavorite, setSaveAsFavorite] = useState(false);
 
+  // Estados para Pago
   const [paymentMethod, setPaymentMethod] = useState('redirect');
-  // Estados para Pago Directo
-  const [directMethods, setDirectMethods] = useState([]); // Lista de métodos
-  const [selectedDirectMethod, setSelectedDirectMethod] = useState(null); // Método elegido (ID)
-  const [directFormData, setDirectFormData] = useState({}); // Datos del formulario
+  const [directMethods, setDirectMethods] = useState([]);
+  const [selectedDirectMethod, setSelectedDirectMethod] = useState(null);
+  const [directFormData, setDirectFormData] = useState({});
+  const [directPaymentAvailable, setDirectPaymentAvailable] = useState(true);
 
-  // 1. Refresco de Cotización (sin cambios)
+  // 1. Refrescar Cotización
   useEffect(() => {
     const refreshQuote = async () => {
       try {
         setLoadingQuote(true);
         const response = await getQuote({ amount: formData.quoteData.amountIn, destCountry });
         if (response.ok) setCurrentQuote(response.data);
-        else setError('No se pudo actualizar la cotización.');
-      } catch (err) { setError('Error de red al actualizar.'); }
-      finally { setLoadingQuote(false); }
+        else console.warn('No se pudo refrescar cotización');
+      } catch (err) {
+        console.error('Error refrescando quote:', err);
+      } finally {
+        setLoadingQuote(false);
+      }
     };
     refreshQuote();
-    setLoadingQuote(false); // Mock para que el ejemplo no se cuelgue si copias y pegas
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // 2. Timer (sin cambios)
+  // 2. Timer
   useEffect(() => {
-    if (!currentQuote || loadingQuote) return;
-    const ts = Date.now();
+    if (loadingQuote) return;
+    const quoteTimestamp = Date.now();
     setRemainingTime(QUOTE_VALIDITY_DURATION);
+
     const interval = setInterval(() => {
-      const elapsed = Date.now() - ts;
-      const left = QUOTE_VALIDITY_DURATION - elapsed;
-      if (left <= 0) { clearInterval(interval); setRemainingTime(0); setIsExpired(true); }
-      else setRemainingTime(left);
+      const elapsedTime = Date.now() - quoteTimestamp;
+      const timeLeft = QUOTE_VALIDITY_DURATION - elapsedTime;
+      if (timeLeft <= 0) {
+        clearInterval(interval);
+        setRemainingTime(0);
+        setIsExpired(true);
+      } else {
+        setRemainingTime(timeLeft);
+      }
     }, 1000);
     return () => clearInterval(interval);
-  }, [currentQuote, loadingQuote]);
+  }, [loadingQuote]);
 
-  // 3. CORRECCIÓN: Cargar métodos de pago reales según el país
+  // 3. Cargar Métodos de Pago Directo
   useEffect(() => {
     if (paymentMethod === 'direct' && directMethods.length === 0) {
       const loadMethods = async () => {
         try {
-          // Llamamos al backend pasando el país (ej: 'CL')
-          // NOTA: El pago directo suele ser en el país de origen del pago (Chile), no el destino.
-          // Si el usuario paga en Chile, usamos 'CL'.
-          const res = await getPaymentMethods('CL');
-
+          const res = await getPaymentMethods('CL'); // Origen del pago (Chile)
           if (res.ok && res.data.payment_methods) {
             setDirectMethods(res.data.payment_methods);
-            // Seleccionar el primero por defecto
-            if (res.data.payment_methods.length > 0) {
-              setSelectedDirectMethod(res.data.payment_methods[0]);
-            }
+            if (res.data.payment_methods.length > 0) setSelectedDirectMethod(res.data.payment_methods[0]);
           }
         } catch (e) {
-          console.error(e);
-          setError('Error cargando métodos de pago disponibles.');
+          console.error("Pago directo no disponible:", e);
+          setDirectPaymentAvailable(false);
+          setPaymentMethod('redirect');
+          alert("Pago directo no disponible temporalmente.");
         }
       };
       loadMethods();
     }
-  }, [paymentMethod]);
+  }, [paymentMethod, directMethods.length]);
 
   const handleDirectFormChange = (e) => {
     setDirectFormData({ ...directFormData, [e.target.name]: e.target.value });
-  };
-
-  const handleMethodChange = (e) => {
-    const methodId = e.target.value;
-    const method = directMethods.find(m => m.method_id === methodId);
-    setSelectedDirectMethod(method);
-    setDirectFormData({}); // Limpiar formulario al cambiar método
   };
 
   const handleConfirm = async () => {
     setLoading(true);
     setError(null);
     try {
-      // Validar campos de pago directo
+      // Validar form directo
       if (paymentMethod === 'direct' && selectedDirectMethod) {
         for (const field of selectedDirectMethod.required_fields) {
-          if (field.required && !directFormData[field.name]) {
-            throw new Error(`El campo ${field.label} es obligatorio.`);
-          }
+          if (field.required && !directFormData[field.name]) throw new Error(`Falta campo: ${field.label}`);
         }
       }
 
-      // Paso A: Withdrawal
+      // 1. Payout
       const withdrawalResult = await createWithdrawal({
         country: destCountry,
         currency: currentQuote.origin,
@@ -112,13 +107,14 @@ const StepConfirm = ({ formData, fields, onBack, isFromFavorite }) => {
       });
 
       if (withdrawalResult.ok) {
-        if (saveAsFavorite) {
+        // 2. Guardar Favorito (Solo si no venía de uno y se marcó el check)
+        if (saveAsFavorite && !isFromFavorite) {
           const nickname = `${beneficiary.beneficiary_first_name} ${beneficiary.beneficiary_last_name}`;
           saveBeneficiary({ nickname, country: destCountry, beneficiaryData: beneficiary }).catch(console.warn);
         }
 
+        // 3. Pay-in
         let paymentOrderResult;
-
         if (paymentMethod === 'redirect') {
           paymentOrderResult = await createPaymentOrder({
             amount: currentQuote.amountIn,
@@ -126,7 +122,6 @@ const StepConfirm = ({ formData, fields, onBack, isFromFavorite }) => {
             orderId: withdrawalResult.data.order,
           });
         } else {
-          // PAGO DIRECTO REAL
           paymentOrderResult = await createDirectPaymentOrder({
             amount: currentQuote.amountIn,
             country: 'CL',
@@ -138,12 +133,11 @@ const StepConfirm = ({ formData, fields, onBack, isFromFavorite }) => {
 
         if (paymentOrderResult.ok) {
           const resData = paymentOrderResult.data || paymentOrderResult;
-          const paymentUrl = resData.payment_url || resData.data?.payment_url || resData.data?.attributes?.url || resData.url;
-
+          const paymentUrl = resData.payment_url || resData.data?.attributes?.url || resData.url;
           if (paymentUrl) window.location.href = paymentUrl;
           else throw new Error('No se recibió URL de pago.');
         } else {
-          throw new Error('Error al generar pago.');
+          throw new Error('Error al generar orden de pago.');
         }
       } else {
         throw new Error(withdrawalResult.details || 'Error al crear transacción.');
@@ -151,148 +145,93 @@ const StepConfirm = ({ formData, fields, onBack, isFromFavorite }) => {
     } catch (err) {
       let msg = err.message || "Error desconocido";
       if (err.details) msg = JSON.stringify(err.details);
+      if (msg.includes('caducaron')) {
+        msg = "La cotización ha vencido. Por favor actualiza.";
+        setIsExpired(true);
+      }
       setError(msg);
       setLoading(false);
     }
   };
 
-  // ... (Helpers de UI sin cambios) ...
   const formatTime = (ms) => {
     if (ms === null || ms <= 0) return '00:00';
     const s = Math.floor(ms / 1000);
     return `${Math.floor(s / 60).toString().padStart(2, '0')}:${(s % 60).toString().padStart(2, '0')}`;
   };
-  const getFieldDetails = (k) => fields?.find(f => f.key === k);
-  const getDisplayValue = (k, v) => { /* ... */ return v; };
-  if (isExpired) return <Card className="p-4"><Alert variant="danger">Expirado</Alert><Button onClick={onBack}>Volver</Button></Card>;
-  if (!quoteData) return null;
 
-  const fullName = `${beneficiary.beneficiary_first_name} ${beneficiary.beneficiary_last_name}`;
+  const getFieldDetails = (k) => fields?.find(f => f.key === k);
+  const getDisplayValue = (k, v) => {
+    const field = getFieldDetails(k);
+    if (field?.type === 'select' && field.options) {
+      const opt = field.options.find(o => o.value === v);
+      return opt ? opt.label : v;
+    }
+    return v;
+  };
+
+  if (isExpired) return <Card className="p-4 text-center"><Alert variant="danger">Cotización Expirada</Alert><Button onClick={onBack}>Volver</Button></Card>;
+
+  const fullName = `${beneficiary.beneficiary_first_name || ''} ${beneficiary.beneficiary_last_name || ''}`;
 
   return (
     <Card className="p-4 shadow-sm border-0">
       <Card.Body>
-        <h4 className="mb-4">Resumen de la transacción</h4>
-        <Row className="mb-4">
-          <Col md={6}>
-            <div className="p-3 rounded bg-light">
-              <span className="fw-bold fs-5">${formatNumberForDisplay(currentQuote.amountIn)} {currentQuote.origin}</span>
-              <br /><small>Total a pagar</small>
-            </div>
-          </Col>
-          <Col md={6}>
-            <div className="mb-2"><strong>Destinatario:</strong> {fullName}</div>
-          </Col>
-        </Row>
-
-        <Row className="mb-4">
-          <Col md={6}>
-            <div className="p-3 rounded bg-light">
-              <span className="fw-bold fs-5">${formatNumberForDisplay(currentQuote.amountIn)} {currentQuote.origin}</span>
-              <br /><small>Total a pagar</small>
-            </div>
-          </Col>
-          <Col md={6}>
-            <div className="mb-2"><strong>Destinatario:</strong> {fullName}</div>
-          </Col>
-        </Row>
+        <h4 className="mb-4">Resumen</h4>
+        {loadingQuote ? <Spinner /> : (
+          <Row className="mb-4">
+            <Col md={6}>
+              <div className="p-3 rounded bg-light">
+                <span className="fw-bold fs-5">${formatNumberForDisplay(currentQuote.amountIn)} {currentQuote.origin}</span>
+                <br /><small>Total a pagar</small>
+              </div>
+            </Col>
+            <Col md={6}>
+              <div className="mb-2"><strong>Destinatario:</strong> {fullName}</div>
+              {Object.entries(beneficiary).map(([key, value]) => {
+                if (!value || key.includes('name')) return null;
+                const field = getFieldDetails(key);
+                return <div key={key}><small className="text-muted">{field?.name}:</small> {getDisplayValue(key, value)}</div>;
+              })}
+            </Col>
+          </Row>
+        )}
 
         <hr />
 
         <h5 className="mb-3">Método de Pago</h5>
         <Form>
           <div className="mb-3">
-            <Form.Check
-              type="radio" id="pay-redirect" label="Pasarela Web (Redirección)"
-              name="paymentMethod" value="redirect"
-              checked={paymentMethod === 'redirect'}
-              onChange={(e) => setPaymentMethod(e.target.value)}
-            />
-            <Form.Check
-              type="radio" id="pay-direct" label="Pago Directo (Khipu / Transferencia)"
-              name="paymentMethod" value="direct"
-              checked={paymentMethod === 'direct'}
-              onChange={(e) => setPaymentMethod(e.target.value)}
-            />
+            <Form.Check type="radio" label="Pasarela Web" name="pm" checked={paymentMethod === 'redirect'} onChange={() => setPaymentMethod('redirect')} />
+            <Form.Check type="radio" label="Pago Directo" name="pm" checked={paymentMethod === 'direct'} onChange={() => setPaymentMethod('direct')} disabled={!directPaymentAvailable} />
           </div>
-
-          {/* --- FORMULARIO DINÁMICO DE PAGO DIRECTO --- */}
-          {paymentMethod === 'direct' && directMethods.length > 0 && (
-            <div className="p-3 border rounded bg-light mb-3">
-              {/* Selector de Método si hay varios */}
-              {directMethods.length > 1 && (
-                <Form.Group className="mb-3">
-                  <Form.Label>Selecciona medio de pago:</Form.Label>
-                  <Form.Select onChange={handleMethodChange} value={selectedDirectMethod?.method_id}>
-                    {directMethods.map(m => <option key={m.method_id} value={m.method_id}>{m.name}</option>)}
-                  </Form.Select>
-                </Form.Group>
-              )}
-
-              {selectedDirectMethod && (
-                <>
-                  <h6 className="text-primary mb-3">{selectedDirectMethod.description || selectedDirectMethod.name}</h6>
-                  <Row>
-                    {selectedDirectMethod.required_fields.map(field => (
-                      <Col md={6} key={field.name}>
-                        <Form.Group className="mb-3">
-                          <Form.Label>{field.label}</Form.Label>
-                          <Form.Control
-                            type={field.type === 'string' ? 'text' : field.type}
-                            name={field.name}
-                            value={directFormData[field.name] || ''}
-                            onChange={handleDirectFormChange}
-                            required={field.required}
-                          />
-                        </Form.Group>
-                      </Col>
-                    ))}
-                  </Row>
-                </>
-              )}
+          {paymentMethod === 'direct' && selectedDirectMethod && (
+            <div className="p-3 bg-light rounded">
+              <h6>{selectedDirectMethod.name}</h6>
+              <Row>
+                {selectedDirectMethod.required_fields.map(f => (
+                  <Col md={6} key={f.name}>
+                    <Form.Group className="mb-2"><Form.Label>{f.label}</Form.Label><Form.Control name={f.name} onChange={handleDirectFormChange} required={f.required} /></Form.Group>
+                  </Col>
+                ))}
+              </Row>
             </div>
-          )}
-          {paymentMethod === 'direct' && directMethods.length === 0 && (
-            <Alert variant="warning">Cargando métodos de pago...</Alert>
           )}
         </Form>
 
-
-        {/* --- CORRECCIÓN VISUAL --- */}
-        {/* Solo mostramos el checkbox si NO viene de un favorito */}
+        {/* Ocultar si ya viene de favorito */}
         {!isFromFavorite && (
           <Form.Group className="mb-3 mt-3 border-top pt-3">
-            <Form.Check
-              type="checkbox"
-              label="Agregar a mis favoritos"
-              checked={saveAsFavorite}
-              onChange={(e) => setSaveAsFavorite(e.target.checked)}
-            />
+            <Form.Check type="checkbox" label="Guardar favorito" checked={saveAsFavorite} onChange={(e) => setSaveAsFavorite(e.target.checked)} />
           </Form.Group>
         )}
 
-        {error && <Alert variant="danger" className="mt-4">{error}</Alert>}
-        <Row className="mb-4">
-          <Col md={6}>
-            <div className="p-3 rounded bg-light">
-              <span className="fw-bold fs-5">${formatNumberForDisplay(currentQuote.amountIn)} {currentQuote.origin}</span>
-              <br /><small>Total a pagar</small>
-            </div>
-          </Col>
-          <Col md={6}>
-            <div className="mb-2"><strong>Destinatario:</strong> {fullName}</div>
-          </Col>
-        </Row>
+        {error && <Alert variant="danger">{error}</Alert>}
 
         <div className="d-flex justify-content-between mt-4">
           <Button variant="outline-secondary" onClick={onBack} disabled={loading}>Atrás</Button>
-          <Button
-            variant="primary"
-            onClick={handleConfirm}
-            disabled={loading || isExpired}
-            style={{ backgroundColor: 'var(--avf-secondary)', borderColor: 'var(--avf-secondary)' }}
-          >
-            {loading ? <Spinner as="span" size="sm" /> : `Pagar $${formatNumberForDisplay(currentQuote.amountIn)}`}
+          <Button variant="primary" onClick={handleConfirm} disabled={loading || isExpired} style={{ backgroundColor: 'var(--avf-secondary)' }}>
+            {loading ? <Spinner size="sm" /> : `Pagar $${formatNumberForDisplay(currentQuote.amountIn)}`}
           </Button>
         </div>
       </Card.Body>

@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Card, Form, Button, Col, Row } from 'react-bootstrap';
-import { getBeneficiaries } from '../../services/api'; // 1. Importa la función
-import { useAuth } from '../../context/AuthContext'
+import { Card, Form, Button, Col, Row, Alert, Spinner } from 'react-bootstrap';
+import { getBeneficiaries } from '../../services/api';
+import { useAuth } from '../../context/AuthContext';
 
-// Expresión regular estándar para la validación de email.
+// Regex estándar para email
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 const StepBeneficiary = ({ formData, fields, onBack, onComplete }) => {
@@ -12,13 +12,14 @@ const StepBeneficiary = ({ formData, fields, onBack, onComplete }) => {
   const [errors, setErrors] = useState({});
   const [fieldsToRender, setFieldsToRender] = useState([]);
 
-  const [favorites, setFavorites] = useState([]); // Estado para favoritos
-  const [loadingFavorites, setLoadingFavorites] = useState(true); // Nuevo estado
+  // Estados para Favoritos
+  const [favorites, setFavorites] = useState([]);
+  const [loadingFavorites, setLoadingFavorites] = useState(false);
   const [selectedFavorite, setSelectedFavorite] = useState('');
 
   const countryFields = fields || [];
 
-  // Efecto para cargar los favoritos al inicio
+  // Cargar favoritos si está logueado
   useEffect(() => {
     if (token) {
       const loadFavorites = async () => {
@@ -29,45 +30,25 @@ const StepBeneficiary = ({ formData, fields, onBack, onComplete }) => {
             setFavorites(response.beneficiaries || []);
           }
         } catch (err) {
-          console.error("Error al cargar favoritos: ", err);
-          // Si hay un 401, no hacemos nada, si no es 401 mostramos un error
+          console.warn("No se pudieron cargar favoritos:", err);
         } finally {
           setLoadingFavorites(false);
         }
       };
       loadFavorites();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [token]);
 
-  // Lógica para autocompletar cuando se selecciona un favorito
-  const handleFavoriteSelect = (e) => {
-    const selectedId = e.target.value;
-    setSelectedFavorite(selectedId);
-
-    if (selectedId) {
-      const favorite = favorites.find(f => f._id === selectedId);
-      if (favorite) {
-        setBeneficiaryData(favorite.beneficiaryData);
-        setErrors({});
-        // Aquí no podemos pasar la bandera directamente a onComplete aún, 
-        // pero podemos guardarla en el estado o pasarla si el usuario avanza inmediatamente.
-        // La mejor opción es pasar una prop extra a onComplete en handleNext
-      }
-    } else {
-      setBeneficiaryData({});
-    }
-  };
-
-  // Efectos para inicializar y mostrar campos (sin cambios)
+  // Inicializar formulario
   useEffect(() => {
     if (countryFields.length > 0) {
       const initialData = {};
       countryFields.forEach(field => { initialData[field.key] = ''; });
-      setBeneficiaryData(initialData);
+      setBeneficiaryData(prev => ({ ...initialData, ...prev })); // Mantiene datos si ya había
     }
   }, [countryFields]);
 
+  // Filtrar campos visibles (lógica condicional 'when')
   useEffect(() => {
     if (countryFields.length > 0) {
       const visibleFields = countryFields.filter(field => {
@@ -78,53 +59,53 @@ const StepBeneficiary = ({ formData, fields, onBack, onComplete }) => {
     }
   }, [beneficiaryData, countryFields]);
 
-  // --- VALIDACIÓN BASADA EN REGLAS VITA ---
+  const handleFavoriteSelect = (e) => {
+    const selectedId = e.target.value;
+    setSelectedFavorite(selectedId);
+
+    if (selectedId) {
+      const favorite = favorites.find(f => f._id === selectedId);
+      if (favorite) {
+        setBeneficiaryData(favorite.beneficiaryData); // Autocompletar
+        setErrors({});
+      }
+    } else {
+      // Limpiar si deselecciona
+      const resetData = {};
+      countryFields.forEach(f => resetData[f.key] = '');
+      setBeneficiaryData(resetData);
+    }
+  };
+
   const validateField = (name, value) => {
     const rule = countryFields.find(f => f.key === name);
     if (!rule) return null;
 
-    // 1. Validar si es requerido (basado en la propiedad 'min')
-    const isRequired = rule.min > 0;
-    if (isRequired && !value) {
-      return 'Este campo es requerido.';
-    }
-    if (!value) return null; // Si no es requerido y está vacío, es válido
+    const isRequired = rule.min > 0 || rule.required === true;
+    if (isRequired && !value) return 'Este campo es requerido.';
+    if (!value) return null;
 
-    // 2. Validar longitud MÍNIMA
-    if (rule.min && value.length < rule.min) {
-      return `Debe tener al menos ${rule.min} caracteres.`;
-    }
+    if (rule.min && value.length < rule.min) return `Mínimo ${rule.min} caracteres.`;
+    if (rule.max && value.length > rule.max) return `Máximo ${rule.max} caracteres.`;
 
-    // 3. Validar longitud MÁXIMA
-    if (rule.max && value.length > rule.max) {
-      return `No puede exceder los ${rule.max} caracteres.`;
-    }
-
-    // 4. Validar formato con REGEX (si la API lo provee)
     if (rule.regex) {
-      const regex = new RegExp(rule.regex);
-      if (!regex.test(value)) {
-        return rule.helper_text || 'El formato es inválido.';
-      }
+      if (!new RegExp(rule.regex).test(value)) return rule.helper_text || 'Formato inválido.';
+    } else if (rule.type === 'email') {
+      if (!EMAIL_REGEX.test(value)) return 'Email inválido.';
     }
-    // 5. Si no hay REGEX, validar por TIPO (ej: 'email')
-    else if (rule.type === 'email') {
-      if (!EMAIL_REGEX.test(value)) {
-        return 'El formato del correo electrónico es inválido.';
-      }
-      const localPart = value.split('@')[0];
-      if (localPart.length < 6) {
-        return 'El nombre del correo debe tener al menos 6 caracteres.';
-      }
-    }
-
-    return null; // El campo es válido
+    return null;
   };
 
   const handleBlur = (e) => {
     const { name, value } = e.target;
     const error = validateField(name, value.trim());
     setErrors(prev => ({ ...prev, [name]: error }));
+  };
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setBeneficiaryData(prev => ({ ...prev, [name]: value }));
+    if (errors[name]) setErrors(prev => ({ ...prev, [name]: null }));
   };
 
   const handleNext = () => {
@@ -145,16 +126,8 @@ const StepBeneficiary = ({ formData, fields, onBack, onComplete }) => {
     setErrors(allErrors);
 
     if (isFormValid) {
-      // Pasamos una bandera extra indicando si vino de un favorito seleccionado
-      onComplete(beneficiaryData, !!selectedFavorite);
-    }
-  };
-
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setBeneficiaryData(prev => ({ ...prev, [name]: value }));
-    if (errors[name]) {
-      setErrors(prev => ({ ...prev, [name]: null }));
+      // Pasamos los datos y true/false si viene de favorito
+      onComplete(cleanData, !!selectedFavorite);
     }
   };
 
@@ -169,8 +142,8 @@ const StepBeneficiary = ({ formData, fields, onBack, onComplete }) => {
             value={beneficiaryData[field.key] || ''}
             isInvalid={!!errors[field.key]}
           >
-            <option value="">Selecciona una opción...</option>
-            {field.options && field.options.map(opt => (
+            <option value="">Seleccionar...</option>
+            {field.options?.map(opt => (
               <option key={opt.value} value={opt.value}>{opt.label}</option>
             ))}
           </Form.Select>
@@ -178,7 +151,7 @@ const StepBeneficiary = ({ formData, fields, onBack, onComplete }) => {
       default:
         return (
           <Form.Control
-            type={field.type}
+            type={field.type || 'text'}
             name={field.key}
             onChange={handleChange}
             onBlur={handleBlur}
@@ -198,7 +171,6 @@ const StepBeneficiary = ({ formData, fields, onBack, onComplete }) => {
       <Card.Body>
         <Card.Title as="h5" className="mb-4">Datos del Beneficiario</Card.Title>
 
-        {/* --- SELECTOR DE FAVORITOS --- */}
         {token && (
           <Form.Group className="mb-4">
             <Form.Label>Cargar Beneficiario Favorito</Form.Label>
@@ -206,18 +178,15 @@ const StepBeneficiary = ({ formData, fields, onBack, onComplete }) => {
               value={selectedFavorite}
               onChange={handleFavoriteSelect}
               disabled={loadingFavorites}
-              className="border-0 bg-light py-2 px-3"
+              className="bg-light"
             >
-              <option value="">{loadingFavorites ? 'Cargando favoritos...' : 'Selecciona un contacto'}</option>
+              <option value="">{loadingFavorites ? 'Cargando...' : 'Selecciona un contacto guardado'}</option>
               {favorites.map(fav => (
-                <option key={fav._id} value={fav._id}>
-                  {fav.nickname}
-                </option>
+                <option key={fav._id} value={fav._id}>{fav.nickname}</option>
               ))}
             </Form.Select>
           </Form.Group>
         )}
-
 
         <Form noValidate>
           <Row>
@@ -226,9 +195,7 @@ const StepBeneficiary = ({ formData, fields, onBack, onComplete }) => {
                 <Form.Group className="mb-3">
                   <Form.Label>{field.name}</Form.Label>
                   {renderField(field)}
-                  <Form.Control.Feedback type="invalid">
-                    {errors[field.key]}
-                  </Form.Control.Feedback>
+                  <Form.Control.Feedback type="invalid">{errors[field.key]}</Form.Control.Feedback>
                 </Form.Group>
               </Col>
             ))}
@@ -238,17 +205,6 @@ const StepBeneficiary = ({ formData, fields, onBack, onComplete }) => {
             <Button variant="primary" style={{ backgroundColor: 'var(--avf-secondary)', borderColor: 'var(--avf-secondary)' }} onClick={handleNext}>Continuar</Button>
           </div>
         </Form>
-
-        <div className="d-flex justify-content-between mt-4">
-          <Button variant="outline-secondary" onClick={onBack}>Volver</Button>
-          <Button
-            variant="primary"
-            style={{ backgroundColor: 'var(--avf-secondary)', borderColor: 'var(--avf-secondary)' }}
-            onClick={handleNext}
-          >
-            Continuar
-          </Button>
-        </div>
       </Card.Body>
     </Card>
   );

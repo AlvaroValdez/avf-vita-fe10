@@ -1,14 +1,14 @@
 import React, { useState } from 'react';
-import { Spinner, Modal } from 'react-bootstrap'; // 1. Importamos Modal
+import { Spinner, Modal } from 'react-bootstrap';
 import CardForm from './CardForm';
 import StepBeneficiary from './StepBeneficiary';
 import StepConfirm from './StepConfirm';
-import KycForm from '../auth/KycForm'; // 2. Importamos el formulario
+import KycForm from '../auth/KycForm';
 import { getWithdrawalRules } from '../../services/api';
-import { useAuth } from '../../context/AuthContext'; // 3. Importamos el contexto
+import { useAuth } from '../../context/AuthContext';
 
 const RemittanceSteps = () => {
-  const { user } = useAuth(); // Accedemos al usuario
+  const { user } = useAuth();
   const [step, setStep] = useState(1);
   const [formData, setFormData] = useState({});
   const [beneficiaryFields, setBeneficiaryFields] = useState([]);
@@ -16,9 +16,12 @@ const RemittanceSteps = () => {
 
   // --- ESTADOS PARA EL BLOQUEO DE KYC ---
   const [showKycModal, setShowKycModal] = useState(false);
-  const [pendingQuote, setPendingQuote] = useState(null); // Guarda la cotización mientras se hace el KYC
+  const [pendingQuote, setPendingQuote] = useState(null);
+
+  // --- ESTADO PARA SABER SI ES FAVORITO ---
   const [isFromFavorite, setIsFromFavorite] = useState(false);
 
+  // Función para avanzar después de validar/completar KYC
   const processQuoteAndAdvance = async (quotePayload) => {
     setFormData(prev => ({ ...prev, ...quotePayload }));
     setIsLoadingRules(true);
@@ -45,31 +48,27 @@ const RemittanceSteps = () => {
   };
 
   const handleQuoteSuccess = (quotePayload) => {
-    // --- VALIDACIÓN DE KYC ---
-    // Si el usuario no ha completado su perfil, mostramos el modal
+    // Validamos si el usuario necesita completar KYC antes de seguir
     if (user && !user.isProfileComplete) {
-      setPendingQuote(quotePayload); // Guardamos los datos para usarlos después
+      setPendingQuote(quotePayload);
       setShowKycModal(true);
-      return; // Detenemos el flujo aquí
+      return;
     }
-
-    // Si ya tiene KYC, procesamos normalmente
     processQuoteAndAdvance(quotePayload);
   };
 
-  // Callback para cuando el KYC se completa exitosamente
   const handleKycSuccess = () => {
     setShowKycModal(false);
     if (pendingQuote) {
-      // Retomamos el flujo automáticamente donde lo dejamos
       processQuoteAndAdvance(pendingQuote);
       setPendingQuote(null);
     }
   };
 
+  // Recibe la data del beneficiario y si vino de un favorito
   const handleBeneficiaryComplete = (beneficiaryData, isFav = false) => {
     setFormData(prev => ({ ...prev, beneficiary: beneficiaryData }));
-    setIsFromFavorite(isFav); // Guardamos la bandera
+    setIsFromFavorite(isFav);
     setStep(3);
   };
 
@@ -80,11 +79,18 @@ const RemittanceSteps = () => {
   };
 
   const renderStep = () => {
-    if (isLoadingRules) return <div className="text-center p-5"><Spinner animation="border" /><p className="mt-2">Cargando...</p></div>;
+    if (isLoadingRules) {
+      return (
+        <div className="text-center p-5">
+          <Spinner animation="border" />
+          <p className="mt-2">Cargando requisitos del país...</p>
+        </div>
+      );
+    }
 
     switch (step) {
       case 1:
-        return <CardForm onQuoteSuccess={(payload) => { /* tu lógica existente */ }} />; // Usa tu lógica actual aquí
+        return <CardForm onQuoteSuccess={handleQuoteSuccess} />;
       case 2:
         return <StepBeneficiary
           formData={formData}
@@ -97,7 +103,7 @@ const RemittanceSteps = () => {
           formData={formData}
           fields={beneficiaryFields}
           onBack={handleBack}
-          isFromFavorite={isFromFavorite} // <--- AQUÍ PASAMOS LA PROP
+          isFromFavorite={isFromFavorite} // Pasamos la bandera al paso final
         />;
       default:
         return <CardForm onQuoteSuccess={handleQuoteSuccess} />;
@@ -108,19 +114,18 @@ const RemittanceSteps = () => {
     <div>
       {renderStep()}
 
-      {/* --- MODAL DE KYC --- */}
+      {/* Modal de KYC Bloqueante */}
       <Modal
         show={showKycModal}
         onHide={() => setShowKycModal(false)}
-        backdrop="static" // Evita cerrar al hacer clic fuera
-        keyboard={false}  // Evita cerrar con ESC
+        backdrop="static"
+        keyboard={false}
         centered
       >
         <Modal.Header closeButton>
           <Modal.Title className="h5 text-primary">Falta un paso importante</Modal.Title>
         </Modal.Header>
         <Modal.Body>
-          {/* Reutilizamos el formulario que creamos */}
           <KycForm onSuccess={handleKycSuccess} />
         </Modal.Body>
       </Modal>
