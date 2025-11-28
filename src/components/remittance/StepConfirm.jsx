@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Card, Button, Row, Col, Spinner, Alert, Form } from 'react-bootstrap';
-import { createWithdrawal, createPaymentOrder, createDirectPaymentOrder, getQuote, saveBeneficiary, getDirectPaymentRequirements } from '../../services/api';
+// Importamos getPaymentMethods en lugar de getDirectPaymentRequirements
+import { createWithdrawal, createPaymentOrder, createDirectPaymentOrder, getQuote, saveBeneficiary, getPaymentMethods } from '../../services/api';
 import { formatNumberForDisplay, formatRate } from '../../utils/formatting';
 
 const QUOTE_VALIDITY_DURATION = 1.5 * 60 * 1000; // 90 segundos
@@ -11,15 +12,17 @@ const StepConfirm = ({ formData, fields, onBack }) => {
   const [loadingQuote, setLoadingQuote] = useState(true);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [transactionResult, setTransactionResult] = useState(null);
   const [remainingTime, setRemainingTime] = useState(null);
   const [isExpired, setIsExpired] = useState(false);
   const [saveAsFavorite, setSaveAsFavorite] = useState(false);
 
-  const [paymentMethod, setPaymentMethod] = useState('redirect'); // 'redirect' | 'direct'
+  const [paymentMethod, setPaymentMethod] = useState('redirect');
 
-  // --- ESTADOS PARA PAGO DIRECTO ---
-  const [directRequirements, setDirectRequirements] = useState(null); // El JSON de configuración
-  const [directFormData, setDirectFormData] = useState({}); // Los datos que escribe el usuario
+  // Estados para Pago Directo
+  const [directMethods, setDirectMethods] = useState([]); // Lista de métodos
+  const [selectedDirectMethod, setSelectedDirectMethod] = useState(null); // Método elegido (ID)
+  const [directFormData, setDirectFormData] = useState({}); // Datos del formulario
 
   // 1. Refresco de Cotización (sin cambios)
   useEffect(() => {
@@ -50,16 +53,29 @@ const StepConfirm = ({ formData, fields, onBack }) => {
     return () => clearInterval(interval);
   }, [currentQuote, loadingQuote]);
 
-  // 3. NUEVO: Cargar requisitos si elige Pago Directo
+  // 3. CORRECCIÓN: Cargar métodos de pago reales según el país
   useEffect(() => {
-    if (paymentMethod === 'direct' && !directRequirements) {
-      const loadReqs = async () => {
+    if (paymentMethod === 'direct' && directMethods.length === 0) {
+      const loadMethods = async () => {
         try {
-          const res = await getDirectPaymentRequirements();
-          if (res.ok) setDirectRequirements(res.data);
-        } catch (e) { console.error(e); setError('Error cargando formulario de pago.'); }
+          // Llamamos al backend pasando el país (ej: 'CL')
+          // NOTA: El pago directo suele ser en el país de origen del pago (Chile), no el destino.
+          // Si el usuario paga en Chile, usamos 'CL'.
+          const res = await getPaymentMethods('CL');
+
+          if (res.ok && res.data.payment_methods) {
+            setDirectMethods(res.data.payment_methods);
+            // Seleccionar el primero por defecto
+            if (res.data.payment_methods.length > 0) {
+              setSelectedDirectMethod(res.data.payment_methods[0]);
+            }
+          }
+        } catch (e) {
+          console.error(e);
+          setError('Error cargando métodos de pago disponibles.');
+        }
       };
-      loadReqs();
+      loadMethods();
     }
   }, [paymentMethod]);
 
@@ -67,14 +83,20 @@ const StepConfirm = ({ formData, fields, onBack }) => {
     setDirectFormData({ ...directFormData, [e.target.name]: e.target.value });
   };
 
+  const handleMethodChange = (e) => {
+    const methodId = e.target.value;
+    const method = directMethods.find(m => m.method_id === methodId);
+    setSelectedDirectMethod(method);
+    setDirectFormData({}); // Limpiar formulario al cambiar método
+  };
+
   const handleConfirm = async () => {
     setLoading(true);
     setError(null);
     try {
-      // Validar campos de pago directo si aplica
-      if (paymentMethod === 'direct' && directRequirements) {
-        const method = directRequirements.payment_methods[0]; // Usamos el primero por defecto (Khipu)
-        for (const field of method.required_fields) {
+      // Validar campos de pago directo
+      if (paymentMethod === 'direct' && selectedDirectMethod) {
+        for (const field of selectedDirectMethod.required_fields) {
           if (field.required && !directFormData[field.name]) {
             throw new Error(`El campo ${field.label} es obligatorio.`);
           }
@@ -104,19 +126,20 @@ const StepConfirm = ({ formData, fields, onBack }) => {
             orderId: withdrawalResult.data.order,
           });
         } else {
-          // PAGO DIRECTO: Enviamos los datos extra capturados
+          // PAGO DIRECTO REAL
           paymentOrderResult = await createDirectPaymentOrder({
             amount: currentQuote.amountIn,
             country: 'CL',
             orderId: withdrawalResult.data.order,
-            payer_details: directFormData, // Enviamos lo que llenó el usuario
-            method_id: directRequirements?.payment_methods[0]?.method_id // Enviamos el ID del método (4820)
+            payer_details: directFormData,
+            method_id: selectedDirectMethod?.method_id
           });
         }
 
         if (paymentOrderResult.ok) {
           const resData = paymentOrderResult.data || paymentOrderResult;
-          const paymentUrl = resData.payment_url || resData.data?.attributes?.url || resData.url;
+          const paymentUrl = resData.payment_url || resData.data?.payment_url || resData.data?.attributes?.url || resData.url;
+
           if (paymentUrl) window.location.href = paymentUrl;
           else throw new Error('No se recibió URL de pago.');
         } else {
@@ -140,7 +163,7 @@ const StepConfirm = ({ formData, fields, onBack }) => {
     return `${Math.floor(s / 60).toString().padStart(2, '0')}:${(s % 60).toString().padStart(2, '0')}`;
   };
   const getFieldDetails = (k) => fields?.find(f => f.key === k);
-  const getDisplayValue = (k, v) => { /* ... */ return v; }; // Simplificado para brevedad
+  const getDisplayValue = (k, v) => { /* ... */ return v; };
   if (isExpired) return <Card className="p-4"><Alert variant="danger">Expirado</Alert><Button onClick={onBack}>Volver</Button></Card>;
   if (!quoteData) return null;
 
@@ -150,7 +173,6 @@ const StepConfirm = ({ formData, fields, onBack }) => {
     <Card className="p-4 shadow-sm border-0">
       <Card.Body>
         <h4 className="mb-4">Resumen de la transacción</h4>
-        {/* ... (Resumen de montos igual que antes) ... */}
         <Row className="mb-4">
           <Col md={6}>
             <div className="p-3 rounded bg-light">
@@ -165,7 +187,6 @@ const StepConfirm = ({ formData, fields, onBack }) => {
 
         <hr />
 
-        {/* --- SELECCIÓN DE PAGO --- */}
         <h5 className="mb-3">Método de Pago</h5>
         <Form>
           <div className="mb-3">
@@ -184,30 +205,46 @@ const StepConfirm = ({ formData, fields, onBack }) => {
           </div>
 
           {/* --- FORMULARIO DINÁMICO DE PAGO DIRECTO --- */}
-          {paymentMethod === 'direct' && directRequirements && (
+          {paymentMethod === 'direct' && directMethods.length > 0 && (
             <div className="p-3 border rounded bg-light mb-3">
-              <h6 className="text-primary mb-3">{directRequirements.payment_methods[0].description}</h6>
-              <Row>
-                {directRequirements.payment_methods[0].required_fields.map(field => (
-                  <Col md={6} key={field.name}>
-                    <Form.Group className="mb-3">
-                      <Form.Label>{field.label}</Form.Label>
-                      <Form.Control
-                        type={field.type}
-                        name={field.name}
-                        value={directFormData[field.name] || ''}
-                        onChange={handleDirectFormChange}
-                        required={field.required}
-                      />
-                    </Form.Group>
-                  </Col>
-                ))}
-              </Row>
+              {/* Selector de Método si hay varios */}
+              {directMethods.length > 1 && (
+                <Form.Group className="mb-3">
+                  <Form.Label>Selecciona medio de pago:</Form.Label>
+                  <Form.Select onChange={handleMethodChange} value={selectedDirectMethod?.method_id}>
+                    {directMethods.map(m => <option key={m.method_id} value={m.method_id}>{m.name}</option>)}
+                  </Form.Select>
+                </Form.Group>
+              )}
+
+              {selectedDirectMethod && (
+                <>
+                  <h6 className="text-primary mb-3">{selectedDirectMethod.description || selectedDirectMethod.name}</h6>
+                  <Row>
+                    {selectedDirectMethod.required_fields.map(field => (
+                      <Col md={6} key={field.name}>
+                        <Form.Group className="mb-3">
+                          <Form.Label>{field.label}</Form.Label>
+                          <Form.Control
+                            type={field.type === 'string' ? 'text' : field.type}
+                            name={field.name}
+                            value={directFormData[field.name] || ''}
+                            onChange={handleDirectFormChange}
+                            required={field.required}
+                          />
+                        </Form.Group>
+                      </Col>
+                    ))}
+                  </Row>
+                </>
+              )}
             </div>
+          )}
+          {paymentMethod === 'direct' && directMethods.length === 0 && (
+            <Alert variant="warning">Cargando métodos de pago...</Alert>
           )}
         </Form>
 
-        {/* ... (Checkbox Favoritos) ... */}
         <Form.Group className="mb-3">
           <Form.Check type="checkbox" label="Guardar favorito" checked={saveAsFavorite} onChange={(e) => setSaveAsFavorite(e.target.checked)} />
         </Form.Group>
@@ -222,7 +259,7 @@ const StepConfirm = ({ formData, fields, onBack }) => {
             disabled={loading || isExpired}
             style={{ backgroundColor: 'var(--avf-secondary)', borderColor: 'var(--avf-secondary)' }}
           >
-            {loading ? <Spinner size="sm" /> : `Pagar $${formatNumberForDisplay(currentQuote.amountIn)}`}
+            {loading ? <Spinner as="span" size="sm" /> : `Pagar $${formatNumberForDisplay(currentQuote.amountIn)}`}
           </Button>
         </div>
       </Card.Body>
