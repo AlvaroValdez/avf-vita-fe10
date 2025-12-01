@@ -321,6 +321,24 @@ export const updateTransactionRules = async (rulesData) => {
   }
 };
 
+export const getAvailableOrigins = async () => {
+  try {
+    const response = await apiClient.get('/transaction-rules/available');
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || error;
+  }
+};
+
+export const getEnabledOrigins = async () => {
+  try {
+    const response = await apiClient.get('/transaction-rules/enabled');
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || error;
+  }
+};
+
 // --- FUNCIONES DE PAGO DIRECTO REALES ---
 
 // 1. Obtener métodos disponibles (Khipu, Webpay, etc.)
