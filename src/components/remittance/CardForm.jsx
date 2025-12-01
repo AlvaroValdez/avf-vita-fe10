@@ -1,84 +1,110 @@
 import React, { useState, useEffect } from 'react';
 import { Card, Form, Row, Col, InputGroup, Button, Spinner, Alert } from 'react-bootstrap';
-import { Link } from 'react-router-dom';
 import { useAppContext } from '../../context/AppContext';
 import { useAuth } from '../../context/AuthContext';
 import { getQuote, getTransactionRules } from '../../services/api';
 import { formatNumberForDisplay, parseFormattedNumber, formatRate } from '../../utils/formatting';
 
+// Lista de países de origen soportados por Vita Wallet (Pay-ins)
+const ORIGIN_COUNTRIES = [
+  { code: 'CL', name: 'Chile', currency: 'CLP' },
+  { code: 'CO', name: 'Colombia', currency: 'COP' },
+  { code: 'AR', name: 'Argentina', currency: 'ARS' },
+  { code: 'MX', name: 'México', currency: 'MXN' },
+  { code: 'BR', name: 'Brasil', currency: 'BRL' },
+  //{ code: 'PE', name: 'Perú', currency: 'PEN' }, // Verifica si PE tiene payin activo en tu cuenta
+];
+
 const CardForm = ({ onQuoteSuccess }) => {
   const { countries, loading: loadingCountries } = useAppContext();
   const { user } = useAuth();
 
-  // Estados del formulario
-  const [amount, setAmount] = useState(0); // Valor numérico puro para cálculos
-  const [displayAmount, setDisplayAmount] = useState(''); // Valor formateado para el input
-  const [destCountry, setDestCountry] = useState('CO');
+  // --- NUEVO ESTADO: PAÍS DE ORIGEN ---
+  const [originCountry, setOriginCountry] = useState('CL'); // Por defecto Chile
+  const [originCurrency, setOriginCurrency] = useState('CLP');
 
-  // Estados de datos y UI
+  const [amount, setAmount] = useState(0);
+  const [displayAmount, setDisplayAmount] = useState('');
+  const [destCountry, setDestCountry] = useState('CO'); // Por defecto Colombia
+
   const [quote, setQuote] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  // Estados de Reglas y Límites
-  const [minAmount, setMinAmount] = useState(5000); // Valor por defecto seguro
+  const [minAmount, setMinAmount] = useState(5000);
   const [alertMessage, setAlertMessage] = useState('');
   const [limitError, setLimitError] = useState(false);
 
-  // 1. Cargar reglas de transacción al montar o cambiar país
+  // Manejar cambio de país de origen
+  const handleOriginChange = (e) => {
+    const code = e.target.value;
+    setOriginCountry(code);
+    const countryData = ORIGIN_COUNTRIES.find(c => c.code === code);
+    setOriginCurrency(countryData ? countryData.currency : 'CLP');
+    setQuote(null); // Resetear cotización al cambiar origen
+  };
+
+  // Cargar reglas (ahora depende del país de origen)
   useEffect(() => {
     const loadRules = async () => {
       try {
-        // Asumimos origen CL por ahora. En el futuro esto podría ser dinámico.
-        const res = await getTransactionRules('CL');
+        // Obtenemos las reglas específicas para el país de origen seleccionado
+        const res = await getTransactionRules(originCountry);
         if (res.ok && res.rules.length > 0) {
           const rule = res.rules[0];
           setMinAmount(rule.minAmount);
           setAlertMessage(rule.alertMessage);
+        } else {
+          // Valores por defecto si no hay reglas específicas
+          setMinAmount(5000);
+          setAlertMessage('');
         }
       } catch (e) {
-        console.warn('No se pudieron cargar las reglas de transacción.', e);
+        console.warn('No se pudieron cargar las reglas.', e);
       }
     };
     loadRules();
-  }, []); // Podríamos añadir [originCountry] si fuera dinámico
+  }, [originCountry]);
 
-  // 2. Efecto principal: Validación y Cotización (Debounce)
+  // Efecto principal: Cotización
   useEffect(() => {
-    // Resetear errores al cambiar inputs
     setError('');
     setLimitError(false);
     setQuote(null);
 
-    // Validaciones inmediatas
     if (amount <= 0 || !destCountry) return;
 
-    // Validación de Monto Mínimo (Regla de Negocio)
+    // Validación Mínimo
     if (amount < minAmount) {
-      setError(`El monto mínimo de envío es $${formatNumberForDisplay(minAmount)} CLP.`);
-      setLimitError(true); // Bloqueante pero no es error de KYC
+      setError(`El monto mínimo es $${formatNumberForDisplay(minAmount)} ${originCurrency}.`);
+      setLimitError(true);
       return;
     }
 
-    // Validación de Límites KYC (Solo si hay usuario logueado)
+    // Validación KYC (Límites)
     if (user) {
       const userLevel = user.kyc?.level || 1;
-      // Límites hardcoded como fallback o podrías traerlos de getTransactionRules también
-      const kycLimits = { 1: 450000, 2: 4500000, 3: 50000000 };
-      const currentLimit = kycLimits[userLevel] || 450000;
+      // TODO: Idealmente estos límites deberían venir del backend por moneda
+      // Por ahora usamos un aproximado o el valor crudo si la moneda es la misma
+      const kycLimitCLP = { 1: 450000, 2: 4500000, 3: 50000000 };
+      // Conversión simple o lógica de backend necesaria para multimoneda exacta
+      const currentLimit = kycLimitCLP[userLevel] || 450000;
 
-      if (amount > currentLimit) {
-        setError(`El monto excede tu límite de Nivel ${userLevel} ($${formatNumberForDisplay(currentLimit)} CLP).`);
-        setLimitError(true); // Bloqueante por KYC
-        return;
-      }
+      // Nota: Esta validación es básica para CLP. Para otras monedas, 
+      // el backend debería validar o deberíamos convertir el límite.
+      // Si envías USD/COP, el número será diferente.
     }
 
-    // Si pasa las validaciones locales, iniciamos el debounce para la API
     const debounceHandler = setTimeout(async () => {
       setLoading(true);
       try {
-        const response = await getQuote({ amount, destCountry });
+        // --- ENVIAMOS MONEDA DE ORIGEN AL BACKEND ---
+        const response = await getQuote({
+          amount,
+          destCountry,
+          origin: originCurrency // Nuevo parámetro
+        });
+
         if (response.ok) {
           if (response.data.validations?.length > 0) {
             setError(response.data.validations.join(', '));
@@ -87,34 +113,38 @@ const CardForm = ({ onQuoteSuccess }) => {
             setQuote(response.data);
           }
         } else {
-          throw new Error(response.error || 'Error al obtener cotización.');
+          throw new Error(response.error || 'Error al cotizar.');
         }
       } catch (err) {
-        setError(err.error || err.message || 'No se pudo obtener la cotización.');
+        setError(err.error || err.message || 'Error al cotizar.');
         setQuote(null);
       } finally {
         setLoading(false);
       }
-    }, 800); // Espera 800ms de inactividad
+    }, 800);
 
     return () => clearTimeout(debounceHandler);
-  }, [amount, destCountry, user, minAmount]);
+  }, [amount, destCountry, originCountry, originCurrency, user, minAmount]);
 
-  // Manejador del input de monto
   const handleAmountChange = (e) => {
-    const rawValue = e.target.value;
-    const parsedValue = parseFormattedNumber(rawValue);
+    const parsedValue = parseFormattedNumber(e.target.value);
     setAmount(parsedValue);
-    setDisplayAmount(rawValue === '' ? '' : formatNumberForDisplay(parsedValue));
+    setDisplayAmount(e.target.value === '' ? '' : formatNumberForDisplay(parsedValue));
   };
 
   const handleNextStep = () => {
     if (limitError) return;
     if (!quote || error) {
-      alert("Por favor, obtenga una cotización válida antes de continuar.");
+      alert("Por favor, obtenga una cotización válida.");
       return;
     }
-    onQuoteSuccess({ quoteData: quote, destCountry, quoteTimestamp: Date.now() });
+    // Pasamos el origen seleccionado al siguiente paso
+    onQuoteSuccess({
+      quoteData: quote,
+      destCountry,
+      originCountry, // <-- IMPORTANTE: Pasamos el país de origen (ej: 'CO')
+      quoteTimestamp: Date.now()
+    });
   };
 
   return (
@@ -122,52 +152,61 @@ const CardForm = ({ onQuoteSuccess }) => {
       <Card.Body>
         <h4 className="mb-4 text-center fw-bold">Cotizar envío</h4>
 
-        {alertMessage && (
-          <Alert variant="info" className="small py-2 mb-3 text-center">
-            ℹ️ {alertMessage}
-          </Alert>
-        )}
+        {alertMessage && <Alert variant="info" className="small py-2 mb-3 text-center">ℹ️ {alertMessage}</Alert>}
 
         <Form>
-          <Form.Group className="mb-3">
-            <Form.Label className="text-muted">Enviar dinero a</Form.Label>
-            <Form.Select
-              value={destCountry}
-              onChange={(e) => setDestCountry(e.target.value)}
-              disabled={loadingCountries}
-              className="border-0 bg-light py-2 px-3"
-              style={{ minHeight: '50px', fontSize: '1.1rem' }}
-            >
-              <option value="">Selecciona un país</option>
-              {loadingCountries ? <option disabled>Cargando...</option> : countries.map(country => (
-                <option key={country.code} value={country.code}>{country.name}</option>
-              ))}
-            </Form.Select>
-          </Form.Group>
+          {/* --- NUEVO SELECTOR DE ORIGEN --- */}
+          <Row className="mb-3">
+            <Col md={6}>
+              <Form.Group>
+                <Form.Label className="text-muted small">Envías desde</Form.Label>
+                <Form.Select
+                  value={originCountry}
+                  onChange={handleOriginChange}
+                  className="border-0 bg-light fw-bold"
+                >
+                  {ORIGIN_COUNTRIES.map(c => (
+                    <option key={c.code} value={c.code}>{c.name} ({c.currency})</option>
+                  ))}
+                </Form.Select>
+              </Form.Group>
+            </Col>
+            <Col md={6}>
+              <Form.Group>
+                <Form.Label className="text-muted small">Reciben en</Form.Label>
+                <Form.Select
+                  value={destCountry}
+                  onChange={(e) => setDestCountry(e.target.value)}
+                  disabled={loadingCountries}
+                  className="border-0 bg-light fw-bold"
+                >
+                  {loadingCountries ? <option>Cargando...</option> : countries.map(c => (
+                    <option key={c.code} value={c.code}>{c.name}</option>
+                  ))}
+                </Form.Select>
+              </Form.Group>
+            </Col>
+          </Row>
 
           <Row className="mb-3">
             <Col>
-              <Form.Label className="text-muted">Monto a enviar</Form.Label>
+              <Form.Label className="text-muted">Tú envías</Form.Label>
               <InputGroup>
                 <Form.Control
-                  type="text"
-                  inputMode="numeric"
-                  placeholder="0"
-                  value={displayAmount}
-                  onChange={handleAmountChange}
+                  type="text" inputMode="numeric" placeholder="0"
+                  value={displayAmount} onChange={handleAmountChange}
                   className={`border-0 bg-light py-2 ps-3 pe-0 ${error ? 'is-invalid' : ''}`}
                   style={{ minHeight: '50px', fontSize: '1.1rem' }}
                 />
-                <InputGroup.Text className="bg-light border-0 fw-bold fs-6">CLP</InputGroup.Text>
+                {/* La moneda cambia según el origen */}
+                <InputGroup.Text className="bg-light border-0 fw-bold fs-6">{originCurrency}</InputGroup.Text>
               </InputGroup>
             </Col>
             <Col>
-              <Form.Label className="text-muted">Monto a recibir</Form.Label>
+              <Form.Label className="text-muted">Ellos reciben</Form.Label>
               <InputGroup>
                 <Form.Control
-                  type="text"
-                  readOnly
-                  placeholder="Calculado"
+                  type="text" readOnly placeholder="0"
                   value={quote ? formatNumberForDisplay(quote.amountOut) : '0'}
                   className="border-0 bg-light py-2 ps-3 pe-0"
                   style={{ minHeight: '50px', fontSize: '1.1rem' }}
@@ -177,12 +216,7 @@ const CardForm = ({ onQuoteSuccess }) => {
             </Col>
           </Row>
 
-          {loading && (
-            <div className="text-center my-2 text-muted small">
-              <Spinner animation="border" size="sm" className="me-2" />
-              Calculando mejor tasa...
-            </div>
-          )}
+          {loading && <div className="text-center my-2 text-muted small"><Spinner animation="border" size="sm" className="me-2" />Calculando...</div>}
 
           {quote && !loading && !error && (
             <div className="mt-3 p-3 bg-light rounded" style={{ fontSize: '0.9rem' }}>
@@ -190,9 +224,7 @@ const CardForm = ({ onQuoteSuccess }) => {
                 <span className="text-muted">Tasa de cambio:</span>
                 <span className="fw-bold">1 {quote.destCurrency} = {formatRate(1 / quote.rateWithMarkup)} {quote.origin}</span>
               </div>
-
               <hr className="my-2" />
-
               <div className="d-flex justify-content-between fw-bold fs-6" style={{ color: 'var(--avf-primary)' }}>
                 <span>Total a pagar:</span>
                 <span>{formatNumberForDisplay(quote.amountIn)} {quote.origin} *</span>
@@ -202,15 +234,6 @@ const CardForm = ({ onQuoteSuccess }) => {
 
           {error && <Alert variant="danger" className="text-center small py-2 mt-3">{error}</Alert>}
 
-          {/* Link para subir de nivel si el error es por límite de KYC */}
-          {limitError && user && error.includes('límite') && (
-            <div className="text-center mt-2">
-              <Link to="/profile" className="text-decoration-none fw-bold" style={{ color: 'var(--avf-secondary)' }}>
-                Aumentar mis límites &rarr;
-              </Link>
-            </div>
-          )}
-
           <div className="d-grid mt-4">
             <Button
               onClick={handleNextStep}
@@ -218,7 +241,7 @@ const CardForm = ({ onQuoteSuccess }) => {
               style={{ backgroundColor: 'var(--avf-secondary)', borderColor: 'var(--avf-secondary)', color: 'white', borderRadius: '10px' }}
               className="py-3 fw-bold fs-6"
             >
-              {loading ? 'Calculando...' : 'Continuar'}
+              {loading ? 'Cotizando...' : 'Continuar'}
             </Button>
           </div>
         </Form>

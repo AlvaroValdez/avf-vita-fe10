@@ -6,7 +6,7 @@ import { formatNumberForDisplay, formatRate } from '../../utils/formatting';
 const QUOTE_VALIDITY_DURATION = 2 * 60 * 1000;
 
 const StepConfirm = ({ formData, fields, onBack, isFromFavorite }) => {
-  const { quoteData, beneficiary, destCountry } = formData;
+  const { quoteData, beneficiary, destCountry, quoteTimestamp, originCountry } = formData;
   const [currentQuote, setCurrentQuote] = useState(formData.quoteData);
   const [loadingQuote, setLoadingQuote] = useState(true);
 
@@ -67,7 +67,10 @@ const StepConfirm = ({ formData, fields, onBack, isFromFavorite }) => {
     if (paymentMethod === 'direct' && directMethods.length === 0) {
       const loadMethods = async () => {
         try {
-          const res = await getPaymentMethods('CL'); // Origen del pago (Chile)
+          //const res = await getPaymentMethods('CL'); // Origen del pago (Chile)
+          const countryCode = originCountry || 'CL';
+          const res = await getPaymentMethods(countryCode);
+
           if (res.ok && res.data.payment_methods) {
             setDirectMethods(res.data.payment_methods);
             if (res.data.payment_methods.length > 0) setSelectedDirectMethod(res.data.payment_methods[0]);
@@ -81,7 +84,7 @@ const StepConfirm = ({ formData, fields, onBack, isFromFavorite }) => {
       };
       loadMethods();
     }
-  }, [paymentMethod, directMethods.length]);
+  }, [paymentMethod, originCountry]);
 
   const handleDirectFormChange = (e) => {
     setDirectFormData({ ...directFormData, [e.target.name]: e.target.value });
