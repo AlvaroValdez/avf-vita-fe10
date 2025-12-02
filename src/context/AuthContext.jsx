@@ -52,7 +52,8 @@ export const AuthProvider = ({ children }) => {
 
   // --- NUEVA FUNCIÓN PARA ACTUALIZAR SESIÓN SIN RELOGIN ---
   const updateUserSession = (userData) => {
-    setUser(userData);
+    setUser(userData); // Actualiza estado en memoria
+    // Actualiza localStorage para persistencia
     localStorage.setItem('user', JSON.stringify(userData));
   };
 

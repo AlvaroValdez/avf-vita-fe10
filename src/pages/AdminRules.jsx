@@ -10,7 +10,7 @@ const AdminRules = () => {
   const [success, setSuccess] = useState('');
 
   const [availableCountries, setAvailableCountries] = useState([]);
-  const [selectedCountry, setSelectedCountry] = useState('CL'); // País que estamos editando
+  const [selectedCountry, setSelectedCountry] = useState('CL');
 
   const [formData, setFormData] = useState({
     originCountry: 'CL',
@@ -27,8 +27,13 @@ const AdminRules = () => {
     const fetchOrigins = async () => {
       try {
         const res = await getAvailableOrigins();
-        if (res.ok) setAvailableCountries(res.origins);
-      } catch (e) { console.error(e); }
+        if (res.ok) {
+          setAvailableCountries(res.origins);
+        }
+      } catch (e) {
+        console.error('Error cargando orígenes:', e);
+        setAvailableCountries([{ code: 'CL', name: 'Chile', currency: 'CLP' }]);
+      }
     };
     fetchOrigins();
   }, []);
@@ -51,6 +56,17 @@ const AdminRules = () => {
             kycLevel1: rule.kycLimits?.level1 || 0,
             kycLevel2: rule.kycLimits?.level2 || 0
           });
+        } else {
+          // Resetear a defaults si no hay regla para ese país
+          setFormData({
+            originCountry: selectedCountry,
+            minAmount: 5000,
+            fixedFee: 0,
+            isEnabled: false,
+            alertMessage: '',
+            kycLevel1: 450000,
+            kycLevel2: 4500000
+          });
         }
       } catch (err) {
         setError('No se pudo cargar la configuración.');
@@ -66,8 +82,10 @@ const AdminRules = () => {
     setFormData(prev => ({ ...prev, [name]: type === 'checkbox' ? checked : value }));
   };
 
+  // Manejador específico para inputs numéricos con formato
   const handleAmountChange = (e) => {
     const { name, value } = e.target;
+    // Elimina puntos para guardar el número puro
     const numericValue = parseFormattedNumber(value);
     setFormData(prev => ({ ...prev, [name]: numericValue }));
   };
@@ -100,27 +118,23 @@ const AdminRules = () => {
   return (
     <Container className="my-5" style={{ maxWidth: '800px' }}>
       <Card className="shadow-sm border-0">
-        <Card.Header className="bg-white py-3">
-          <div className="d-flex justify-content-between align-items-center">
-            <h4 className="mb-0 text-primary">Reglas de Transacción</h4>
+        <Card.Header className="bg-white py-3 d-flex justify-content-between align-items-center">
+          <h4 className="mb-0 text-primary">Reglas de Transacción</h4>
 
-            {/* SELECTOR DE PAÍS A EDITAR */}
-            <Form.Select
-              style={{ maxWidth: '200px', fontWeight: 'bold' }}
-              value={selectedCountry}
-              onChange={(e) => setSelectedCountry(e.target.value)}
-            >
-              {availableCountries.map(c => (
-                <option key={c.code} value={c.code}>{c.name} ({c.currency})</option>
-              ))}
-            </Form.Select>
-          </div>
+          <Form.Select
+            style={{ maxWidth: '200px', fontWeight: 'bold' }}
+            value={selectedCountry}
+            onChange={(e) => setSelectedCountry(e.target.value)}
+          >
+            {availableCountries.map(c => (
+              <option key={c.code} value={c.code}>{c.name} ({c.currency})</option>
+            ))}
+          </Form.Select>
         </Card.Header>
 
         <Card.Body>
           {loading ? <div className="text-center p-5"><Spinner animation="border" /></div> : (
             <Form onSubmit={handleSubmit}>
-              {/* SWITCH GLOBAL */}
               <div className="d-flex justify-content-between align-items-center mb-4 p-3 bg-light rounded">
                 <div>
                   <h5 className="mb-0">Estado del Corredor: <strong>{selectedCountry}</strong></h5>
@@ -140,7 +154,13 @@ const AdminRules = () => {
                   <Form.Group className="mb-3">
                     <Form.Label>Monto Mínimo</Form.Label>
                     <InputGroup><InputGroup.Text>$</InputGroup.Text>
-                      <Form.Control type="text" inputMode="numeric" name="minAmount" value={formatNumberForDisplay(formData.minAmount)} onChange={handleAmountChange} />
+                      <Form.Control
+                        type="text"
+                        inputMode="numeric"
+                        name="minAmount"
+                        value={formatNumberForDisplay(formData.minAmount)}
+                        onChange={handleAmountChange}
+                      />
                     </InputGroup>
                   </Form.Group>
                 </Col>
@@ -148,7 +168,13 @@ const AdminRules = () => {
                   <Form.Group className="mb-3">
                     <Form.Label>Fee Fijo</Form.Label>
                     <InputGroup><InputGroup.Text>$</InputGroup.Text>
-                      <Form.Control type="text" inputMode="numeric" name="fixedFee" value={formatNumberForDisplay(formData.fixedFee)} onChange={handleAmountChange} />
+                      <Form.Control
+                        type="text"
+                        inputMode="numeric"
+                        name="fixedFee"
+                        value={formatNumberForDisplay(formData.fixedFee)}
+                        onChange={handleAmountChange}
+                      />
                     </InputGroup>
                   </Form.Group>
                 </Col>
@@ -159,20 +185,34 @@ const AdminRules = () => {
                 <Col md={6}>
                   <Form.Group><Form.Label>Límite Nivel 1</Form.Label>
                     <InputGroup><InputGroup.Text>$</InputGroup.Text>
-                      <Form.Control type="text" inputMode="numeric" name="kycLevel1" value={formatNumberForDisplay(formData.kycLevel1)} onChange={handleAmountChange} />
-                    </InputGroup></Form.Group>
+                      <Form.Control
+                        type="text"
+                        inputMode="numeric"
+                        name="kycLevel1"
+                        value={formatNumberForDisplay(formData.kycLevel1)}
+                        onChange={handleAmountChange}
+                      />
+                    </InputGroup>
+                  </Form.Group>
                 </Col>
                 <Col md={6}>
                   <Form.Group><Form.Label>Límite Nivel 2</Form.Label>
                     <InputGroup><InputGroup.Text>$</InputGroup.Text>
-                      <Form.Control type="text" inputMode="numeric" name="kycLevel2" value={formatNumberForDisplay(formData.kycLevel2)} onChange={handleAmountChange} />
-                    </InputGroup></Form.Group>
+                      <Form.Control
+                        type="text"
+                        inputMode="numeric"
+                        name="kycLevel2"
+                        value={formatNumberForDisplay(formData.kycLevel2)}
+                        onChange={handleAmountChange}
+                      />
+                    </InputGroup>
+                  </Form.Group>
                 </Col>
               </Row>
 
               <h5 className="text-muted mb-3">Comunicación</h5>
               <Form.Group className="mb-4">
-                <Form.Label>Mensaje de Alerta</Form.Label>
+                <Form.Label>Mensaje de Alerta Global</Form.Label>
                 <Form.Control as="textarea" rows={2} name="alertMessage" value={formData.alertMessage} onChange={handleChange} placeholder="Aviso visible para el usuario..." />
               </Form.Group>
 

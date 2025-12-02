@@ -1,245 +1,146 @@
 import React, { useState, useEffect } from 'react';
-import { Card, Button, Row, Col, Spinner, Alert, Form } from 'react-bootstrap';
-import { createWithdrawal, createPaymentOrder, createDirectPaymentOrder, getQuote, saveBeneficiary, getPaymentMethods } from '../../services/api';
-import { formatNumberForDisplay, formatRate } from '../../utils/formatting';
+import { Card, Form, Button, Col, Row, Spinner } from 'react-bootstrap';
+import { getBeneficiaries } from '../../services/api';
+import { useAuth } from '../../context/AuthContext';
 
-const QUOTE_VALIDITY_DURATION = 2 * 60 * 1000;
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-const StepConfirm = ({ formData, fields, onBack, isFromFavorite }) => {
-  const { quoteData, beneficiary, destCountry, quoteTimestamp, originCountry } = formData;
-  const [currentQuote, setCurrentQuote] = useState(formData.quoteData);
-  const [loadingQuote, setLoadingQuote] = useState(true);
+const StepBeneficiary = ({ formData, fields, onBack, onComplete }) => {
+  const { token } = useAuth();
+  const [beneficiaryData, setBeneficiaryData] = useState({});
+  const [errors, setErrors] = useState({});
+  const [fieldsToRender, setFieldsToRender] = useState([]);
 
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
-  const [remainingTime, setRemainingTime] = useState(null);
-  const [isExpired, setIsExpired] = useState(false);
+  const [favorites, setFavorites] = useState([]);
+  const [loadingFavorites, setLoadingFavorites] = useState(false);
+  const [selectedFavorite, setSelectedFavorite] = useState('');
 
-  const [saveAsFavorite, setSaveAsFavorite] = useState(false);
+  const countryFields = fields || [];
 
-  // Estados para Pago
-  const [paymentMethod, setPaymentMethod] = useState('redirect');
-  const [directMethods, setDirectMethods] = useState([]);
-  const [selectedDirectMethod, setSelectedDirectMethod] = useState(null);
-  const [directFormData, setDirectFormData] = useState({});
-  const [directPaymentAvailable, setDirectPaymentAvailable] = useState(true);
-
-  // 1. Refrescar Cotización
   useEffect(() => {
-    const refreshQuote = async () => {
-      try {
-        setLoadingQuote(true);
-        const response = await getQuote({ amount: formData.quoteData.amountIn, destCountry });
-        if (response.ok) setCurrentQuote(response.data);
-        else console.warn('No se pudo refrescar cotización');
-      } catch (err) {
-        console.error('Error refrescando quote:', err);
-      } finally {
-        setLoadingQuote(false);
-      }
-    };
-    refreshQuote();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  // 2. Timer
-  useEffect(() => {
-    if (loadingQuote) return;
-    const quoteTimestamp = Date.now();
-    setRemainingTime(QUOTE_VALIDITY_DURATION);
-
-    const interval = setInterval(() => {
-      const elapsedTime = Date.now() - quoteTimestamp;
-      const timeLeft = QUOTE_VALIDITY_DURATION - elapsedTime;
-      if (timeLeft <= 0) {
-        clearInterval(interval);
-        setRemainingTime(0);
-        setIsExpired(true);
-      } else {
-        setRemainingTime(timeLeft);
-      }
-    }, 1000);
-    return () => clearInterval(interval);
-  }, [loadingQuote]);
-
-  // 3. Cargar Métodos de Pago Directo
-  useEffect(() => {
-    if (paymentMethod === 'direct' && directMethods.length === 0) {
-      const loadMethods = async () => {
+    if (token) {
+      const loadFavorites = async () => {
+        setLoadingFavorites(true);
         try {
-          //const res = await getPaymentMethods('CL'); // Origen del pago (Chile)
-          const countryCode = originCountry || 'CL';
-          const res = await getPaymentMethods(countryCode);
-
-          if (res.ok && res.data.payment_methods) {
-            setDirectMethods(res.data.payment_methods);
-            if (res.data.payment_methods.length > 0) setSelectedDirectMethod(res.data.payment_methods[0]);
-          }
-        } catch (e) {
-          console.error("Pago directo no disponible:", e);
-          setDirectPaymentAvailable(false);
-          setPaymentMethod('redirect');
-          alert("Pago directo no disponible temporalmente.");
-        }
+          const response = await getBeneficiaries();
+          if (response.ok) setFavorites(response.beneficiaries || []);
+        } catch (err) { console.warn(err); }
+        finally { setLoadingFavorites(false); }
       };
-      loadMethods();
+      loadFavorites();
     }
-  }, [paymentMethod, originCountry]);
+  }, [token]);
 
-  const handleDirectFormChange = (e) => {
-    setDirectFormData({ ...directFormData, [e.target.name]: e.target.value });
-  };
+  useEffect(() => {
+    if (countryFields.length > 0) {
+      const initialData = {};
+      countryFields.forEach(field => { initialData[field.key] = ''; });
+      setBeneficiaryData(prev => ({ ...initialData, ...prev }));
+    }
+  }, [countryFields]);
 
-  const handleConfirm = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      // Validar form directo
-      if (paymentMethod === 'direct' && selectedDirectMethod) {
-        for (const field of selectedDirectMethod.required_fields) {
-          if (field.required && !directFormData[field.name]) throw new Error(`Falta campo: ${field.label}`);
-        }
-      }
-
-      // 1. Payout
-      const withdrawalResult = await createWithdrawal({
-        country: destCountry,
-        currency: currentQuote.origin,
-        amount: currentQuote.amountIn,
-        ...beneficiary,
+  useEffect(() => {
+    if (countryFields.length > 0) {
+      const visibleFields = countryFields.filter(field => {
+        if (!field.when) return true;
+        return beneficiaryData[field.when.key] === field.when.value;
       });
+      setFieldsToRender(visibleFields);
+    }
+  }, [beneficiaryData, countryFields]);
 
-      if (withdrawalResult.ok) {
-        // 2. Guardar Favorito (Solo si no venía de uno y se marcó el check)
-        if (saveAsFavorite && !isFromFavorite) {
-          const nickname = `${beneficiary.beneficiary_first_name} ${beneficiary.beneficiary_last_name}`;
-          saveBeneficiary({ nickname, country: destCountry, beneficiaryData: beneficiary }).catch(console.warn);
-        }
+  const handleFavoriteSelect = (e) => {
+    const selectedId = e.target.value;
+    setSelectedFavorite(selectedId);
 
-        // 3. Pay-in
-        let paymentOrderResult;
-        if (paymentMethod === 'redirect') {
-          paymentOrderResult = await createPaymentOrder({
-            amount: currentQuote.amountIn,
-            country: 'CL',
-            orderId: withdrawalResult.data.order,
-          });
-        } else {
-          paymentOrderResult = await createDirectPaymentOrder({
-            amount: currentQuote.amountIn,
-            country: 'CL',
-            orderId: withdrawalResult.data.order,
-            payer_details: directFormData,
-            method_id: selectedDirectMethod?.method_id
-          });
-        }
-
-        if (paymentOrderResult.ok) {
-          const resData = paymentOrderResult.data || paymentOrderResult;
-          const paymentUrl = resData.payment_url || resData.data?.attributes?.url || resData.url;
-          if (paymentUrl) window.location.href = paymentUrl;
-          else throw new Error('No se recibió URL de pago.');
-        } else {
-          throw new Error('Error al generar orden de pago.');
-        }
-      } else {
-        throw new Error(withdrawalResult.details || 'Error al crear transacción.');
+    if (selectedId) {
+      const favorite = favorites.find(f => f._id === selectedId);
+      if (favorite) {
+        setBeneficiaryData(favorite.beneficiaryData);
+        setErrors({});
       }
-    } catch (err) {
-      let msg = err.message || "Error desconocido";
-      if (err.details) msg = JSON.stringify(err.details);
-      if (msg.includes('caducaron')) {
-        msg = "La cotización ha vencido. Por favor actualiza.";
-        setIsExpired(true);
-      }
-      setError(msg);
-      setLoading(false);
+    } else {
+      const resetData = {};
+      countryFields.forEach(f => resetData[f.key] = '');
+      setBeneficiaryData(resetData);
     }
   };
 
-  const formatTime = (ms) => {
-    if (ms === null || ms <= 0) return '00:00';
-    const s = Math.floor(ms / 1000);
-    return `${Math.floor(s / 60).toString().padStart(2, '0')}:${(s % 60).toString().padStart(2, '0')}`;
+  const validateField = (name, value) => {
+    const rule = countryFields.find(f => f.key === name);
+    if (!rule) return null;
+    const isRequired = rule.min > 0 || rule.required === true;
+    if (isRequired && !value) return 'Requerido.';
+    if (rule.min && value.length < rule.min) return `Mínimo ${rule.min} caracteres.`;
+    if (rule.max && value.length > rule.max) return `Máximo ${rule.max} caracteres.`;
+    if (rule.regex && !new RegExp(rule.regex).test(value)) return rule.helper_text || 'Formato inválido.';
+    if (rule.type === 'email' && !EMAIL_REGEX.test(value)) return 'Email inválido.';
+    return null;
   };
 
-  const getFieldDetails = (k) => fields?.find(f => f.key === k);
-  const getDisplayValue = (k, v) => {
-    const field = getFieldDetails(k);
-    if (field?.type === 'select' && field.options) {
-      const opt = field.options.find(o => o.value === v);
-      return opt ? opt.label : v;
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setBeneficiaryData(prev => ({ ...prev, [name]: value }));
+    if (errors[name]) setErrors(prev => ({ ...prev, [name]: null }));
+  };
+
+  const handleBlur = (e) => {
+    const { name, value } = e.target;
+    const error = validateField(name, value);
+    setErrors(prev => ({ ...prev, [name]: error }));
+  };
+
+  const handleNext = () => {
+    let allErrors = {};
+    let isFormValid = true;
+    fieldsToRender.forEach(field => {
+      const val = beneficiaryData[field.key] || '';
+      const error = validateField(field.key, val);
+      if (error) { allErrors[field.key] = error; isFormValid = false; }
+    });
+    setErrors(allErrors);
+
+    if (isFormValid) {
+      // --- CORRECCIÓN: Pasar true si selectedFavorite tiene un ID ---
+      onComplete(beneficiaryData, !!selectedFavorite);
     }
-    return v;
   };
 
-  if (isExpired) return <Card className="p-4 text-center"><Alert variant="danger">Cotización Expirada</Alert><Button onClick={onBack}>Volver</Button></Card>;
+  const renderField = (field) => {
+    if (field.type === 'select') {
+      return <Form.Select name={field.key} onChange={handleChange} onBlur={handleBlur} value={beneficiaryData[field.key] || ''} isInvalid={!!errors[field.key]}>
+        <option value="">Seleccionar...</option>
+        {field.options?.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
+      </Form.Select>;
+    }
+    return <Form.Control type={field.type || 'text'} name={field.key} onChange={handleChange} onBlur={handleBlur} value={beneficiaryData[field.key] || ''} isInvalid={!!errors[field.key]} />;
+  };
 
-  const fullName = `${beneficiary.beneficiary_first_name || ''} ${beneficiary.beneficiary_last_name || ''}`;
+  if (countryFields.length === 0) return <Card className="p-4"><Card.Body>Cargando...</Card.Body></Card>;
 
   return (
     <Card className="p-4 shadow-sm border-0">
       <Card.Body>
-        <h4 className="mb-4">Resumen</h4>
-        {loadingQuote ? <Spinner /> : (
-          <Row className="mb-4">
-            <Col md={6}>
-              <div className="p-3 rounded bg-light">
-                <span className="fw-bold fs-5">${formatNumberForDisplay(currentQuote.amountIn)} {currentQuote.origin}</span>
-                <br /><small>Total a pagar</small>
-              </div>
-            </Col>
-            <Col md={6}>
-              <div className="mb-2"><strong>Destinatario:</strong> {fullName}</div>
-              {Object.entries(beneficiary).map(([key, value]) => {
-                if (!value || key.includes('name')) return null;
-                const field = getFieldDetails(key);
-                return <div key={key}><small className="text-muted">{field?.name}:</small> {getDisplayValue(key, value)}</div>;
-              })}
-            </Col>
-          </Row>
-        )}
-
-        <hr />
-
-        <h5 className="mb-3">Método de Pago</h5>
-        <Form>
-          <div className="mb-3">
-            <Form.Check type="radio" label="Pasarela Web" name="pm" checked={paymentMethod === 'redirect'} onChange={() => setPaymentMethod('redirect')} />
-            <Form.Check type="radio" label="Pago Directo" name="pm" checked={paymentMethod === 'direct'} onChange={() => setPaymentMethod('direct')} disabled={!directPaymentAvailable} />
-          </div>
-          {paymentMethod === 'direct' && selectedDirectMethod && (
-            <div className="p-3 bg-light rounded">
-              <h6>{selectedDirectMethod.name}</h6>
-              <Row>
-                {selectedDirectMethod.required_fields.map(f => (
-                  <Col md={6} key={f.name}>
-                    <Form.Group className="mb-2"><Form.Label>{f.label}</Form.Label><Form.Control name={f.name} onChange={handleDirectFormChange} required={f.required} /></Form.Group>
-                  </Col>
-                ))}
-              </Row>
-            </div>
-          )}
-        </Form>
-
-        {/* Ocultar si ya viene de favorito */}
-        {!isFromFavorite && (
-          <Form.Group className="mb-3 mt-3 border-top pt-3">
-            <Form.Check type="checkbox" label="Guardar favorito" checked={saveAsFavorite} onChange={(e) => setSaveAsFavorite(e.target.checked)} />
+        <Card.Title as="h5" className="mb-4">Datos del Beneficiario</Card.Title>
+        {token && (
+          <Form.Group className="mb-4 bg-light p-3 rounded">
+            <Form.Label className="fw-bold text-primary">Cargar Beneficiario Favorito</Form.Label>
+            <Form.Select value={selectedFavorite} onChange={handleFavoriteSelect} disabled={loadingFavorites}>
+              <option value="">{loadingFavorites ? 'Cargando...' : 'Selecciona un contacto guardado...'}</option>
+              {favorites.map(fav => <option key={fav._id} value={fav._id}>{fav.nickname}</option>)}
+            </Form.Select>
           </Form.Group>
         )}
-
-        {error && <Alert variant="danger">{error}</Alert>}
-
-        <div className="d-flex justify-content-between mt-4">
-          <Button variant="outline-secondary" onClick={onBack} disabled={loading}>Atrás</Button>
-          <Button variant="primary" onClick={handleConfirm} disabled={loading || isExpired} style={{ backgroundColor: 'var(--avf-secondary)' }}>
-            {loading ? <Spinner size="sm" /> : `Pagar $${formatNumberForDisplay(currentQuote.amountIn)}`}
-          </Button>
-        </div>
+        <Form>
+          <Row>{fieldsToRender.map(f => <Col md={6} key={f.key}><Form.Group className="mb-3"><Form.Label>{f.name}</Form.Label>{renderField(f)}<Form.Control.Feedback type="invalid">{errors[f.key]}</Form.Control.Feedback></Form.Group></Col>)}</Row>
+          <div className="d-flex justify-content-between mt-4">
+            <Button variant="outline-secondary" onClick={onBack}>Volver</Button>
+            <Button variant="primary" style={{ backgroundColor: 'var(--avf-secondary)', borderColor: 'var(--avf-secondary)' }} onClick={handleNext}>Continuar</Button>
+          </div>
+        </Form>
       </Card.Body>
     </Card>
   );
 };
 
-export default StepConfirm;
+export default StepBeneficiary;
