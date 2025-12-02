@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Container, Card, Form, Button, Spinner, Alert, Row, Col, InputGroup } from 'react-bootstrap';
 import { getTransactionRules, updateTransactionRules, getAvailableOrigins } from '../services/api';
 import { formatNumberForDisplay, parseFormattedNumber } from '../utils/formatting';
+import { uploadImage } from '../services/api';
 
 const AdminRules = () => {
   const [loading, setLoading] = useState(true);
@@ -11,6 +12,7 @@ const AdminRules = () => {
 
   const [availableCountries, setAvailableCountries] = useState([]);
   const [selectedCountry, setSelectedCountry] = useState('CL');
+  const [uploadingQr, setUploadingQr] = useState(false);
 
   const [formData, setFormData] = useState({
     originCountry: 'CL',
@@ -19,8 +21,45 @@ const AdminRules = () => {
     isEnabled: false,
     alertMessage: '',
     kycLevel1: 450000,
-    kycLevel2: 4500000
+    kycLevel2: 4500000,
+
+    provider: 'vita_wallet',
+    bankName: '',
+    accountNumber: '',
+    accountType: '',
+    holderName: '',
+    holderId: '',
+    depositQrImage: ''
   });
+
+  // Función compatible para subir el QR
+  const handleQrUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    // Validar tamaño (ej: 2MB)
+    if (file.size > 2 * 1024 * 1024) {
+      alert("La imagen es muy pesada (máx 2MB).");
+      return;
+    }
+
+    setUploadingQr(true);
+    const data = new FormData();
+    data.append('image', file); // El nombre 'image' debe coincidir con el backend
+
+    try {
+      const res = await uploadImage(data);
+      if (res.ok) {
+        // Actualizamos el estado del formulario con la URL recibida
+        setFormData(prev => ({ ...prev, depositQrImage: res.url }));
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Error al subir la imagen del QR.");
+    } finally {
+      setUploadingQr(false);
+    }
+  };
 
   // 1. Cargar lista de países disponibles
   useEffect(() => {
@@ -43,6 +82,7 @@ const AdminRules = () => {
     const loadRules = async () => {
       setLoading(true);
       setSuccess('');
+
       try {
         const response = await getTransactionRules(selectedCountry);
         if (response.ok && response.rules && response.rules.length > 0) {
@@ -54,7 +94,15 @@ const AdminRules = () => {
             isEnabled: rule.isEnabled,
             alertMessage: rule.alertMessage || '',
             kycLevel1: rule.kycLimits?.level1 || 0,
-            kycLevel2: rule.kycLimits?.level2 || 0
+            kycLevel2: rule.kycLimits?.level2 || 0,
+
+            provider: rule.provider || 'vita_wallet',
+            bankName: rule.localBankDetails?.bankName || '',
+            accountNumber: rule.localBankDetails?.accountNumber || '',
+            accountType: rule.localBankDetails?.accountType || '',
+            holderName: rule.localBankDetails?.holderName || '',
+            holderId: rule.localBankDetails?.holderId || '',
+            depositQrImage: rule.depositQrImage || ''
           });
         } else {
           // Resetear a defaults si no hay regla para ese país
@@ -65,7 +113,15 @@ const AdminRules = () => {
             isEnabled: false,
             alertMessage: '',
             kycLevel1: 450000,
-            kycLevel2: 4500000
+            kycLevel2: 4500000,
+
+            provider: 'vita_wallet',
+            bankName: '',
+            accountNumber: '',
+            accountType: '',
+            holderName: '',
+            holderId: '',
+            depositQrImage: ''
           });
         }
       } catch (err) {
@@ -218,6 +274,49 @@ const AdminRules = () => {
 
               {error && <Alert variant="danger">{error}</Alert>}
               {success && <Alert variant="success">{success}</Alert>}
+
+              {/* --- SECCIÓN ANCHOR MANUAL --- */}
+              <div className="p-3 bg-light rounded mb-4 border">
+                <h5 className="text-primary mb-3">Configuración de Proveedor</h5>
+                <Form.Group className="mb-3">
+                  <Form.Label>Proveedor de Liquidez</Form.Label>
+                  <Form.Select name="provider" value={formData.provider} onChange={handleChange}>
+                    <option value="vita_wallet">Vita Wallet (Automático)</option>
+                    <option value="internal_manual">Anchor Manual (Transferencia Bancaria)</option>
+                  </Form.Select>
+                </Form.Group>
+
+                {formData.provider === 'internal_manual' && (
+                  <>
+                    <h6 className="mt-3">Datos Bancarios para Depósito (On-Ramp)</h6>
+                    <Row>
+                      <Col md={6}><Form.Group className="mb-2"><Form.Label>Banco</Form.Label><Form.Control name="bankName" value={formData.bankName} onChange={handleChange} /></Form.Group></Col>
+                      <Col md={6}><Form.Group className="mb-2"><Form.Label>Nro. Cuenta</Form.Label><Form.Control name="accountNumber" value={formData.accountNumber} onChange={handleChange} /></Form.Group></Col>
+                    </Row>
+                    <Row>
+                      <Col md={6}><Form.Group className="mb-2"><Form.Label>Tipo Cuenta</Form.Label><Form.Control name="accountType" value={formData.accountType} onChange={handleChange} /></Form.Group></Col>
+                      <Col md={6}><Form.Group className="mb-2"><Form.Label>Titular</Form.Label><Form.Control name="holderName" value={formData.holderName} onChange={handleChange} /></Form.Group></Col>
+                      <Col md={6}><Form.Group className="mb-2"><Form.Label>CI/RUT</Form.Label><Form.Control name="holderId" value={formData.holderId} onChange={handleChange} /></Form.Group></Col>
+                    </Row>
+
+                    <Form.Group className="mt-3">
+                      <Form.Label>QR de Cobro</Form.Label>
+                      <div className="d-flex align-items-center">
+                        <Form.Control type="file" onChange={handleQrUpload} disabled={uploadingQr} accept="image/*" />
+                        {uploadingQr && <Spinner size="sm" className="ms-2" />}
+                      </div>
+
+                      {/* Vista previa si ya existe una imagen */}
+                      {formData.depositQrImage && (
+                        <div className="mt-2">
+                          <img src={formData.depositQrImage} alt="QR Actual" style={{ maxHeight: '150px', border: '1px solid #ddd', borderRadius: '4px' }} />
+                          <div className="text-success small mt-1">✓ Imagen cargada correctamente</div>
+                        </div>
+                      )}
+                    </Form.Group>
+                  </>
+                )}
+              </div>
 
               <div className="d-grid">
                 <Button type="submit" disabled={saving} size="lg" style={{ backgroundColor: 'var(--avf-secondary)', borderColor: 'var(--avf-secondary)' }}>

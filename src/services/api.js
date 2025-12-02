@@ -321,6 +321,26 @@ export const updateTransactionRules = async (rulesData) => {
   }
 };
 
+/**
+ * Sube una imagen genérica (ej: QR, Comprobante) al servidor.
+ * @param {FormData} formData - Debe contener un campo 'image'.
+ * @returns {Promise<object>} { ok: true, url: '...' }
+ */
+export const uploadImage = async (formData) => {
+  try {
+    // Axios detecta FormData y configura el header multipart automáticamente
+    // Forzamos Content-Type: undefined para evitar conflictos
+    const response = await apiClient.post('/upload', formData, {
+      headers: { 'Content-Type': undefined }
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error uploading image:', error.response?.data || error.message);
+    throw error.response?.data || error;
+  }
+};
+
+
 export const getAvailableOrigins = async () => {
   try {
     const response = await apiClient.get('/transaction-rules/available');
