@@ -2,9 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { Container, Card, Form, Button, Spinner, Alert, Row, Col, InputGroup } from 'react-bootstrap';
 import { getTransactionRules, updateTransactionRules, getAvailableOrigins } from '../services/api';
 import { formatNumberForDisplay, parseFormattedNumber } from '../utils/formatting';
-import { uploadImage } from '../services/api';
+import { uploadImage, getTransactionRules, updateTransactionRules, getAvailableOrigins } from '../services/api';
 
 const AdminRules = () => {
+  //ESTADOS
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
@@ -12,8 +13,10 @@ const AdminRules = () => {
 
   const [availableCountries, setAvailableCountries] = useState([]);
   const [selectedCountry, setSelectedCountry] = useState('CL');
+
   const [uploadingQr, setUploadingQr] = useState(false);
 
+  // Estado inicial con todos los campos
   const [formData, setFormData] = useState({
     originCountry: 'CL',
     minAmount: 5000,
@@ -22,7 +25,7 @@ const AdminRules = () => {
     alertMessage: '',
     kycLevel1: 450000,
     kycLevel2: 4500000,
-
+    // Campos para Anchor Manual
     provider: 'vita_wallet',
     bankName: '',
     accountNumber: '',
@@ -31,35 +34,6 @@ const AdminRules = () => {
     holderId: '',
     depositQrImage: ''
   });
-
-  // Función compatible para subir el QR
-  const handleQrUpload = async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-
-    // Validar tamaño (ej: 2MB)
-    if (file.size > 2 * 1024 * 1024) {
-      alert("La imagen es muy pesada (máx 2MB).");
-      return;
-    }
-
-    setUploadingQr(true);
-    const data = new FormData();
-    data.append('image', file); // El nombre 'image' debe coincidir con el backend
-
-    try {
-      const res = await uploadImage(data);
-      if (res.ok) {
-        // Actualizamos el estado del formulario con la URL recibida
-        setFormData(prev => ({ ...prev, depositQrImage: res.url }));
-      }
-    } catch (err) {
-      console.error(err);
-      alert("Error al subir la imagen del QR.");
-    } finally {
-      setUploadingQr(false);
-    }
-  };
 
   // 1. Cargar lista de países disponibles
   useEffect(() => {
@@ -82,7 +56,6 @@ const AdminRules = () => {
     const loadRules = async () => {
       setLoading(true);
       setSuccess('');
-
       try {
         const response = await getTransactionRules(selectedCountry);
         if (response.ok && response.rules && response.rules.length > 0) {
@@ -95,7 +68,7 @@ const AdminRules = () => {
             alertMessage: rule.alertMessage || '',
             kycLevel1: rule.kycLimits?.level1 || 0,
             kycLevel2: rule.kycLimits?.level2 || 0,
-
+            // --- Mapeo de datos anidados a estado plano ---
             provider: rule.provider || 'vita_wallet',
             bankName: rule.localBankDetails?.bankName || '',
             accountNumber: rule.localBankDetails?.accountNumber || '',
@@ -105,7 +78,7 @@ const AdminRules = () => {
             depositQrImage: rule.depositQrImage || ''
           });
         } else {
-          // Resetear a defaults si no hay regla para ese país
+          // Resetear a defaults
           setFormData({
             originCountry: selectedCountry,
             minAmount: 5000,
@@ -114,7 +87,6 @@ const AdminRules = () => {
             alertMessage: '',
             kycLevel1: 450000,
             kycLevel2: 4500000,
-
             provider: 'vita_wallet',
             bankName: '',
             accountNumber: '',
@@ -146,6 +118,26 @@ const AdminRules = () => {
     setFormData(prev => ({ ...prev, [name]: numericValue }));
   };
 
+  // Handler para subir QR
+  const handleQrUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    setUploadingQr(true);
+    const data = new FormData();
+    data.append('image', file);
+    try {
+      const res = await uploadImage(data);
+      if (res.ok) {
+        setFormData(prev => ({ ...prev, depositQrImage: res.url }));
+      }
+    } catch (err) {
+      alert("Error al subir QR.");
+    } finally {
+      setUploadingQr(false);
+    }
+  };
+
+  // 3. Submit: EMPAQUETAR DATOS PARA EL BACKEND
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSaving(true); setError(''); setSuccess('');
@@ -159,8 +151,20 @@ const AdminRules = () => {
         kycLimits: {
           level1: Number(formData.kycLevel1),
           level2: Number(formData.kycLevel2)
+        },
+        // --- Nuevos Campos ---
+        provider: formData.provider,
+        depositQrImage: formData.depositQrImage,
+        // Empaquetamos los datos bancarios en el objeto que espera el modelo
+        localBankDetails: {
+          bankName: formData.bankName,
+          accountNumber: formData.accountNumber,
+          accountType: formData.accountType,
+          holderName: formData.holderName,
+          holderId: formData.holderId
         }
       };
+
       const response = await updateTransactionRules(payload);
       if (response.ok) setSuccess(`Reglas para ${selectedCountry} guardadas.`);
       else throw new Error(response.error);
