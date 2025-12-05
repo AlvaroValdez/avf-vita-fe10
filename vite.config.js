@@ -8,7 +8,7 @@ export default defineConfig({
     rollupOptions: {
       external: [
         'fs',
-        'path', 
+        'path',
         'url',
         'http',
         'https',
@@ -19,9 +19,11 @@ export default defineConfig({
         'crypto',
         'buffer',
         'querystring',
-        'zlib'
+        'zlib',
       ]
-    }
+    },
+    sourcemap: false, // Desactiva la generación de mapas de fuente
+    chunkSizeWarningLimit: 1600, // Aumenta el límite de aviso (opcional, reduce ruido)
   },
   define: {
     global: 'globalThis',
