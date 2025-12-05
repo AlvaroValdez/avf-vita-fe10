@@ -47,7 +47,7 @@ const AdminRules = () => {
     fetchOrigins();
   }, []);
 
-  // 2. Cargar reglas al cambiar país
+  // 2. Cargar reglas al cambiar país para tasa
   useEffect(() => {
     const loadRules = async () => {
       setLoading(true);
