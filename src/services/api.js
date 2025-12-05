@@ -10,7 +10,6 @@ export const apiClient = axios.create({
 });
 
 // --- AUTENTICACIÓN ---
-
 export const loginUser = async (credentials) => {
   try {
     const response = await apiClient.post('/auth/login', credentials);
@@ -27,8 +26,7 @@ export const registerUser = async (userData) => {
     const response = await apiClient.post('/auth/register', userData);
     return response.data;
   } catch (error) {
-    console.error('Error en registerUser:', error.response?.data || error.message);
-    throw { ok: false, error: error.response?.data?.error || 'Error al registrar usuario.' };
+    throw { ok: false, error: error.response?.data?.message || error.response?.data?.error || 'Error al registrar.' };
   }
 };
 
@@ -60,7 +58,6 @@ export const resetPassword = async (token, password) => {
 };
 
 // --- PERFIL Y KYC ---
-
 export const updateUserProfile = async (profileData) => {
   try {
     const response = await apiClient.put('/auth/profile', profileData);
@@ -92,8 +89,26 @@ export const uploadAvatar = async (formData) => {
   }
 };
 
-// --- REMESAS Y COTIZACIÓN ---
+// --- ADMIN KYC ---
+export const getPendingKycUsers = async () => {
+  try {
+    const response = await apiClient.get('/admin/kyc/pending');
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || error;
+  }
+};
 
+export const reviewKycUser = async (userId, action, reason = '') => {
+  try {
+    const response = await apiClient.put(`/admin/kyc/${userId}/review`, { action, reason });
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || error;
+  }
+};
+
+// --- REMESAS Y REGLAS ---
 export const getPrices = async () => {
   try {
     const response = await apiClient.get('/prices');
@@ -112,6 +127,42 @@ export const getQuote = async (params) => {
   }
 };
 
+export const getTransactionRules = async (country = 'CL') => {
+  try {
+    const response = await apiClient.get(`/transaction-rules?country=${country}`);
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || error;
+  }
+};
+
+export const updateTransactionRules = async (rulesData) => {
+  try {
+    const response = await apiClient.put('/transaction-rules', rulesData);
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || error;
+  }
+};
+
+export const getAvailableOrigins = async () => {
+  try {
+    const response = await apiClient.get('/transaction-rules/available');
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || error;
+  }
+};
+
+export const getEnabledOrigins = async () => {
+  try {
+    const response = await apiClient.get('/transaction-rules/enabled');
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || error;
+  }
+};
+
 export const getWithdrawalRules = async (params) => {
   try {
     const response = await apiClient.get('/withdrawal-rules', { params });
@@ -121,6 +172,18 @@ export const getWithdrawalRules = async (params) => {
   }
 };
 
+export const uploadImage = async (formData) => {
+  try {
+    const response = await apiClient.post('/upload', formData, {
+      headers: { 'Content-Type': undefined }
+    });
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || error;
+  }
+};
+
+// --- TRANSACCIONES Y PAGOS ---
 export const createWithdrawal = async (payload) => {
   try {
     const response = await apiClient.post('/withdrawals', payload);
@@ -129,8 +192,6 @@ export const createWithdrawal = async (payload) => {
     throw error.response?.data || error;
   }
 };
-
-// --- PAGOS (Pay-in) ---
 
 export const createPaymentOrder = async (orderData) => {
   try {
@@ -141,28 +202,23 @@ export const createPaymentOrder = async (orderData) => {
   }
 };
 
-// ** FUNCIONES FALTANTES AÑADIDAS AQUÍ **
 export const createDirectPaymentOrder = async (orderData) => {
   try {
     const response = await apiClient.post('/payment-orders/direct', orderData);
     return response.data;
   } catch (error) {
-    console.error('Error creating direct payment order:', error);
     throw error.response?.data || error;
   }
 };
 
-export const getDirectPaymentRequirements = async () => {
+export const getPaymentMethods = async (country) => {
   try {
-    const response = await apiClient.get('/payment-orders/direct-requirements');
+    const response = await apiClient.get(`/payment-orders/methods/${country}`);
     return response.data;
   } catch (error) {
-    console.error('Error fetching payment requirements:', error);
     throw error.response?.data || error;
   }
 };
-
-// --- TRANSACCIONES ---
 
 export const getTransactions = async (params) => {
   try {
@@ -182,8 +238,7 @@ export const getTransactionById = async (id) => {
   }
 };
 
-// --- BENEFICIARIOS (Favoritos) ---
-
+// --- BENEFICIARIOS ---
 export const getBeneficiaries = async () => {
   try {
     const response = await apiClient.get('/beneficiaries');
@@ -220,8 +275,7 @@ export const deleteBeneficiary = async (id) => {
   }
 };
 
-// --- ADMINISTRACIÓN ---
-
+// --- ADMIN MARKUP/USUARIOS ---
 export const getMarkup = async () => {
   try {
     const response = await apiClient.get('/admin/markup');
@@ -281,104 +335,6 @@ export const adminUpdateUser = async (userId, userData) => {
     const response = await apiClient.put(`/admin/users/${userId}`, userData);
     return response.data;
   } catch (error) {
-    throw error.response?.data || error;
-  }
-};
-
-export const getPendingKycUsers = async () => {
-  try {
-    const response = await apiClient.get('/admin/kyc/pending');
-    return response.data;
-  } catch (error) {
-    throw error.response?.data || error;
-  }
-};
-
-export const reviewKycUser = async (userId, action, reason = '') => {
-  try {
-    const response = await apiClient.put(`/admin/kyc/${userId}/review`, { action, reason });
-    return response.data;
-  } catch (error) {
-    throw error.response?.data || error;
-  }
-};
-
-export const getTransactionRules = async (country = 'CL') => {
-  try {
-    const response = await apiClient.get(`/transaction-rules?country=${country}`);
-    return response.data;
-  } catch (error) {
-    throw error.response?.data || error;
-  }
-};
-
-export const updateTransactionRules = async (rulesData) => {
-  try {
-    const response = await apiClient.put('/transaction-rules', rulesData);
-    return response.data;
-  } catch (error) {
-    throw error.response?.data || error;
-  }
-};
-
-/**
- * Sube una imagen genérica (ej: QR, Comprobante) al servidor.
- * @param {FormData} formData - Debe contener un campo 'image'.
- * @returns {Promise<object>} { ok: true, url: '...' }
- */
-export const uploadImage = async (formData) => {
-  try {
-    // Axios detecta FormData y configura el header multipart automáticamente
-    // Forzamos Content-Type: undefined para evitar conflictos
-    const response = await apiClient.post('/upload', formData, {
-      headers: { 'Content-Type': undefined }
-    });
-    return response.data;
-  } catch (error) {
-    console.error('Error uploading image:', error.response?.data || error.message);
-    throw error.response?.data || error;
-  }
-};
-
-
-export const getAvailableOrigins = async () => {
-  try {
-    const response = await apiClient.get('/transaction-rules/available');
-    return response.data;
-  } catch (error) {
-    throw error.response?.data || error;
-  }
-};
-
-export const getEnabledOrigins = async () => {
-  try {
-    const response = await apiClient.get('/transaction-rules/enabled');
-    return response.data;
-  } catch (error) {
-    throw error.response?.data || error;
-  }
-};
-
-// --- FUNCIONES DE PAGO DIRECTO REALES ---
-
-// 1. Obtener métodos disponibles (Khipu, Webpay, etc.)
-export const getPaymentMethods = async (country) => {
-  try {
-    const response = await apiClient.get(`/payment-orders/methods/${country}`);
-    return response.data;
-  } catch (error) {
-    console.error('Error fetching payment methods:', error);
-    throw error.response?.data || error;
-  }
-};
-
-// 2. Ejecutar el pago directo (Paso final)
-export const executeDirectPayment = async (vitaOrderId, paymentData) => {
-  try {
-    const response = await apiClient.post(`/payment-orders/${vitaOrderId}/execute`, { payment_data: paymentData });
-    return response.data;
-  } catch (error) {
-    console.error('Error executing direct payment:', error);
     throw error.response?.data || error;
   }
 };
