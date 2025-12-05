@@ -13,6 +13,7 @@ const AdminRules = () => {
   const [availableCountries, setAvailableCountries] = useState([]);
   const [selectedCountry, setSelectedCountry] = useState('CL');
 
+  // Estado inicial completo
   const [formData, setFormData] = useState({
     originCountry: 'CL',
     minAmount: 5000,
@@ -21,6 +22,7 @@ const AdminRules = () => {
     alertMessage: '',
     kycLevel1: 450000,
     kycLevel2: 4500000,
+    // Campos Anchor Manual
     provider: 'vita_wallet',
     manualExchangeRate: 0,
     bankName: '',
@@ -31,6 +33,7 @@ const AdminRules = () => {
     depositQrImage: ''
   });
 
+  // 1. Cargar países disponibles
   useEffect(() => {
     const fetchOrigins = async () => {
       try {
@@ -44,6 +47,7 @@ const AdminRules = () => {
     fetchOrigins();
   }, []);
 
+  // 2. Cargar reglas al cambiar país
   useEffect(() => {
     const loadRules = async () => {
       setLoading(true);
@@ -60,6 +64,7 @@ const AdminRules = () => {
             alertMessage: rule.alertMessage || '',
             kycLevel1: rule.kycLimits?.level1 || 0,
             kycLevel2: rule.kycLimits?.level2 || 0,
+            // Mapeo de datos anidados y nuevos campos
             provider: rule.provider || 'vita_wallet',
             manualExchangeRate: rule.manualExchangeRate || 0,
             bankName: rule.localBankDetails?.bankName || '',
@@ -70,6 +75,7 @@ const AdminRules = () => {
             depositQrImage: rule.depositQrImage || ''
           });
         } else {
+          // Defaults para nuevo país
           setFormData({
             originCountry: selectedCountry,
             minAmount: 5000,
@@ -199,7 +205,7 @@ const AdminRules = () => {
               />
             </div>
 
-            {/* --- SECCIÓN DE PROVEEDOR --- */}
+            {/* --- SECCIÓN ANCHOR MANUAL --- */}
             <div className="p-3 bg-light rounded mb-4 border">
               <h5 className="text-primary mb-3">Configuración de Proveedor</h5>
               <Form.Group className="mb-3">
@@ -210,7 +216,7 @@ const AdminRules = () => {
                 </Form.Select>
               </Form.Group>
 
-              {/* --- AQUÍ ESTÁ EL CAMPO QUE FALTABA --- */}
+              {/* Renderizado Condicional para Anchor Manual */}
               {formData.provider === 'internal_manual' && (
                 <>
                   <div className="mb-3 p-3 bg-white border rounded">
@@ -228,7 +234,7 @@ const AdminRules = () => {
                       <InputGroup.Text>CLP</InputGroup.Text>
                     </InputGroup>
                     <Form.Text className="text-muted">
-                      Define cuántos Pesos Chilenos (CLP) entregas por cada 1 unidad de moneda local.
+                      Define cuánto vale 1 unidad de la moneda de origen en Pesos Chilenos (CLP).
                     </Form.Text>
                   </div>
 
