@@ -6,21 +6,28 @@ import ManualDeposit from './ManualDeposit';
 
 const QUOTE_VALIDITY_DURATION = 1.5 * 60 * 1000; // 90 segundos
 
+// Mapeo simple de país a moneda para seguridad
+const COUNTRY_TO_CURRENCY = {
+  'CL': 'CLP', 'CO': 'COP', 'AR': 'ARS', 'MX': 'MXN', 'BR': 'BRL', 'PE': 'PEN', 'BO': 'BOB', 'US': 'USD'
+};
+
 const StepConfirm = ({ formData, fields, onBack, isFromFavorite }) => {
-  // Desestructuramos los datos recibidos del paso anterior
   const { quoteData, beneficiary, destCountry, originCountry, quoteTimestamp } = formData;
 
-  // Estados
+  // Determinamos la moneda de origen correcta
+  // 1. Usamos la del quote si existe. 
+  // 2. Si no, deducimos del país de origen.
+  // 3. Default a CLP.
+  const safeOriginCurrency = quoteData?.origin || COUNTRY_TO_CURRENCY[originCountry] || 'CLP';
+
   const [currentQuote, setCurrentQuote] = useState(quoteData);
   const [loadingQuote, setLoadingQuote] = useState(true);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  // Timer
   const [remainingTime, setRemainingTime] = useState(null);
   const [isExpired, setIsExpired] = useState(false);
 
-  // Favoritos y Pagos
   const [saveAsFavorite, setSaveAsFavorite] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState('redirect');
   const [directMethods, setDirectMethods] = useState([]);
@@ -28,17 +35,16 @@ const StepConfirm = ({ formData, fields, onBack, isFromFavorite }) => {
   const [directFormData, setDirectFormData] = useState({});
   const [directPaymentAvailable, setDirectPaymentAvailable] = useState(true);
 
-  // 1. Refrescar Cotización al cargar (CRÍTICO: Incluye 'origin')
+  // 1. Refrescar Cotización al cargar
   useEffect(() => {
     const refreshQuote = async () => {
       try {
         setLoadingQuote(true);
-        // CORRECCIÓN: Enviamos 'origin' para que el backend calcule bien la tasa (ej: BOB->CLP o CLP->COP)
-        const origin = originCountry || currentQuote.origin || 'CLP';
+        // --- CORRECCIÓN: Usamos la moneda segura (safeOriginCurrency) ---
         const response = await getQuote({
           amount: currentQuote.amountIn,
           destCountry,
-          origin: origin
+          origin: safeOriginCurrency
         });
 
         if (response.ok) {
@@ -60,7 +66,7 @@ const StepConfirm = ({ formData, fields, onBack, isFromFavorite }) => {
   useEffect(() => {
     if (loadingQuote) return;
 
-    const startTimestamp = Date.now(); // Reiniciamos el contador al refrescar
+    const startTimestamp = Date.now();
     setRemainingTime(QUOTE_VALIDITY_DURATION);
     setIsExpired(false);
 
@@ -80,15 +86,14 @@ const StepConfirm = ({ formData, fields, onBack, isFromFavorite }) => {
     return () => clearInterval(interval);
   }, [loadingQuote]);
 
-  // 3. Cargar Métodos de Pago (Dinámico según País de Origen)
+  // 3. Cargar Métodos de Pago (Si no es manual)
   useEffect(() => {
-    // Si es Manual (BO), no cargamos métodos de Vita
-    if (originCountry === 'BO' || currentQuote.origin === 'BOB') return;
+    // Si es Anchor Manual (BOB), no cargamos métodos de Vita
+    if (safeOriginCurrency === 'BOB') return;
 
     if (paymentMethod === 'direct' && directMethods.length === 0) {
       const loadMethods = async () => {
         try {
-          // Cargamos métodos para el país donde está el usuario (Origen)
           const countryCode = originCountry || 'CL';
           const res = await getPaymentMethods(countryCode);
 
@@ -102,12 +107,11 @@ const StepConfirm = ({ formData, fields, onBack, isFromFavorite }) => {
           console.error("Pago directo no disponible:", e);
           setDirectPaymentAvailable(false);
           setPaymentMethod('redirect');
-          // No mostramos alert para no interrumpir, solo deshabilitamos la opción visualmente si se desea
         }
       };
       loadMethods();
     }
-  }, [paymentMethod, originCountry, currentQuote.origin, directMethods.length]);
+  }, [paymentMethod, originCountry, safeOriginCurrency, directMethods.length]);
 
   const handleDirectFormChange = (e) => {
     setDirectFormData({ ...directFormData, [e.target.name]: e.target.value });
@@ -117,7 +121,6 @@ const StepConfirm = ({ formData, fields, onBack, isFromFavorite }) => {
     setLoading(true);
     setError(null);
     try {
-      // Validar formulario de pago directo
       if (paymentMethod === 'direct' && selectedDirectMethod) {
         for (const field of selectedDirectMethod.required_fields) {
           if (field.required && !directFormData[field.name]) {
@@ -127,35 +130,32 @@ const StepConfirm = ({ formData, fields, onBack, isFromFavorite }) => {
       }
 
       // 1. Crear Payout (Withdrawal)
+      // --- CORRECCIÓN: Usamos safeOriginCurrency ---
       const withdrawalResult = await createWithdrawal({
         country: destCountry,
-        currency: currentQuote.origin,
+        currency: safeOriginCurrency,
         amount: currentQuote.amountIn,
         ...beneficiary,
       });
 
       if (withdrawalResult.ok) {
-        // 2. Guardar Favorito (si corresponde)
         if (saveAsFavorite && !isFromFavorite) {
           const nickname = `${beneficiary.beneficiary_first_name} ${beneficiary.beneficiary_last_name}`;
-          // Guardamos en segundo plano (no bloqueante)
           saveBeneficiary({ nickname, country: destCountry, beneficiaryData: beneficiary }).catch(console.warn);
         }
 
         // 3. Crear Orden de Pago (Pay-in)
         let paymentOrderResult;
 
-        // Datos base para la orden
         const orderPayload = {
           amount: currentQuote.amountIn,
-          country: originCountry || 'CL', // País del pagador
+          country: originCountry || 'CL',
           orderId: withdrawalResult.data.order,
         };
 
         if (paymentMethod === 'redirect') {
           paymentOrderResult = await createPaymentOrder(orderPayload);
         } else {
-          // Inyectamos datos extra para Direct Payment
           paymentOrderResult = await createDirectPaymentOrder({
             ...orderPayload,
             payer_details: directFormData,
@@ -164,7 +164,6 @@ const StepConfirm = ({ formData, fields, onBack, isFromFavorite }) => {
         }
 
         if (paymentOrderResult.ok) {
-          // Búsqueda inteligente de la URL de pago
           const resData = paymentOrderResult.data || paymentOrderResult;
           const paymentUrl =
             resData.data?.attributes?.url ||
@@ -197,13 +196,30 @@ const StepConfirm = ({ formData, fields, onBack, isFromFavorite }) => {
     }
   };
 
+  const formatTime = (ms) => {
+    if (ms === null || ms <= 0) return '00:00';
+    const s = Math.floor(ms / 1000);
+    return `${Math.floor(s / 60).toString().padStart(2, '0')}:${(s % 60).toString().padStart(2, '0')}`;
+  };
+
+  const getFieldDetails = (k) => fields?.find(f => f.key === k);
+  const getDisplayValue = (k, v) => {
+    const field = getFieldDetails(k);
+    if (field?.type === 'select' && field.options) {
+      const opt = field.options.find(o => o.value === v);
+      return opt ? opt.label : v;
+    }
+    return v;
+  };
+
   // --- RENDERIZADO ---
 
   // 1. Caso Anchor Manual (Bolivia)
-  if (originCountry === 'BO' || currentQuote.origin === 'BOB') {
+  // --- CORRECCIÓN: Usamos safeOriginCurrency para detectar BOB ---
+  if (safeOriginCurrency === 'BOB') {
     return (
       <ManualDeposit
-        formData={{ ...formData, quoteData: currentQuote }}
+        formData={{ ...formData, quoteData: currentQuote, originCountry: originCountry }} // Pasamos datos completos
         onFinish={() => window.location.href = '/transactions'}
         onBack={onBack}
       />
@@ -224,22 +240,6 @@ const StepConfirm = ({ formData, fields, onBack, isFromFavorite }) => {
     );
   }
 
-  const formatTime = (ms) => {
-    if (ms === null || ms <= 0) return '00:00';
-    const s = Math.floor(ms / 1000);
-    return `${Math.floor(s / 60).toString().padStart(2, '0')}:${(s % 60).toString().padStart(2, '0')}`;
-  };
-
-  const getFieldDetails = (k) => fields?.find(f => f.key === k);
-  const getDisplayValue = (k, v) => {
-    const field = getFieldDetails(k);
-    if (field?.type === 'select' && field.options) {
-      const opt = field.options.find(o => o.value === v);
-      return opt ? opt.label : v;
-    }
-    return v;
-  };
-
   const fullName = `${beneficiary.beneficiary_first_name || ''} ${beneficiary.beneficiary_last_name || ''}`.trim();
 
   return (
@@ -248,45 +248,46 @@ const StepConfirm = ({ formData, fields, onBack, isFromFavorite }) => {
         <h4 className="mb-4">Resumen de la transacción</h4>
 
         {loadingQuote ? (
-          <div className="text-center p-5">
-            <Spinner animation="border" variant="primary" />
-            <p className="mt-3 text-muted">Actualizando tasa de cambio...</p>
-          </div>
+          <div className="text-center p-5"><Spinner animation="border" variant="primary" /> <p>Actualizando cotización...</p></div>
         ) : (
-          <Row className="mb-4">
-            <Col md={6}>
-              <div className="p-3 rounded bg-light mb-3 mb-md-0">
-                <div className="d-flex justify-content-between mb-2">
-                  <span>Monto a enviar:</span>
-                  <span className="fw-bold">{formatNumberForDisplay(currentQuote.amountIn)} {currentQuote.origin}</span>
+          <Row>
+            <Col md={6} className="mb-4 mb-md-0">
+              <h5>Detalles:</h5>
+              <div className="p-3 rounded" style={{ backgroundColor: '#f8f9fa' }}>
+                <div className="d-flex justify-content-between align-items-center mb-2">
+                  <span>Total a enviar:</span>
+                  <span className="fw-bold fs-5">{`$ ${formatNumberForDisplay(currentQuote.amountIn)} ${currentQuote.origin}`}</span>
                 </div>
-                <div className="d-flex justify-content-between mb-2 text-muted small">
-                  <span>Tasa:</span>
-                  <span>1 {currentQuote.destCurrency} = {formatRate(1 / currentQuote.rateWithMarkup)} {currentQuote.origin}</span>
-                </div>
-                <hr className="my-2" />
-                <div className="d-flex justify-content-between fw-bold fs-5 text-primary">
+                <small className="text-muted d-block text-center mb-2">
+                  Tasa de cambio: 1 {currentQuote.destCurrency} = ${formatRate(1 / currentQuote.rateWithMarkup)} {currentQuote.origin}
+                </small>
+                <div className="d-flex justify-content-between align-items-center fw-bold">
                   <span>Total a recibir:</span>
-                  {/* Aquí mostramos el monto calculado corregido */}
-                  <span>{formatNumberForDisplay(currentQuote.amountOut)} {currentQuote.destCurrency}</span>
+                  <span className="fs-5">{`$ ${formatNumberForDisplay(currentQuote.amountOut)} ${currentQuote.destCurrency}`}</span>
                 </div>
               </div>
             </Col>
             <Col md={6}>
-              <h6 className="text-primary">Datos del Beneficiario</h6>
-              <div className="mb-2"><strong>Nombre:</strong> {fullName}</div>
+              <h5>Beneficiario:</h5>
+              <div className="mb-2"><small className="text-muted d-block">Nombre</small><span className="fw-medium">{fullName}</span></div>
               {Object.entries(beneficiary).map(([key, value]) => {
                 if (!value || key.includes('name') || key === 'onComplete') return null;
                 const field = getFieldDetails(key);
-                // Solo mostramos campos relevantes (banco, cuenta, email)
-                if (!field) return null;
-                return <div key={key} className="small mb-1"><span className="text-muted">{field.name}:</span> {getDisplayValue(key, value)}</div>;
+                const label = field ? field.name : key;
+                return (
+                  <div key={key} className="mb-2">
+                    <small className="text-muted d-block">{label}:</small>
+                    <span className="fw-medium">{getDisplayValue(key, value)}</span>
+                  </div>
+                );
               })}
             </Col>
           </Row>
         )}
 
-        <hr />
+        {error && <Alert variant="danger" className="mt-4">{error}</Alert>}
+
+        <hr className="my-4" />
 
         <h5 className="mb-3">Método de Pago</h5>
         <Form>
@@ -297,7 +298,6 @@ const StepConfirm = ({ formData, fields, onBack, isFromFavorite }) => {
               checked={paymentMethod === 'redirect'}
               onChange={(e) => setPaymentMethod(e.target.value)}
             />
-            {/* Solo mostramos la opción Directa si está disponible y no falló la carga */}
             <Form.Check
               type="radio" id="pay-direct" label="Pago Directo (Marca Blanca)"
               name="paymentMethod" value="direct"
@@ -307,8 +307,10 @@ const StepConfirm = ({ formData, fields, onBack, isFromFavorite }) => {
             />
           </div>
 
+          {/* Formulario Direct Payment ... */}
           {paymentMethod === 'direct' && selectedDirectMethod && (
             <div className="p-3 border rounded bg-light mb-3">
+              {/* ... Inputs dinámicos ... */}
               <h6 className="text-primary mb-3">{selectedDirectMethod.description || selectedDirectMethod.name}</h6>
               <Row>
                 {selectedDirectMethod.required_fields.map(field => (
@@ -329,19 +331,11 @@ const StepConfirm = ({ formData, fields, onBack, isFromFavorite }) => {
           )}
         </Form>
 
-        {/* Ocultar checkbox si ya viene de favorito */}
         {!isFromFavorite && (
           <Form.Group className="mb-3 mt-3 border-top pt-3">
-            <Form.Check
-              type="checkbox"
-              label="Guardar en Mis Favoritos"
-              checked={saveAsFavorite}
-              onChange={(e) => setSaveAsFavorite(e.target.checked)}
-            />
+            <Form.Check type="checkbox" label="Guardar en Mis Favoritos" checked={saveAsFavorite} onChange={(e) => setSaveAsFavorite(e.target.checked)} />
           </Form.Group>
         )}
-
-        {error && <Alert variant="danger" className="mt-4">{error}</Alert>}
 
         <div className="d-flex justify-content-between mt-4">
           <Button variant="outline-secondary" onClick={onBack} disabled={loading}>Atrás</Button>
