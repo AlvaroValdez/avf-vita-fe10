@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Card, Form, Button, Col, Row, Alert, Spinner } from 'react-bootstrap';
+import { Card, Form, Button, Col, Row, Spinner } from 'react-bootstrap';
 import { getBeneficiaries } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
 
-// Regex estándar para email
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 const StepBeneficiary = ({ formData, fields, onBack, onComplete }) => {
@@ -12,43 +11,33 @@ const StepBeneficiary = ({ formData, fields, onBack, onComplete }) => {
   const [errors, setErrors] = useState({});
   const [fieldsToRender, setFieldsToRender] = useState([]);
 
-  // Estados para Favoritos
   const [favorites, setFavorites] = useState([]);
   const [loadingFavorites, setLoadingFavorites] = useState(false);
   const [selectedFavorite, setSelectedFavorite] = useState('');
 
   const countryFields = fields || [];
 
-  // Cargar favoritos si está logueado
+  // Cargar favoritos
   useEffect(() => {
     if (token) {
-      const loadFavorites = async () => {
-        setLoadingFavorites(true);
-        try {
-          const response = await getBeneficiaries();
-          if (response.ok) {
-            setFavorites(response.beneficiaries || []);
-          }
-        } catch (err) {
-          console.warn("No se pudieron cargar favoritos:", err);
-        } finally {
-          setLoadingFavorites(false);
-        }
-      };
-      loadFavorites();
+      setLoadingFavorites(true);
+      getBeneficiaries()
+        .then(res => { if (res.ok) setFavorites(res.beneficiaries || []); })
+        .catch(console.warn)
+        .finally(() => setLoadingFavorites(false));
     }
   }, [token]);
 
-  // Inicializar formulario
+  // Inicializar datos
   useEffect(() => {
     if (countryFields.length > 0) {
       const initialData = {};
       countryFields.forEach(field => { initialData[field.key] = ''; });
-      setBeneficiaryData(prev => ({ ...initialData, ...prev })); // Mantiene datos si ya había
+      setBeneficiaryData(prev => ({ ...initialData, ...prev }));
     }
   }, [countryFields]);
 
-  // Filtrar campos visibles (lógica condicional 'when')
+  // Campos visibles dinámicos
   useEffect(() => {
     if (countryFields.length > 0) {
       const visibleFields = countryFields.filter(field => {
@@ -62,15 +51,13 @@ const StepBeneficiary = ({ formData, fields, onBack, onComplete }) => {
   const handleFavoriteSelect = (e) => {
     const selectedId = e.target.value;
     setSelectedFavorite(selectedId);
-
     if (selectedId) {
       const favorite = favorites.find(f => f._id === selectedId);
       if (favorite) {
-        setBeneficiaryData(favorite.beneficiaryData); // Autocompletar
+        setBeneficiaryData(favorite.beneficiaryData);
         setErrors({});
       }
     } else {
-      // Limpiar si deselecciona
       const resetData = {};
       countryFields.forEach(f => resetData[f.key] = '');
       setBeneficiaryData(resetData);
@@ -81,31 +68,34 @@ const StepBeneficiary = ({ formData, fields, onBack, onComplete }) => {
     const rule = countryFields.find(f => f.key === name);
     if (!rule) return null;
 
+    // Validación de requeridos
     const isRequired = rule.min > 0 || rule.required === true;
-    if (isRequired && !value) return 'Este campo es requerido.';
+    if (isRequired && (!value || value.trim() === '')) return 'Este campo es requerido.';
     if (!value) return null;
 
     if (rule.min && value.length < rule.min) return `Mínimo ${rule.min} caracteres.`;
     if (rule.max && value.length > rule.max) return `Máximo ${rule.max} caracteres.`;
 
     if (rule.regex) {
-      if (!new RegExp(rule.regex).test(value)) return rule.helper_text || 'Formato inválido.';
+      try {
+        if (!new RegExp(rule.regex).test(value)) return rule.helper_text || 'Formato inválido.';
+      } catch (e) { console.warn("Regex inválido del backend:", rule.regex); }
     } else if (rule.type === 'email') {
       if (!EMAIL_REGEX.test(value)) return 'Email inválido.';
     }
     return null;
   };
 
-  const handleBlur = (e) => {
-    const { name, value } = e.target;
-    const error = validateField(name, value.trim());
-    setErrors(prev => ({ ...prev, [name]: error }));
-  };
-
   const handleChange = (e) => {
     const { name, value } = e.target;
     setBeneficiaryData(prev => ({ ...prev, [name]: value }));
     if (errors[name]) setErrors(prev => ({ ...prev, [name]: null }));
+  };
+
+  const handleBlur = (e) => {
+    const { name, value } = e.target;
+    const error = validateField(name, value);
+    setErrors(prev => ({ ...prev, [name]: error }));
   };
 
   const handleNext = () => {
@@ -126,83 +116,62 @@ const StepBeneficiary = ({ formData, fields, onBack, onComplete }) => {
     setErrors(allErrors);
 
     if (isFormValid) {
-      // Pasamos los datos y true/false si viene de favorito
+      console.log("Formulario válido, avanzando...");
       onComplete(cleanData, !!selectedFavorite);
+    } else {
+      console.log("Errores en formulario:", allErrors);
+      alert("Por favor, corrige los errores en el formulario antes de continuar.");
     }
   };
 
   const renderField = (field) => {
-    switch (field.type) {
-      case 'select':
-        return (
-          <Form.Select
-            name={field.key}
-            onChange={handleChange}
-            onBlur={handleBlur}
-            value={beneficiaryData[field.key] || ''}
-            isInvalid={!!errors[field.key]}
-          >
-            <option value="">Seleccionar...</option>
-            {field.options?.map(opt => (
-              <option key={opt.value} value={opt.value}>{opt.label}</option>
-            ))}
-          </Form.Select>
-        );
-      default:
-        return (
-          <Form.Control
-            type={field.type || 'text'}
-            name={field.key}
-            onChange={handleChange}
-            onBlur={handleBlur}
-            value={beneficiaryData[field.key] || ''}
-            isInvalid={!!errors[field.key]}
-          />
-        );
+    if (field.type === 'select') {
+      return <Form.Select name={field.key} onChange={handleChange} onBlur={handleBlur} value={beneficiaryData[field.key] || ''} isInvalid={!!errors[field.key]}>
+        <option value="">Seleccionar...</option>
+        {field.options?.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
+      </Form.Select>;
     }
+    return <Form.Control type={field.type || 'text'} name={field.key} onChange={handleChange} onBlur={handleBlur} value={beneficiaryData[field.key] || ''} isInvalid={!!errors[field.key]} />;
   };
 
-  if (countryFields.length === 0) {
-    return <Card className="p-4"><Card.Body>Cargando formulario...</Card.Body></Card>;
-  }
+  if (countryFields.length === 0) return <Card className="p-4"><Card.Body>Cargando formulario...</Card.Body></Card>;
 
   return (
-    <Card className="p-4">
+    <Card className="p-4 shadow-lg border-0" style={{ borderRadius: '15px' }}>
       <Card.Body>
-        <Card.Title as="h5" className="mb-4">Datos del Beneficiario</Card.Title>
+        <h4 className="mb-4 text-center fw-bold">Datos del Beneficiario</h4>
 
         {token && (
-          <Form.Group className="mb-4">
-            <Form.Label>Cargar Beneficiario Favorito</Form.Label>
-            <Form.Select
-              value={selectedFavorite}
-              onChange={handleFavoriteSelect}
-              disabled={loadingFavorites}
-              className="bg-light"
-            >
-              <option value="">{loadingFavorites ? 'Cargando...' : 'Selecciona un contacto guardado'}</option>
-              {favorites.map(fav => (
-                <option key={fav._id} value={fav._id}>{fav.nickname}</option>
-              ))}
+          <Form.Group className="mb-4 p-3 bg-light rounded">
+            <Form.Label className="fw-bold text-primary">Cargar Favorito</Form.Label>
+            <Form.Select value={selectedFavorite} onChange={handleFavoriteSelect} disabled={loadingFavorites}>
+              <option value="">{loadingFavorites ? 'Cargando...' : 'Selecciona un contacto...'}</option>
+              {favorites.map(fav => <option key={fav._id} value={fav._id}>{fav.nickname}</option>)}
             </Form.Select>
           </Form.Group>
         )}
 
-        <Form noValidate>
+        <Form>
           <Row>
-            {fieldsToRender.map((field) => (
-              <Col md={6} key={field.key}>
+            {fieldsToRender.map(f => (
+              <Col md={6} key={f.key}>
                 <Form.Group className="mb-3">
-                  <Form.Label>{field.name}</Form.Label>
-                  {renderField(field)}
-                  <Form.Control.Feedback type="invalid">{errors[field.key]}</Form.Control.Feedback>
+                  <Form.Label>{f.name}</Form.Label>
+                  {renderField(f)}
+                  <Form.Control.Feedback type="invalid">{errors[f.key]}</Form.Control.Feedback>
                 </Form.Group>
               </Col>
             ))}
           </Row>
           <div className="d-flex justify-content-between mt-4">
-            <Button variant="outline-secondary" onClick={onBack}>Volver</Button>
-            <Button variant="primary" style={{ backgroundColor: 'var(--avf-secondary)', borderColor: 'var(--avf-secondary)' }} onClick={handleNext}>Continuar</Button>
+            <Button variant="outline-secondary" onClick={onBack}>Atrás</Button>
+            <Button
+              variant="primary"
+              onClick={handleNext}
+              style={{ backgroundColor: 'var(--avf-secondary)', borderColor: 'var(--avf-secondary)', color: 'white' }}
+            >
+              Continuar
+            </Button>
           </div>
         </Form>
       </Card.Body>
