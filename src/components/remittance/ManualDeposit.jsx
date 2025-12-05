@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Card, Button, Form, Alert, Spinner, Image } from 'react-bootstrap';
 import { createWithdrawal, uploadImage, getTransactionRules } from '../../services/api';
 
-const ManualDeposit = ({ formData, onBack }) => {
+const ManualDeposit = ({ formData, onBack, onFinish }) => {
     const { quoteData, beneficiary, destCountry, originCountry } = formData;
     const [bankDetails, setBankDetails] = useState(null);
     const [depositQr, setDepositQr] = useState(null);
@@ -12,7 +12,6 @@ const ManualDeposit = ({ formData, onBack }) => {
     const [error, setError] = useState('');
     const [success, setSuccess] = useState(false);
 
-    // Cargar datos bancarios del Admin para el país de origen (ej: BO)
     useEffect(() => {
         const loadRules = async () => {
             try {
@@ -45,10 +44,9 @@ const ManualDeposit = ({ formData, onBack }) => {
             setUploading(false);
 
             // 2. Crear Transacción con la URL del comprobante
-            // Enviamos currency: BOB (o la moneda local) para activar el flujo manual en backend
             const payload = {
                 country: destCountry,
-                currency: quoteData.origin, // ej: 'BOB'
+                currency: quoteData.origin,
                 amount: quoteData.amountIn,
                 ...beneficiary,
                 proofOfPayment: uploadRes.url
@@ -58,6 +56,7 @@ const ManualDeposit = ({ formData, onBack }) => {
 
             if (res.ok) {
                 setSuccess(true);
+                if (onFinish) onFinish();
             } else {
                 throw new Error(res.error || "Error al crear solicitud.");
             }
@@ -76,39 +75,51 @@ const ManualDeposit = ({ formData, onBack }) => {
                     <div style={{ fontSize: '3rem' }}>✅</div>
                     <h4 className="text-success my-3">¡Solicitud Enviada!</h4>
                     <p>Hemos recibido tu comprobante. Verificaremos tu depósito y procesaremos el envío a la brevedad.</p>
-                    <Button variant="primary" href="/transactions">Ver Mis Transacciones</Button>
+                    <Button variant="primary" href="/transactions" style={{ backgroundColor: 'var(--avf-secondary)', borderColor: 'var(--avf-secondary)' }}>Ver Mis Transacciones</Button>
                 </Card.Body>
             </Card>
         );
     }
 
     return (
-        <Card className="shadow-lg border-0">
-            <Card.Header className="bg-white py-3">
+        <Card className="shadow-lg border-0 mt-4">
+            <Card.Header className="bg-white py-3 text-center">
                 <h5 className="mb-0 text-primary">Instrucciones de Depósito ({originCountry})</h5>
             </Card.Header>
             <Card.Body className="p-4">
-                <Alert variant="info" className="small">
+                <Alert variant="info" className="small mb-4 text-center">
                     <i className="bi bi-info-circle-fill me-2"></i>
-                    Para completar tu envío, realiza una transferencia o depósito bancario por <strong>{quoteData.amountIn} {quoteData.origin}</strong> a la siguiente cuenta:
+                    Realiza el pago por <strong>{quoteData.amountIn} {quoteData.origin}</strong> escaneando el QR o transfiriendo a la cuenta indicada.
                 </Alert>
 
                 {bankDetails ? (
-                    <div className="bg-light p-3 rounded mb-4 border">
-                        <div className="row">
-                            <div className="col-md-8">
-                                <p className="mb-1"><strong>Banco:</strong> {bankDetails.bankName}</p>
-                                <p className="mb-1"><strong>Tipo de Cuenta:</strong> {bankDetails.accountType}</p>
-                                <p className="mb-1"><strong>Nro. Cuenta:</strong> <span className="user-select-all bg-white px-1 border rounded">{bankDetails.accountNumber}</span></p>
-                                <p className="mb-1"><strong>Titular:</strong> {bankDetails.holderName}</p>
-                                <p className="mb-0"><strong>CI/NIT:</strong> {bankDetails.holderId}</p>
+                    <div className="bg-light p-4 rounded mb-4 border text-center">
+
+                        {/* --- 1. QR GRANDE ARRIBA --- */}
+                        {depositQr ? (
+                            <div className="mb-4">
+                                <p className="fw-bold text-muted mb-2">Escanear QR para Pagar</p>
+                                <Image
+                                    src={depositQr}
+                                    fluid
+                                    rounded
+                                    style={{ maxHeight: '250px', border: '2px solid #ddd', padding: '5px', background: 'white' }}
+                                    className="shadow-sm"
+                                />
                             </div>
-                            {depositQr && (
-                                <div className="col-md-4 text-center">
-                                    <p className="small fw-bold mb-1">Escanear QR</p>
-                                    <Image src={depositQr} fluid rounded style={{ maxHeight: '120px' }} />
-                                </div>
-                            )}
+                        ) : (
+                            <div className="mb-4 p-4 bg-white border rounded text-muted">Sin QR disponible</div>
+                        )}
+
+                        {/* --- 2. DATOS BANCARIOS DEBAJO --- */}
+                        <div className="text-start mx-auto" style={{ maxWidth: '350px' }}>
+                            <hr />
+                            <h6 className="text-center text-muted mb-3">Datos de Transferencia</h6>
+                            <p className="mb-1"><strong>Banco:</strong> {bankDetails.bankName}</p>
+                            <p className="mb-1"><strong>Tipo de Cuenta:</strong> {bankDetails.accountType}</p>
+                            <p className="mb-1"><strong>Nro. Cuenta:</strong> <span className="user-select-all bg-white px-2 border rounded">{bankDetails.accountNumber}</span></p>
+                            <p className="mb-1"><strong>Titular:</strong> {bankDetails.holderName}</p>
+                            <p className="mb-0"><strong>CI/NIT:</strong> {bankDetails.holderId}</p>
                         </div>
                     </div>
                 ) : (
@@ -116,9 +127,9 @@ const ManualDeposit = ({ formData, onBack }) => {
                 )}
 
                 <Form.Group className="mb-4">
-                    <Form.Label className="fw-bold">Subir Comprobante</Form.Label>
+                    <Form.Label className="fw-bold">Subir Comprobante de Pago</Form.Label>
                     <Form.Control type="file" onChange={handleFileChange} accept="image/*" />
-                    <Form.Text className="text-muted">Sube una foto clara o captura de pantalla de la transferencia.</Form.Text>
+                    <Form.Text className="text-muted">Sube una foto clara o captura de pantalla de la transferencia realizada.</Form.Text>
                 </Form.Group>
 
                 {error && <Alert variant="danger">{error}</Alert>}
@@ -126,7 +137,7 @@ const ManualDeposit = ({ formData, onBack }) => {
                 <div className="d-flex justify-content-between mt-4">
                     <Button variant="outline-secondary" onClick={onBack} disabled={loading}>Atrás</Button>
                     <Button
-                        className="w-50"
+                        className="w-50 fw-bold"
                         onClick={handleSubmit}
                         disabled={loading || !file}
                         style={{ backgroundColor: 'var(--avf-secondary)', borderColor: 'var(--avf-secondary)' }}
