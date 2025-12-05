@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Container, Card, Form, Button, Spinner, Alert, Row, Col, InputGroup } from 'react-bootstrap';
-import { getTransactionRules, updateTransactionRules, getAvailableOrigins, uploadImage } from '../services/api'; // Asegúrate de importar uploadImage
+import { getTransactionRules, updateTransactionRules, getAvailableOrigins, uploadImage } from '../services/api';
 import { formatNumberForDisplay, parseFormattedNumber } from '../utils/formatting';
 
 const AdminRules = () => {
@@ -13,7 +13,6 @@ const AdminRules = () => {
   const [availableCountries, setAvailableCountries] = useState([]);
   const [selectedCountry, setSelectedCountry] = useState('CL');
 
-  // Estado inicial completo
   const [formData, setFormData] = useState({
     originCountry: 'CL',
     minAmount: 5000,
@@ -22,7 +21,6 @@ const AdminRules = () => {
     alertMessage: '',
     kycLevel1: 450000,
     kycLevel2: 4500000,
-    // Campos Anchor Manual
     provider: 'vita_wallet',
     manualExchangeRate: 0,
     bankName: '',
@@ -33,7 +31,6 @@ const AdminRules = () => {
     depositQrImage: ''
   });
 
-  // 1. Cargar países
   useEffect(() => {
     const fetchOrigins = async () => {
       try {
@@ -47,7 +44,6 @@ const AdminRules = () => {
     fetchOrigins();
   }, []);
 
-  // 2. Cargar reglas al cambiar país para tasa
   useEffect(() => {
     const loadRules = async () => {
       setLoading(true);
@@ -64,7 +60,6 @@ const AdminRules = () => {
             alertMessage: rule.alertMessage || '',
             kycLevel1: rule.kycLimits?.level1 || 0,
             kycLevel2: rule.kycLimits?.level2 || 0,
-            // Mapeo de datos anidados y nuevos campos
             provider: rule.provider || 'vita_wallet',
             manualExchangeRate: rule.manualExchangeRate || 0,
             bankName: rule.localBankDetails?.bankName || '',
@@ -75,7 +70,6 @@ const AdminRules = () => {
             depositQrImage: rule.depositQrImage || ''
           });
         } else {
-          // Defaults para nuevo país
           setFormData({
             originCountry: selectedCountry,
             minAmount: 5000,
@@ -205,7 +199,7 @@ const AdminRules = () => {
               />
             </div>
 
-            {/* --- SECCIÓN ANCHOR MANUAL --- */}
+            {/* --- SECCIÓN DE PROVEEDOR --- */}
             <div className="p-3 bg-light rounded mb-4 border">
               <h5 className="text-primary mb-3">Configuración de Proveedor</h5>
               <Form.Group className="mb-3">
@@ -216,7 +210,7 @@ const AdminRules = () => {
                 </Form.Select>
               </Form.Group>
 
-              {/* Renderizado Condicional para Anchor Manual */}
+              {/* --- AQUÍ ESTÁ EL CAMPO QUE FALTABA --- */}
               {formData.provider === 'internal_manual' && (
                 <>
                   <div className="mb-3 p-3 bg-white border rounded">
@@ -233,7 +227,9 @@ const AdminRules = () => {
                       />
                       <InputGroup.Text>CLP</InputGroup.Text>
                     </InputGroup>
-                    <Form.Text className="text-muted">Define el valor de la moneda local frente al Peso Chileno.</Form.Text>
+                    <Form.Text className="text-muted">
+                      Define cuántos Pesos Chilenos (CLP) entregas por cada 1 unidad de moneda local.
+                    </Form.Text>
                   </div>
 
                   <h6 className="mt-3">Datos Bancarios para Depósito (On-Ramp)</h6>
@@ -283,9 +279,35 @@ const AdminRules = () => {
                 </Form.Group>
               </Col>
             </Row>
-            {/* ... (Sección KYC y Alertas igual que antes) ... */}
 
-            <div className="d-grid mt-4">
+            <h5 className="text-muted mb-3">Límites KYC</h5>
+            <Row className="mb-3">
+              <Col md={6}>
+                <Form.Group><Form.Label>Límite Nivel 1</Form.Label>
+                  <InputGroup><InputGroup.Text>$</InputGroup.Text>
+                    <Form.Control type="text" inputMode="numeric" name="kycLevel1" value={formatNumberForDisplay(formData.kycLevel1)} onChange={handleAmountChange} />
+                  </InputGroup>
+                </Form.Group>
+              </Col>
+              <Col md={6}>
+                <Form.Group><Form.Label>Límite Nivel 2</Form.Label>
+                  <InputGroup><InputGroup.Text>$</InputGroup.Text>
+                    <Form.Control type="text" inputMode="numeric" name="kycLevel2" value={formatNumberForDisplay(formData.kycLevel2)} onChange={handleAmountChange} />
+                  </InputGroup>
+                </Form.Group>
+              </Col>
+            </Row>
+
+            <h5 className="text-muted mb-3">Comunicación</h5>
+            <Form.Group className="mb-4">
+              <Form.Label>Mensaje de Alerta Global</Form.Label>
+              <Form.Control as="textarea" rows={2} name="alertMessage" value={formData.alertMessage} onChange={handleChange} placeholder="Aviso visible para el usuario..." />
+            </Form.Group>
+
+            {error && <Alert variant="danger">{error}</Alert>}
+            {success && <Alert variant="success">{success}</Alert>}
+
+            <div className="d-grid">
               <Button type="submit" disabled={saving} size="lg" style={{ backgroundColor: 'var(--avf-secondary)', borderColor: 'var(--avf-secondary)' }}>
                 {saving ? <Spinner size="sm" /> : `Guardar Configuración para ${selectedCountry}`}
               </Button>
