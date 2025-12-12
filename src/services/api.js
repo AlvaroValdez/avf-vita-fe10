@@ -9,6 +9,15 @@ export const apiClient = axios.create({
   },
 });
 
+// Interceptor para agregar token si existe
+apiClient.interceptors.request.use((config) => {
+  const token = localStorage.getItem('token');
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
+
 // --- AUTENTICACIÓN ---
 export const loginUser = async (credentials) => {
   try {
@@ -109,19 +118,11 @@ export const reviewKycUser = async (userId, action, reason = '') => {
 };
 
 // --- REMESAS Y REGLAS ---
-// Interceptor para agregar token si existe
-api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('token');
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
-  return config;
-});
 
 // --- FUNCIÓN CRÍTICA: OBTENER PRECIOS Y PAÍSES ---
 export const getPrices = async () => {
   try {
-    const response = await api.get('/prices');
+    const response = await apiClient.get('/prices');
     const rawData = response.data;
 
     console.log('📦 [API] Raw Prices:', rawData);
@@ -387,3 +388,6 @@ export const adminUpdateUser = async (userId, userData) => {
     throw error.response?.data || error;
   }
 };
+
+// Default export if needed by other components, though named exports are preferred
+export default apiClient;
