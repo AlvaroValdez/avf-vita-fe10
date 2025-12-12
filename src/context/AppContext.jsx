@@ -16,19 +16,36 @@ export const AppProvider = ({ children }) => {
     const loadInitialData = async () => {
       try {
         const pricesResponse = await getPrices();
-        
-        // 2. Solo actualizamos el estado si el componente sigue montado
-        if (isMounted && pricesResponse.ok && pricesResponse.data.clp) {
-          const countryCodesObject = pricesResponse.data.clp.withdrawal.prices.attributes.clp_sell;
-          
-          const countryList = Object.keys(countryCodesObject)
-            .filter(code => !blacklistedCodes.includes(code.toUpperCase()))
-            .map(code => ({
-              code: code.toUpperCase(),
-              name: getCountryName(code),
-            }));
 
-          setCountries(countryList);
+        // 2. Solo actualizamos el estado si el componente sigue montado
+        if (isMounted && pricesResponse.ok && pricesResponse.data) {
+          const rawData = pricesResponse.data;
+
+          // Buscamos dinámicamente el nodo raíz (CLP, USD, etc)
+          const rootKey = Object.keys(rawData).find(key =>
+            rawData[key]?.withdrawal?.prices?.attributes
+          );
+
+          if (rootKey) {
+            const attributes = rawData[rootKey].withdrawal.prices.attributes;
+            // Buscamos la llave de venta (ej: clp_sell, usd_sell)
+            const sellKey = Object.keys(attributes).find(k => k.endsWith('_sell'));
+
+            if (sellKey && attributes[sellKey]) {
+              const countryCodesObject = attributes[sellKey];
+
+              const countryList = Object.keys(countryCodesObject)
+                .filter(code => !blacklistedCodes.includes(code.toUpperCase()))
+                .map(code => ({
+                  code: code.toUpperCase(),
+                  name: getCountryName(code),
+                }));
+
+              // Ordenar
+              countryList.sort((a, b) => a.name.localeCompare(b.name));
+              setCountries(countryList);
+            }
+          }
         }
       } catch (error) {
         if (isMounted) {
