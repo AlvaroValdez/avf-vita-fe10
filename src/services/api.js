@@ -109,12 +109,61 @@ export const reviewKycUser = async (userId, action, reason = '') => {
 };
 
 // --- REMESAS Y REGLAS ---
+// Interceptor para agregar token si existe
+api.interceptors.request.use((config) => {
+  const token = localStorage.getItem('token');
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
+
+// --- FUNCIÓN CRÍTICA: OBTENER PRECIOS Y PAÍSES ---
 export const getPrices = async () => {
   try {
-    const response = await apiClient.get('/prices');
-    return response.data;
+    const response = await api.get('/prices');
+    const rawData = response.data;
+
+    console.log('📦 [API] Raw Prices:', rawData);
+
+    // ESTRATEGIA DE NORMALIZACIÓN (Adaptador Universal)
+    // Convierte lo que sea que mande el Backend en un Array simple para el Select.
+
+    // CASO 1: El Backend mandó un Array directo (Moderno)
+    if (Array.isArray(rawData)) return rawData;
+    if (rawData.data && Array.isArray(rawData.data)) return rawData.data;
+
+    // CASO 2: El Backend mandó estructura Legacy (CLP -> withdrawal...)
+    // Buscamos en las llaves comunes: CLP, clp, USD, usd, o data.CLP
+    const legacyRoot = rawData.CLP || rawData.clp || rawData.USD || rawData.usd || rawData?.data?.CLP;
+
+    if (legacyRoot) {
+      // Navegamos profundo: withdrawal -> prices -> attributes -> sell
+      // O ruta corta: withdrawal -> sell
+      const withdrawalNode = legacyRoot.withdrawal || {};
+      const pricesNode = withdrawalNode.prices || {};
+      const attributesNode = pricesNode.attributes || {};
+
+      // Intentamos encontrar el mapa de tasas: { "co": 0.042, "ar": 0.85 ... }
+      const sellMap = attributesNode.sell || pricesNode.sell || withdrawalNode.sell || {};
+
+      // Convertimos el Mapa a Array [{ code: 'CO', rate: 0.042 }]
+      const countriesArray = Object.entries(sellMap).map(([key, value]) => ({
+        code: key.toUpperCase(), // Forzamos mayúsculas para que coincida con flags/CO.png
+        rate: Number(value)
+      })).filter(item => item.code.length === 2); // Filtramos basura (solo códigos de 2 letras)
+
+      // Ordenar alfabéticamente
+      return countriesArray.sort((a, b) => a.code.localeCompare(b.code));
+    }
+
+    // Si nada funciona, devolvemos array vacío para no romper la UI
+    console.warn('⚠️ [API] No se pudo normalizar la lista de países');
+    return [];
+
   } catch (error) {
-    throw error.response?.data || error;
+    console.error("❌ [API] Error fetching prices:", error);
+    return [];
   }
 };
 
