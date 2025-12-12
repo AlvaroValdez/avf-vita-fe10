@@ -21,30 +21,43 @@ export const AppProvider = ({ children }) => {
         if (isMounted && pricesResponse.ok && pricesResponse.data) {
           const rawData = pricesResponse.data;
 
+          // 1. Intento: Estructura Anidada (Consumer / Legacy)
           // Buscamos dinámicamente el nodo raíz (CLP, USD, etc)
-          const rootKey = Object.keys(rawData).find(key =>
+          const nestedRootKey = Object.keys(rawData).find(key =>
             rawData[key]?.withdrawal?.prices?.attributes
           );
 
-          if (rootKey) {
-            const attributes = rawData[rootKey].withdrawal.prices.attributes;
-            // Buscamos la llave de venta (ej: clp_sell, usd_sell)
+          let countryCodesObject = null;
+
+          if (nestedRootKey) {
+            const attributes = rawData[nestedRootKey].withdrawal.prices.attributes;
             const sellKey = Object.keys(attributes).find(k => k.endsWith('_sell'));
-
             if (sellKey && attributes[sellKey]) {
-              const countryCodesObject = attributes[sellKey];
-
-              const countryList = Object.keys(countryCodesObject)
-                .filter(code => !blacklistedCodes.includes(code.toUpperCase()))
-                .map(code => ({
-                  code: code.toUpperCase(),
-                  name: getCountryName(code),
-                }));
-
-              // Ordenar
-              countryList.sort((a, b) => a.name.localeCompare(b.name));
-              setCountries(countryList);
+              countryCodesObject = attributes[sellKey];
             }
+          }
+
+          // 2. Intento: Estructura Plana (Business API / Raw)
+          // Buscamos keys tipo 'usd_sell', 'clp_sell' directamente en la raiz
+          if (!countryCodesObject) {
+            const flatSellKey = Object.keys(rawData).find(k => k.endsWith('_sell') && typeof rawData[k] === 'object');
+            if (flatSellKey) {
+              countryCodesObject = rawData[flatSellKey];
+            }
+          }
+
+          // 3. Procesar y setear si encontramos algo
+          if (countryCodesObject) {
+            const countryList = Object.keys(countryCodesObject)
+              .filter(code => !blacklistedCodes.includes(code.toUpperCase()))
+              .map(code => ({
+                code: code.toUpperCase(),
+                name: getCountryName(code),
+              }));
+
+            // Ordenar
+            countryList.sort((a, b) => a.name.localeCompare(b.name));
+            setCountries(countryList);
           }
         }
       } catch (error) {
