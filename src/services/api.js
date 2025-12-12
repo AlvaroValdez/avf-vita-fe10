@@ -1,5 +1,6 @@
 import axios from 'axios';
 
+// Ajusta esto según tu URL real si es necesario
 const API_URL = 'https://remesas-avf1-0.onrender.com/api';
 
 export const apiClient = axios.create({
@@ -9,7 +10,7 @@ export const apiClient = axios.create({
   },
 });
 
-// Interceptor para agregar token si existe
+// --- INTERCEPTOR GLOBAL (Movido arriba para que aplique a todo) ---
 apiClient.interceptors.request.use((config) => {
   const token = localStorage.getItem('token');
   if (token) {
@@ -119,46 +120,38 @@ export const reviewKycUser = async (userId, action, reason = '') => {
 
 // --- REMESAS Y REGLAS ---
 
-// --- FUNCIÓN CRÍTICA: OBTENER PRECIOS Y PAÍSES ---
+// 🔥 FUNCIÓN CRÍTICA CORREGIDA: Usa 'apiClient' en lugar de 'api'
 export const getPrices = async () => {
   try {
+    // CORRECCIÓN AQUÍ: apiClient
     const response = await apiClient.get('/prices');
     const rawData = response.data;
 
     console.log('📦 [API] Raw Prices:', rawData);
 
-    // ESTRATEGIA DE NORMALIZACIÓN (Adaptador Universal)
-    // Convierte lo que sea que mande el Backend en un Array simple para el Select.
-
-    // CASO 1: El Backend mandó un Array directo (Moderno)
+    // ESTRATEGIA DE NORMALIZACIÓN
+    // 1. Si es Array directo
     if (Array.isArray(rawData)) return rawData;
     if (rawData.data && Array.isArray(rawData.data)) return rawData.data;
 
-    // CASO 2: El Backend mandó estructura Legacy (CLP -> withdrawal...)
-    // Buscamos en las llaves comunes: CLP, clp, USD, usd, o data.CLP
+    // 2. Si es estructura Legacy/Objeto
     const legacyRoot = rawData.CLP || rawData.clp || rawData.USD || rawData.usd || rawData?.data?.CLP;
 
     if (legacyRoot) {
-      // Navegamos profundo: withdrawal -> prices -> attributes -> sell
-      // O ruta corta: withdrawal -> sell
       const withdrawalNode = legacyRoot.withdrawal || {};
       const pricesNode = withdrawalNode.prices || {};
       const attributesNode = pricesNode.attributes || {};
 
-      // Intentamos encontrar el mapa de tasas: { "co": 0.042, "ar": 0.85 ... }
       const sellMap = attributesNode.sell || pricesNode.sell || withdrawalNode.sell || {};
 
-      // Convertimos el Mapa a Array [{ code: 'CO', rate: 0.042 }]
       const countriesArray = Object.entries(sellMap).map(([key, value]) => ({
-        code: key.toUpperCase(), // Forzamos mayúsculas para que coincida con flags/CO.png
+        code: key.toUpperCase(),
         rate: Number(value)
-      })).filter(item => item.code.length === 2); // Filtramos basura (solo códigos de 2 letras)
+      })).filter(item => item.code.length === 2);
 
-      // Ordenar alfabéticamente
       return countriesArray.sort((a, b) => a.code.localeCompare(b.code));
     }
 
-    // Si nada funciona, devolvemos array vacío para no romper la UI
     console.warn('⚠️ [API] No se pudo normalizar la lista de países');
     return [];
 
@@ -389,5 +382,4 @@ export const adminUpdateUser = async (userId, userData) => {
   }
 };
 
-// Default export if needed by other components, though named exports are preferred
 export default apiClient;
