@@ -164,22 +164,17 @@ export const getQuote = async (params) => {
   try {
     const response = await apiClient.get('/fx/quote', { params });
 
-    // LOG DE DEPURACIÓN (Míralo en la consola del navegador)
+    // LOG IMPORTANTE: Verás en la consola del navegador qué llega exactamente
     console.log('💰 [API] Respuesta Cotización:', response.data);
 
-    // ESTRATEGIA DE DESEMPAQUETADO:
-    // El Backend devuelve: { ok: true, data: { rate: 0.23, receiveAmount: 230 ... } }
-
-    // 1. Si existe response.data.data, devolvemos ESO (el interior).
-    if (response.data && response.data.data) {
-      return response.data.data;
-    }
-
-    // 2. Si el Backend devolviera los datos directos (sin 'data'), devolvemos response.data
+    // 🔥 CORRECCIÓN: Devolvemos response.data COMPLETO.
+    // El Backend envía: { ok: true, data: { rate: 0.23, ... } }
+    // Tu componente CardForm necesita verificar "if (res.ok)" para mostrar los datos.
     return response.data;
 
   } catch (error) {
     console.error("❌ Error en getQuote:", error);
+    // Lanzamos el error para que el componente muestre el mensaje rojo si falla de verdad
     throw error.response?.data || error;
   }
 };
