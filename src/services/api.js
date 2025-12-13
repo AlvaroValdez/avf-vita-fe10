@@ -163,8 +163,23 @@ export const getPrices = async () => {
 export const getQuote = async (params) => {
   try {
     const response = await apiClient.get('/fx/quote', { params });
+
+    // LOG DE DEPURACIÓN (Míralo en la consola del navegador)
+    console.log('💰 [API] Respuesta Cotización:', response.data);
+
+    // ESTRATEGIA DE DESEMPAQUETADO:
+    // El Backend devuelve: { ok: true, data: { rate: 0.23, receiveAmount: 230 ... } }
+
+    // 1. Si existe response.data.data, devolvemos ESO (el interior).
+    if (response.data && response.data.data) {
+      return response.data.data;
+    }
+
+    // 2. Si el Backend devolviera los datos directos (sin 'data'), devolvemos response.data
     return response.data;
+
   } catch (error) {
+    console.error("❌ Error en getQuote:", error);
     throw error.response?.data || error;
   }
 };
