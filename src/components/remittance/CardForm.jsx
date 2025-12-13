@@ -137,7 +137,8 @@ const CardForm = ({ onQuoteSuccess }) => {
         const response = await getQuote({
           amount,
           destCountry,
-          origin: originCurrency
+          origin: originCurrency,
+          originCountry
         });
 
         if (response.ok) {

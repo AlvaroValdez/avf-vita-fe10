@@ -44,7 +44,8 @@ const StepConfirm = ({ formData, fields, onBack, isFromFavorite }) => {
         const response = await getQuote({
           amount: currentQuote.amountIn,
           destCountry,
-          origin: safeOriginCurrency
+          origin: safeOriginCurrency,
+          originCountry
         });
 
         if (response.ok) {
