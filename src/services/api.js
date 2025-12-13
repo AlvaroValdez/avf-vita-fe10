@@ -163,18 +163,35 @@ export const getPrices = async () => {
 export const getQuote = async (params) => {
   try {
     const response = await apiClient.get('/fx/quote', { params });
+    const raw = response.data; // { ok: true, data: { ... } }
 
-    // LOG IMPORTANTE: Verás en la consola del navegador qué llega exactamente
-    console.log('💰 [API] Respuesta Cotización:', response.data);
+    console.log('💰 [API] Raw del Backend:', raw);
 
-    // 🔥 CORRECCIÓN: Devolvemos response.data COMPLETO.
-    // El Backend envía: { ok: true, data: { rate: 0.23, ... } }
-    // Tu componente CardForm necesita verificar "if (res.ok)" para mostrar los datos.
-    return response.data;
+    // Si la respuesta es exitosa, hacemos la TRADUCCIÓN de variables
+    if (raw.ok && raw.data) {
+      const backendData = raw.data;
+
+      return {
+        ok: true,
+        data: {
+          // Mapeo: Izquierda (lo que pide CardForm) = Derecha (lo que da el Backend)
+          amountIn: backendData.amount,           // Monto enviado
+          amountOut: backendData.receiveAmount,   // Monto a recibir
+          rateWithMarkup: backendData.rate,       // Tasa de cambio
+          origin: backendData.originCurrency,     // Moneda origen (CLP)
+          destCurrency: backendData.destCurrency, // Moneda destino (CO/COP)
+
+          // Mantenemos otros datos por si acaso
+          ...backendData
+        }
+      };
+    }
+
+    // Si hubo error o formato desconocido, devolvemos tal cual
+    return raw;
 
   } catch (error) {
     console.error("❌ Error en getQuote:", error);
-    // Lanzamos el error para que el componente muestre el mensaje rojo si falla de verdad
     throw error.response?.data || error;
   }
 };
