@@ -18,46 +18,79 @@ export const AppProvider = ({ children }) => {
         const pricesResponse = await getPrices();
 
         // 2. Solo actualizamos el estado si el componente sigue montado
-        if (isMounted && pricesResponse.ok && pricesResponse.data) {
-          const rawData = pricesResponse.data;
-
-          // 1. Intento: Estructura Anidada (Consumer / Legacy)
-          // Buscamos dinámicamente el nodo raíz (CLP, USD, etc)
-          const nestedRootKey = Object.keys(rawData).find(key =>
-            rawData[key]?.withdrawal?.prices?.attributes
-          );
+        if (isMounted && pricesResponse) {
 
           let countryCodesObject = null;
+          let rawArray = null;
 
-          if (nestedRootKey) {
-            const attributes = rawData[nestedRootKey].withdrawal.prices.attributes;
-            const sellKey = Object.keys(attributes).find(k => k.endsWith('_sell'));
-            if (sellKey && attributes[sellKey]) {
-              countryCodesObject = attributes[sellKey];
+          // ESTRATEGIA DE DETECCIÓN DE FORMATO
+
+          // CASO A: Array Directo (Nuevo Estándar api.js)
+          if (Array.isArray(pricesResponse)) {
+            rawArray = pricesResponse;
+          }
+          // CASO B: Objeto con propiedad .data (Legacy Wrapper)
+          else if (pricesResponse.data && Array.isArray(pricesResponse.data)) {
+            rawArray = pricesResponse.data;
+          }
+          // CASO C: Objeto Legacy Anidado
+          else {
+            // Buscamos dinámicamente el nodo raíz (CLP, USD, etc)
+            const nestedRootKey = Object.keys(pricesResponse).find(key =>
+              pricesResponse[key]?.withdrawal?.prices?.attributes
+            );
+
+            if (nestedRootKey) {
+              const attributes = pricesResponse[nestedRootKey].withdrawal.prices.attributes;
+              const sellKey = Object.keys(attributes).find(k => k.endsWith('_sell'));
+              if (sellKey && attributes[sellKey]) {
+                countryCodesObject = attributes[sellKey];
+              }
+            } else {
+              // Fallback: búsqueda plana de keys '_sell'
+              const flatSellKey = Object.keys(pricesResponse).find(k => k.endsWith('_sell') && typeof pricesResponse[k] === 'object');
+              if (flatSellKey) {
+                countryCodesObject = pricesResponse[flatSellKey];
+              }
             }
           }
 
-          // 2. Intento: Estructura Plana (Business API / Raw)
-          // Buscamos keys tipo 'usd_sell', 'clp_sell' directamente en la raiz
-          if (!countryCodesObject) {
-            const flatSellKey = Object.keys(rawData).find(k => k.endsWith('_sell') && typeof rawData[k] === 'object');
-            if (flatSellKey) {
-              countryCodesObject = rawData[flatSellKey];
-            }
-          }
+          // CONSTRUCCIÓN DE LA LISTA FINAL
+          let countryList = [];
 
-          // 3. Procesar y setear si encontramos algo
-          if (countryCodesObject) {
-            const countryList = Object.keys(countryCodesObject)
+          // Opción 1: Desde Array
+          if (rawArray) {
+            countryList = rawArray
+              .filter(item => item.code && !blacklistedCodes.includes(item.code.toUpperCase()))
+              .map(item => ({
+                code: item.code.toUpperCase(),
+                name: getCountryName(item.code),
+              }));
+          }
+          // Opción 2: Desde Objeto (Legacy)
+          else if (countryCodesObject) {
+            countryList = Object.keys(countryCodesObject)
               .filter(code => !blacklistedCodes.includes(code.toUpperCase()))
               .map(code => ({
                 code: code.toUpperCase(),
                 name: getCountryName(code),
               }));
+          }
 
-            // Ordenar
-            countryList.sort((a, b) => a.name.localeCompare(b.name));
-            setCountries(countryList);
+          if (countryList.length > 0) {
+            // Eliminar duplicados por código
+            const uniqueCountries = [];
+            const seen = new Set();
+            for (const c of countryList) {
+              if (!seen.has(c.code)) {
+                seen.add(c.code);
+                uniqueCountries.push(c);
+              }
+            }
+
+            // Ordenar alfabéticamente
+            uniqueCountries.sort((a, b) => a.name.localeCompare(b.name));
+            setCountries(uniqueCountries);
           }
         }
       } catch (error) {
