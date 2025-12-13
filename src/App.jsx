@@ -5,7 +5,7 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 // Páginas
 import Home from './pages/Home.jsx';
 import Transactions from './pages/Transactions.jsx';
-import TransactionDetail from './pages/TransactionDetail.jsx'; // <-- ASEGURAR IMPORTACIÓN
+import TransactionDetail from './pages/TransactionDetail.jsx';
 import Login from './pages/Login.jsx';
 import Register from './pages/Register.jsx';
 import PaymentSuccess from './pages/PaymentSuccess.jsx';
@@ -13,29 +13,28 @@ import AdminMarkup from './pages/AdminMarkup.jsx';
 import AdminUsers from './pages/AdminUsers.jsx';
 import AdminKyc from './pages/AdminKyc.jsx';
 import AdminRules from './pages/AdminRules.jsx';
+import AdminTreasury from './pages/AdminTreasury.jsx';
 import VerifyEmail from './pages/VerifyEmail.jsx';
-import Profile from './pages/Profile.jsx';
-import Favorites from './pages/Favorites.jsx';
 
-// Componentes UI
+import Favorites from './pages/Favorites.jsx';
+import Profile from './pages/Profile.jsx';
+
 import AppNavbar from './components/ui/Navbar.jsx';
 import Footer from './components/ui/Footer.jsx';
+import ProtectedRoute from './components/auth/ProtectedRoute.jsx';
+import AdminRoute from './components/auth/AdminRoute.jsx';
 
-const ProtectedRouteWrapper = () => {
-  const { token } = useAuth();
-  return token ? <Outlet /> : <Navigate to="/login" replace />;
-};
+function ProtectedRouteWrapper() {
+  return <ProtectedRoute><Outlet /></ProtectedRoute>;
+}
 
-const AdminRouteWrapper = () => {
-  const { user, token } = useAuth();
-  if (!token) return <Navigate to="/login" replace />;
-  if (user?.role !== 'admin') return <Navigate to="/" replace />;
-  return <Outlet />;
-};
+function AdminRouteWrapper() {
+  return <AdminRoute><Outlet /></AdminRoute>;
+}
 
 function AppContent() {
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+    <div className="d-flex flex-column min-vh-100">
       <AppNavbar />
       <main className="flex-grow-1">
         <Routes>
@@ -49,7 +48,6 @@ function AppContent() {
           {/* Rutas Protegidas (Usuario) */}
           <Route element={<ProtectedRouteWrapper />}>
             <Route path="/transactions" element={<Transactions />} />
-            {/* --- CORRECCIÓN AQUÍ: Apuntar al componente correcto --- */}
             <Route path="/transactions/:id" element={<TransactionDetail />} />
             <Route path="/profile" element={<Profile />} />
             <Route path="/favorites" element={<Favorites />} />
@@ -61,6 +59,7 @@ function AppContent() {
             <Route path="/admin/users" element={<AdminUsers />} />
             <Route path="/admin/kyc" element={<AdminKyc />} />
             <Route path="/admin/rules" element={<AdminRules />} />
+            <Route path="/admin/treasury" element={<AdminTreasury />} />
           </Route>
         </Routes>
       </main>
