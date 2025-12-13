@@ -13,28 +13,30 @@ import AdminMarkup from './pages/AdminMarkup.jsx';
 import AdminUsers from './pages/AdminUsers.jsx';
 import AdminKyc from './pages/AdminKyc.jsx';
 import AdminRules from './pages/AdminRules.jsx';
-import AdminTreasury from './pages/AdminTreasury.jsx';
+import AdminTreasury from './pages/AdminTreasury.jsx'; // ✅ NUEVO
 import VerifyEmail from './pages/VerifyEmail.jsx';
-
-import Favorites from './pages/Favorites.jsx';
 import Profile from './pages/Profile.jsx';
+import Favorites from './pages/Favorites.jsx';
 
+// Componentes UI
 import AppNavbar from './components/ui/Navbar.jsx';
 import Footer from './components/ui/Footer.jsx';
-import ProtectedRoute from './components/auth/ProtectedRoute.jsx';
-import AdminRoute from './components/auth/AdminRoute.jsx';
 
-function ProtectedRouteWrapper() {
-  return <ProtectedRoute><Outlet /></ProtectedRoute>;
-}
+const ProtectedRouteWrapper = () => {
+  const { token } = useAuth();
+  return token ? <Outlet /> : <Navigate to="/login" replace />;
+};
 
-function AdminRouteWrapper() {
-  return <AdminRoute><Outlet /></AdminRoute>;
-}
+const AdminRouteWrapper = () => {
+  const { user, token } = useAuth();
+  if (!token) return <Navigate to="/login" replace />;
+  if (user?.role !== 'admin') return <Navigate to="/" replace />;
+  return <Outlet />;
+};
 
 function AppContent() {
   return (
-    <div className="d-flex flex-column min-vh-100">
+    <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
       <AppNavbar />
       <main className="flex-grow-1">
         <Routes>
@@ -59,8 +61,11 @@ function AppContent() {
             <Route path="/admin/users" element={<AdminUsers />} />
             <Route path="/admin/kyc" element={<AdminKyc />} />
             <Route path="/admin/rules" element={<AdminRules />} />
-            <Route path="/admin/treasury" element={<AdminTreasury />} />
+            <Route path="/admin/treasury" element={<AdminTreasury />} /> {/* ✅ NUEVO */}
           </Route>
+
+          {/* (Opcional) fallback */}
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </main>
       <Footer />

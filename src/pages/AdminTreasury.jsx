@@ -15,7 +15,8 @@ const AdminTreasury = () => {
             const res = await apiClient.get('/admin/treasury/pending');
             setTransactions(res.data.transactions || []);
         } catch (e) {
-            setError(e?.response?.data?.error || 'Error cargando tesorería');
+            setError(e?.response?.data?.error || 'Error al cargar tesorería.');
+            setTransactions([]);
         } finally {
             setLoading(false);
         }
@@ -24,15 +25,16 @@ const AdminTreasury = () => {
     useEffect(() => { fetchPending(); }, []);
 
     const approveDeposit = async (id) => {
-        if (!confirm('¿Confirmas que el depósito fue recibido y deseas iniciar el payout en Vita?')) return;
+        if (!confirm('¿Confirmas que el depósito fue recibido y deseas iniciar el payout?')) return;
         try {
             setBusyId(id);
             setError('');
             await apiClient.put(`/admin/treasury/${id}/approve-deposit`);
             await fetchPending();
         } catch (e) {
+            const msg = e?.response?.data?.error || 'Error aprobando depósito.';
             const details = e?.response?.data?.details;
-            setError(details ? JSON.stringify(details) : (e?.response?.data?.error || 'Error aprobando depósito'));
+            setError(details ? `${msg} ${JSON.stringify(details)}` : msg);
         } finally {
             setBusyId(null);
         }
@@ -46,7 +48,7 @@ const AdminTreasury = () => {
             await apiClient.put(`/admin/treasury/${id}/complete-payout`, {});
             await fetchPending();
         } catch (e) {
-            setError(e?.response?.data?.error || 'Error completando pago');
+            setError(e?.response?.data?.error || 'Error completando pago.');
         } finally {
             setBusyId(null);
         }
@@ -54,7 +56,7 @@ const AdminTreasury = () => {
 
     return (
         <Container className="my-5">
-            <h2 className="mb-3">Tesorería (Operaciones Manuales)</h2>
+            <h2 className="mb-4">Tesorería (Operaciones Manuales)</h2>
 
             {error && <Alert variant="danger">{error}</Alert>}
 
@@ -80,28 +82,30 @@ const AdminTreasury = () => {
                                 {transactions.length === 0 ? (
                                     <tr>
                                         <td colSpan={6} className="text-center text-muted py-4">
-                                            No hay pendientes.
+                                            No hay transacciones pendientes.
                                         </td>
                                     </tr>
                                 ) : (
-                                    transactions.map(tx => {
+                                    transactions.map((tx) => {
                                         const isOnRamp = tx.status === 'pending_verification';
                                         const isOffRamp = tx.status === 'pending_manual_payout';
                                         const busy = busyId === tx._id;
 
                                         return (
                                             <tr key={tx._id}>
-                                                <td>{new Date(tx.createdAt).toLocaleString()}</td>
+                                                <td>{tx.createdAt ? new Date(tx.createdAt).toLocaleString() : '-'}</td>
                                                 <td>{tx.createdBy?.name || tx.createdBy?.email || '-'}</td>
                                                 <td>
-                                                    {isOnRamp
-                                                        ? <Badge bg="info">Entrada (On-Ramp)</Badge>
-                                                        : <Badge bg="warning">Salida (Off-Ramp)</Badge>}
+                                                    {isOnRamp ? (
+                                                        <Badge bg="info">Entrada (On-Ramp)</Badge>
+                                                    ) : (
+                                                        <Badge bg="warning">Salida (Off-Ramp)</Badge>
+                                                    )}
                                                 </td>
                                                 <td>{tx.amount} {tx.currency}</td>
                                                 <td>
                                                     {tx.proofOfPayment
-                                                        ? <a href={tx.proofOfPayment} target="_blank" rel="noreferrer">Ver</a>
+                                                        ? <a href={tx.proofOfPayment} target="_blank" rel="noreferrer">Ver Foto</a>
                                                         : <span className="text-muted">-</span>}
                                                 </td>
                                                 <td>
@@ -110,6 +114,7 @@ const AdminTreasury = () => {
                                                             {busy ? 'Procesando...' : 'Aprobar depósito'}
                                                         </Button>
                                                     )}
+
                                                     {isOffRamp && (
                                                         <Button size="sm" variant="success" disabled={busy} onClick={() => completePayout(tx._id)}>
                                                             {busy ? 'Guardando...' : 'Marcar pagado'}
