@@ -1,11 +1,11 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Container, Table, Button, Badge, Card, Alert, Spinner } from 'react-bootstrap';
 import { apiClient } from '../services/api';
 
 const AdminTreasury = () => {
     const [transactions, setTransactions] = useState([]);
     const [loading, setLoading] = useState(false);
-    const [actionLoadingId, setActionLoadingId] = useState(null);
+    const [busyId, setBusyId] = useState(null);
     const [error, setError] = useState('');
 
     const fetchPending = async () => {
@@ -15,8 +15,7 @@ const AdminTreasury = () => {
             const res = await apiClient.get('/admin/treasury/pending');
             setTransactions(res.data.transactions || []);
         } catch (e) {
-            const msg = e?.response?.data?.error || e?.message || 'Error cargando tesorería';
-            setError(msg);
+            setError(e?.response?.data?.error || 'Error cargando tesorería');
         } finally {
             setLoading(false);
         }
@@ -24,71 +23,49 @@ const AdminTreasury = () => {
 
     useEffect(() => { fetchPending(); }, []);
 
-    const counts = useMemo(() => {
-        const onRamp = transactions.filter(t => t.status === 'pending_verification').length;
-        const offRamp = transactions.filter(t => t.status === 'pending_manual_payout').length;
-        return { onRamp, offRamp, total: transactions.length };
-    }, [transactions]);
-
-    const handleApproveDeposit = async (id) => {
-        if (!confirm('¿Confirmas que el depósito/entrada fue recibido y deseas ejecutar el envío en Vita?')) return;
+    const approveDeposit = async (id) => {
+        if (!confirm('¿Confirmas que el depósito fue recibido y deseas iniciar el payout en Vita?')) return;
         try {
-            setActionLoadingId(id);
+            setBusyId(id);
             setError('');
             await apiClient.put(`/admin/treasury/${id}/approve-deposit`);
             await fetchPending();
-            alert('Depósito aprobado. Envío iniciado.');
         } catch (e) {
             const details = e?.response?.data?.details;
-            const msg = e?.response?.data?.error || e?.message || 'Error aprobando depósito';
-            setError(details ? `${msg}: ${JSON.stringify(details)}` : msg);
+            setError(details ? JSON.stringify(details) : (e?.response?.data?.error || 'Error aprobando depósito'));
         } finally {
-            setActionLoadingId(null);
+            setBusyId(null);
         }
     };
 
-    const handleCompletePayout = async (id) => {
-        if (!confirm('¿Confirmas que ya realizaste el pago manual (off-ramp) y deseas marcarlo como completado?')) return;
+    const completePayout = async (id) => {
+        if (!confirm('¿Confirmas que ya realizaste el pago manual y deseas marcarlo como completado?')) return;
         try {
-            setActionLoadingId(id);
+            setBusyId(id);
             setError('');
             await apiClient.put(`/admin/treasury/${id}/complete-payout`, {});
             await fetchPending();
-            alert('Pago marcado como completado.');
         } catch (e) {
-            const msg = e?.response?.data?.error || e?.message || 'Error completando pago';
-            setError(msg);
+            setError(e?.response?.data?.error || 'Error completando pago');
         } finally {
-            setActionLoadingId(null);
+            setBusyId(null);
         }
     };
 
     return (
-        <Container className="py-4">
-            <div className="d-flex align-items-center justify-content-between mb-3">
-                <div>
-                    <h3 className="mb-1">Tesorería</h3>
-                    <div className="text-muted">
-                        Pendientes: {counts.total} • Entradas: {counts.onRamp} • Salidas: {counts.offRamp}
-                    </div>
-                </div>
-
-                <Button variant="outline-secondary" onClick={fetchPending} disabled={loading}>
-                    {loading ? 'Actualizando...' : 'Actualizar'}
-                </Button>
-            </div>
+        <Container className="my-5">
+            <h2 className="mb-3">Tesorería (Operaciones Manuales)</h2>
 
             {error && <Alert variant="danger">{error}</Alert>}
 
-            <Card className="shadow-sm">
+            <Card>
                 <Card.Body>
                     {loading ? (
-                        <div className="py-5 text-center">
+                        <div className="text-center py-5">
                             <Spinner animation="border" />
-                            <div className="mt-2">Cargando...</div>
                         </div>
                     ) : (
-                        <Table responsive hover className="mb-0">
+                        <Table responsive>
                             <thead>
                                 <tr>
                                     <th>Fecha</th>
@@ -103,53 +80,39 @@ const AdminTreasury = () => {
                                 {transactions.length === 0 ? (
                                     <tr>
                                         <td colSpan={6} className="text-center text-muted py-4">
-                                            No hay transacciones pendientes.
+                                            No hay pendientes.
                                         </td>
                                     </tr>
                                 ) : (
-                                    transactions.map((tx) => {
+                                    transactions.map(tx => {
                                         const isOnRamp = tx.status === 'pending_verification';
                                         const isOffRamp = tx.status === 'pending_manual_payout';
-                                        const isBusy = actionLoadingId === tx._id;
+                                        const busy = busyId === tx._id;
 
                                         return (
                                             <tr key={tx._id}>
-                                                <td>{tx.createdAt ? new Date(tx.createdAt).toLocaleString() : '-'}</td>
+                                                <td>{new Date(tx.createdAt).toLocaleString()}</td>
                                                 <td>{tx.createdBy?.name || tx.createdBy?.email || '-'}</td>
                                                 <td>
-                                                    {isOnRamp ? (
-                                                        <Badge bg="info">Entrada (On-Ramp)</Badge>
-                                                    ) : (
-                                                        <Badge bg="warning">Salida (Off-Ramp)</Badge>
-                                                    )}
+                                                    {isOnRamp
+                                                        ? <Badge bg="info">Entrada (On-Ramp)</Badge>
+                                                        : <Badge bg="warning">Salida (Off-Ramp)</Badge>}
                                                 </td>
                                                 <td>{tx.amount} {tx.currency}</td>
                                                 <td>
-                                                    {tx.proofOfPayment ? (
-                                                        <a href={tx.proofOfPayment} target="_blank" rel="noreferrer">Ver</a>
-                                                    ) : (
-                                                        <span className="text-muted">-</span>
-                                                    )}
+                                                    {tx.proofOfPayment
+                                                        ? <a href={tx.proofOfPayment} target="_blank" rel="noreferrer">Ver</a>
+                                                        : <span className="text-muted">-</span>}
                                                 </td>
                                                 <td>
                                                     {isOnRamp && (
-                                                        <Button
-                                                            size="sm"
-                                                            onClick={() => handleApproveDeposit(tx._id)}
-                                                            disabled={isBusy}
-                                                        >
-                                                            {isBusy ? 'Procesando...' : 'Aprobar depósito'}
+                                                        <Button size="sm" disabled={busy} onClick={() => approveDeposit(tx._id)}>
+                                                            {busy ? 'Procesando...' : 'Aprobar depósito'}
                                                         </Button>
                                                     )}
-
                                                     {isOffRamp && (
-                                                        <Button
-                                                            size="sm"
-                                                            variant="success"
-                                                            onClick={() => handleCompletePayout(tx._id)}
-                                                            disabled={isBusy}
-                                                        >
-                                                            {isBusy ? 'Guardando...' : 'Marcar pagado'}
+                                                        <Button size="sm" variant="success" disabled={busy} onClick={() => completePayout(tx._id)}>
+                                                            {busy ? 'Guardando...' : 'Marcar pagado'}
                                                         </Button>
                                                     )}
                                                 </td>
