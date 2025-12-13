@@ -1,9 +1,8 @@
 import axios from 'axios';
 
-// URL del Backend en Render
+// Detecta URL de entorno o usa la de producción
 const API_URL = import.meta.env.VITE_API_URL || 'https://remesas-avf1-0.onrender.com/api';
 
-// 1. Instancia correcta de Axios (apiClient)
 export const apiClient = axios.create({
   baseURL: API_URL,
   headers: {
@@ -11,7 +10,7 @@ export const apiClient = axios.create({
   },
 });
 
-// Interceptor para Token
+// Interceptor para agregar token si existe
 apiClient.interceptors.request.use((config) => {
   const token = localStorage.getItem('token');
   if (token) {
@@ -27,8 +26,8 @@ export const loginUser = async (credentials) => {
     if (response.data.ok) return response.data;
     throw new Error(response.data.message || 'Error en el login');
   } catch (error) {
-    console.error('Error en loginUser:', error);
-    throw { ok: false, error: error.response?.data?.message || 'Error al iniciar sesión.' };
+    console.error('Error en loginUser:', error.response?.data || error.message);
+    throw { ok: false, error: error.response?.data?.message || error.response?.data?.error || 'Error al iniciar sesión.' };
   }
 };
 
@@ -37,48 +36,113 @@ export const registerUser = async (userData) => {
     const response = await apiClient.post('/auth/register', userData);
     return response.data;
   } catch (error) {
-    throw { ok: false, error: error.response?.data?.message || 'Error al registrar.' };
+    throw { ok: false, error: error.response?.data?.message || error.response?.data?.error || 'Error al registrar.' };
   }
 };
 
-// ... (Mantén tus funciones de Auth/Password/KYC iguales, usando apiClient) ...
+export const verifyEmailToken = async (token) => {
+  try {
+    const response = await apiClient.get(`/auth/verify-email?token=${token}`);
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || error;
+  }
+};
 
-// --- FUNCIÓN CRÍTICA CORREGIDA ---
+export const requestPasswordReset = async (email) => {
+  try {
+    const response = await apiClient.post('/auth/forgotpassword', { email });
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || error;
+  }
+};
+
+export const resetPassword = async (token, password) => {
+  try {
+    const response = await apiClient.put(`/auth/resetpassword/${token}`, { password });
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || error;
+  }
+};
+
+// --- PERFIL Y KYC ---
+export const updateUserProfile = async (profileData) => {
+  try {
+    const response = await apiClient.put('/auth/profile', profileData);
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || error;
+  }
+};
+
+export const uploadKycDocuments = async (formData) => {
+  try {
+    const response = await apiClient.post('/auth/kyc-documents', formData, {
+      headers: { 'Content-Type': undefined },
+    });
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || error;
+  }
+};
+
+export const uploadAvatar = async (formData) => {
+  try {
+    const response = await apiClient.post('/auth/avatar', formData, {
+      headers: { 'Content-Type': undefined },
+    });
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || error;
+  }
+};
+
+// --- ADMIN KYC ---
+export const getPendingKycUsers = async () => {
+  try {
+    const response = await apiClient.get('/admin/kyc/pending');
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || error;
+  }
+};
+
+export const reviewKycUser = async (userId, action, reason = '') => {
+  try {
+    const response = await apiClient.put(`/admin/kyc/${userId}/review`, { action, reason });
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || error;
+  }
+};
+
+// --- REMESAS Y REGLAS ---
+
+// 🔥 FUNCIÓN CRÍTICA (CORREGIDA): Usa apiClient y normaliza datos
 export const getPrices = async () => {
   try {
-    console.log('📡 [API] Solicitando precios...');
-
-    // 🔥 CORRECCIÓN CLAVE: Usamos 'apiClient', no 'api'
+    // Usamos apiClient (no api)
     const response = await apiClient.get('/prices');
     const rawData = response.data;
 
-    console.log('📦 [API] Respuesta recibida:', rawData);
+    console.log('📦 [API] Raw Prices:', rawData);
 
-    // ESTRATEGIA DE NORMALIZACIÓN
-    // 1. Si el Backend manda un Array directo (Moderno)
-    if (Array.isArray(rawData)) {
-      console.log('✅ [API] Formato Array detectado');
-      return rawData;
-    }
+    // 1. Si es Array directo
+    if (Array.isArray(rawData)) return rawData;
+    if (rawData.data && Array.isArray(rawData.data)) return rawData.data;
 
-    // 2. Si el Backend manda { data: [...] } (Estándar API)
-    if (rawData.data && Array.isArray(rawData.data)) {
-      console.log('✅ [API] Formato Data.Array detectado');
-      return rawData.data;
-    }
-
-    // 3. Si el Backend manda estructura Legacy (CLP -> withdrawal...)
+    // 2. Si es estructura Legacy
     const legacyRoot = rawData.CLP || rawData.clp || rawData.USD || rawData.usd || rawData?.data?.CLP;
 
     if (legacyRoot) {
-      console.log('✅ [API] Formato Legacy detectado');
       const withdrawalNode = legacyRoot.withdrawal || {};
       const pricesNode = withdrawalNode.prices || {};
       const attributesNode = pricesNode.attributes || {};
 
       const sellMap = attributesNode.sell || pricesNode.sell || withdrawalNode.sell || {};
 
-      // Convertimos Mapa a Array [{ code: 'CO', rate: 0.042 }]
       const countriesArray = Object.entries(sellMap).map(([key, value]) => ({
         code: key.toUpperCase(),
         rate: Number(value)
@@ -91,22 +155,230 @@ export const getPrices = async () => {
     return [];
 
   } catch (error) {
-    console.error("❌ [API] Error obteniendo precios:", error);
+    console.error("❌ [API] Error fetching prices:", error);
     return [];
   }
 };
 
-// --- RESTO DE FUNCIONES (Usando apiClient) ---
+export const getQuote = async (params) => {
+  try {
+    const response = await apiClient.get('/fx/quote', { params });
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || error;
+  }
+};
+
+export const getTransactionRules = async (country = 'CL') => {
+  try {
+    const response = await apiClient.get(`/transaction-rules?country=${country}`);
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || error;
+  }
+};
+
+export const updateTransactionRules = async (rulesData) => {
+  try {
+    const response = await apiClient.put('/transaction-rules', rulesData);
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || error;
+  }
+};
+
+export const getAvailableOrigins = async () => {
+  try {
+    const response = await apiClient.get('/transaction-rules/available');
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || error;
+  }
+};
+
+export const getEnabledOrigins = async () => {
+  try {
+    const response = await apiClient.get('/transaction-rules/enabled');
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || error;
+  }
+};
 
 export const getWithdrawalRules = async (params) => {
-  const query = new URLSearchParams(params).toString();
-  return apiClient.get(`/withdrawal-rules?${query}`);
+  try {
+    const response = await apiClient.get('/withdrawal-rules', { params });
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || error;
+  }
 };
 
+export const uploadImage = async (formData) => {
+  try {
+    const response = await apiClient.post('/upload', formData, {
+      headers: { 'Content-Type': undefined }
+    });
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || error;
+  }
+};
+
+// --- TRANSACCIONES Y PAGOS ---
 export const createWithdrawal = async (payload) => {
-  return apiClient.post('/withdrawals', payload);
+  try {
+    const response = await apiClient.post('/withdrawals', payload);
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || error;
+  }
 };
 
-// ... Asegúrate de que TODAS las funciones usen 'apiClient' ...
+export const createPaymentOrder = async (orderData) => {
+  try {
+    const response = await apiClient.post('/payment-orders', orderData);
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || error;
+  }
+};
+
+export const createDirectPaymentOrder = async (orderData) => {
+  try {
+    const response = await apiClient.post('/payment-orders/direct', orderData);
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || error;
+  }
+};
+
+export const getPaymentMethods = async (country) => {
+  try {
+    const response = await apiClient.get(`/payment-orders/methods/${country}`);
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || error;
+  }
+};
+
+export const getTransactions = async (params) => {
+  try {
+    const response = await apiClient.get('/transactions', { params });
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || error;
+  }
+};
+
+export const getTransactionById = async (id) => {
+  try {
+    const response = await apiClient.get(`/transactions/${id}`);
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || error;
+  }
+};
+
+// --- BENEFICIARIOS ---
+export const getBeneficiaries = async () => {
+  try {
+    const response = await apiClient.get('/beneficiaries');
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || error;
+  }
+};
+
+export const saveBeneficiary = async (data) => {
+  try {
+    const response = await apiClient.post('/beneficiaries', data);
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || error;
+  }
+};
+
+export const updateBeneficiary = async (id, data) => {
+  try {
+    const response = await apiClient.put(`/beneficiaries/${id}`, data);
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || error;
+  }
+};
+
+export const deleteBeneficiary = async (id) => {
+  try {
+    const response = await apiClient.delete(`/beneficiaries/${id}`);
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || error;
+  }
+};
+
+// --- ADMIN MARKUP/USUARIOS ---
+export const getMarkup = async () => {
+  try {
+    const response = await apiClient.get('/admin/markup');
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || error;
+  }
+};
+
+export const updateMarkup = async (newMarkup) => {
+  try {
+    const response = await apiClient.put('/admin/markup', { markup: newMarkup });
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || error;
+  }
+};
+
+export const getMarkupPairs = async () => {
+  try {
+    const response = await apiClient.get('/admin/markup/pairs');
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || error;
+  }
+};
+
+export const updateMarkupPair = async (pairData) => {
+  try {
+    const response = await apiClient.put('/admin/markup/pairs', pairData);
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || error;
+  }
+};
+
+export const getUsers = async () => {
+  try {
+    const response = await apiClient.get('/admin/users');
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || error;
+  }
+};
+
+export const updateUserRole = async (userId, role) => {
+  try {
+    const response = await apiClient.put(`/admin/users/${userId}/role`, { role });
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || error;
+  }
+};
+
+export const adminUpdateUser = async (userId, userData) => {
+  try {
+    const response = await apiClient.put(`/admin/users/${userId}`, userData);
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || error;
+  }
+};
 
 export default apiClient;
