@@ -166,8 +166,13 @@ const StepConfirm = ({ formData, fields, onBack, isFromFavorite }) => {
 
         if (paymentOrderResult.ok) {
           const resData = paymentOrderResult.data || paymentOrderResult;
+
           const paymentUrl =
-            resData.data?.attributes?.url ||
+            resData.checkoutUrl ||                         // ✅ NUEVO (tu BE)
+            resData.raw?.checkout_url ||                   // ✅ fallback por si viene en raw
+            resData.raw?.redirect_url ||
+            resData.raw?.url ||
+            resData.data?.attributes?.url ||               // legacy
             resData.data?.payment_url ||
             resData.payment_url ||
             resData.url;
@@ -181,6 +186,7 @@ const StepConfirm = ({ formData, fields, onBack, isFromFavorite }) => {
         } else {
           throw new Error('No se pudo generar la orden de pago.');
         }
+
       } else {
         throw new Error(withdrawalResult.details || withdrawalResult.error || 'Error al crear la transacción.');
       }
