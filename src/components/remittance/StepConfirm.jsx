@@ -154,8 +154,8 @@ const StepConfirm = ({ formData, fields, onBack, isFromFavorite }) => {
   const handleConfirm = async () => {
     setLoading(true);
     setError(null);
-
     try {
+      // Validación de Direct Payment (si lo usas)
       if (paymentMethod === 'direct' && selectedDirectMethod) {
         for (const field of selectedDirectMethod.required_fields) {
           if (field.required && !directFormData[field.name]) {
@@ -164,40 +164,40 @@ const StepConfirm = ({ formData, fields, onBack, isFromFavorite }) => {
         }
       }
 
-      // 1) Crear Withdrawal
-      const withdrawalResult = await createWithdrawal({
+      // 1) Crear Payout (Withdrawal) — ahora puede traer checkoutUrl directo
+      const w = await createWithdrawal({
         country: destCountry,
         currency: safeOriginCurrency,
         amount: currentQuote.amountIn,
-        ...beneficiary
+        ...beneficiary,
       });
 
-      if (!withdrawalResult?.ok) {
-        throw new Error(
-          withdrawalResult?.details ||
-          withdrawalResult?.error ||
-          'Error al crear la transacción.'
-        );
+      if (!w.ok) {
+        throw new Error(w.details || w.error || 'Error al crear la transacción.');
       }
 
-      // Guardar favorito (no bloqueante)
-      if (saveAsFavorite && !isFromFavorite) {
-        const nickname = `${beneficiary.beneficiary_first_name} ${beneficiary.beneficiary_last_name}`;
-        saveBeneficiary({ nickname, country: destCountry, beneficiaryData: beneficiary }).catch(console.warn);
+      // ⭐️ Redirección directa si Vita (transactions) trae checkout_url
+      const directCheckout = w?.data?.checkoutUrl;
+      if (directCheckout) {
+        if (saveAsFavorite && !isFromFavorite) {
+          const nickname = `${beneficiary.beneficiary_first_name} ${beneficiary.beneficiary_last_name}`;
+          saveBeneficiary({ nickname, country: destCountry, beneficiaryData: beneficiary }).catch(console.warn);
+        }
+        window.location.href = directCheckout;
+        return; // FIN
       }
 
-      // 2) Crear Orden de Pago (Pay-in)
+      // 2) Fallback: crear Payment Order (cuando transactions NO trae checkout_url)
+      let paymentOrderResult;
       const orderPayload = {
         amount: currentQuote.amountIn,
         country: originCountry || 'CL',
-        orderId: withdrawalResult.data?.order || withdrawalResult.order || withdrawalResult.data?.raw?.order
+        orderId: w.data.order,
       };
 
-      let paymentOrderResult;
       if (paymentMethod === 'redirect') {
         paymentOrderResult = await createPaymentOrder(orderPayload);
       } else {
-        // Nota: tu backend aún no está 100% alineado con "direct" en FE
         paymentOrderResult = await createDirectPaymentOrder({
           ...orderPayload,
           payer_details: directFormData,
@@ -205,57 +205,43 @@ const StepConfirm = ({ formData, fields, onBack, isFromFavorite }) => {
         });
       }
 
-      if (!paymentOrderResult?.ok) {
+      if (paymentOrderResult.ok) {
+        const resData = paymentOrderResult.data || paymentOrderResult;
+        const paymentUrl =
+          resData.checkoutUrl ||
+          resData.raw?.checkout_url ||
+          resData.raw?.redirect_url ||
+          resData.raw?.url ||
+          resData.data?.attributes?.url ||
+          resData.data?.payment_url ||
+          resData.payment_url ||
+          resData.url;
+
+        if (paymentUrl) {
+          if (saveAsFavorite && !isFromFavorite) {
+            const nickname = `${beneficiary.beneficiary_first_name} ${beneficiary.beneficiary_last_name}`;
+            saveBeneficiary({ nickname, country: destCountry, beneficiaryData: beneficiary }).catch(console.warn);
+          }
+          window.location.href = paymentUrl;
+        } else {
+          console.error('Respuesta Vita sin URL:', resData);
+          throw new Error('No se recibió la URL para completar el pago.');
+        }
+      } else {
         throw new Error('No se pudo generar la orden de pago.');
       }
-
-      // Normaliza respuesta: a veces api.js devuelve {ok, data}, otras {ok, checkoutUrl}
-      const resData = paymentOrderResult?.data ?? paymentOrderResult;
-
-      // ✅ PRIORIDAD 1: backend ya entrega checkoutUrl
-      let paymentUrl = resData.checkoutUrl;
-
-      // ✅ PRIORIDAD 2: Vita podría traer url en raw
-      if (!paymentUrl) {
-        const raw = resData.raw;
-        paymentUrl =
-          raw?.checkout_url ||
-          raw?.redirect_url ||
-          raw?.url ||
-          raw?.attributes?.checkout_url ||
-          raw?.attributes?.redirect_url ||
-          raw?.attributes?.url;
-      }
-
-      // ✅ PRIORIDAD 3: construir desde raw.id + raw.attributes.public_code
-      if (!paymentUrl) {
-        paymentUrl = buildCheckoutUrlFromRaw(resData.raw);
-      }
-
-      if (paymentUrl) {
-        window.location.href = paymentUrl;
-        return;
-      }
-
-      console.error('Respuesta Vita sin URL:', resData);
-      throw new Error(
-        CHECKOUT_BASE_URL
-          ? 'No se recibió la URL para completar el pago (la respuesta no incluye checkout_url y no se pudo construir).'
-          : 'No se recibió la URL para completar el pago. Falta configurar VITE_VITA_CHECKOUT_BASE_URL en el Frontend.'
-      );
     } catch (err) {
-      let msg = err?.message || 'Error desconocido';
-      if (err?.details) msg = typeof err.details === 'string' ? err.details : JSON.stringify(err.details);
-
+      let msg = err.message || 'Error desconocido';
+      if (err.details) msg = typeof err.details === 'string' ? err.details : JSON.stringify(err.details);
       if (msg.toLowerCase().includes('caducaron')) {
         msg = 'La cotización ha vencido. Por favor actualiza.';
         setIsExpired(true);
       }
-
       setError(msg);
       setLoading(false);
     }
   };
+
 
   const formatTime = (ms) => {
     if (ms === null || ms <= 0) return '00:00';

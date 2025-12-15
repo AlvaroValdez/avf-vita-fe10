@@ -253,14 +253,15 @@ export const uploadImage = async (formData) => {
 };
 
 // --- TRANSACCIONES Y PAGOS ---
-export const createWithdrawal = async (payload) => {
-  try {
-    const response = await apiClient.post('/withdrawals', payload);
-    return response.data;
-  } catch (error) {
-    throw error.response?.data || error;
-  }
-};
+export async function createWithdrawal(body) {
+  const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/withdrawals`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${localStorage.getItem('token')}` },
+    body: JSON.stringify(body),
+  });
+  const json = await res.json();
+  return json; // { ok, data: { order, txId, vitaTxnId, checkoutUrl }, raw }
+}
 
 export const createPaymentOrder = async (orderData) => {
   try {
