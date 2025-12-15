@@ -1,6 +1,14 @@
+// frontend/src/components/remittance/StepConfirm.jsx
 import React, { useState, useEffect } from 'react';
 import { Card, Button, Row, Col, Spinner, Alert, Form } from 'react-bootstrap';
-import { createWithdrawal, createPaymentOrder, createDirectPaymentOrder, getQuote, saveBeneficiary, getPaymentMethods } from '../../services/api';
+import {
+  createWithdrawal,
+  createPaymentOrder,
+  createDirectPaymentOrder,
+  getQuote,
+  saveBeneficiary,
+  getPaymentMethods
+} from '../../services/api';
 import { formatNumberForDisplay, formatRate } from '../../utils/formatting';
 import ManualDeposit from './ManualDeposit';
 
@@ -8,16 +16,37 @@ const QUOTE_VALIDITY_DURATION = 1.5 * 60 * 1000; // 90 segundos
 
 // Mapeo simple de país a moneda para seguridad
 const COUNTRY_TO_CURRENCY = {
-  'CL': 'CLP', 'CO': 'COP', 'AR': 'ARS', 'MX': 'MXN', 'BR': 'BRL', 'PE': 'PEN', 'BO': 'BOB', 'US': 'USD'
+  CL: 'CLP',
+  CO: 'COP',
+  AR: 'ARS',
+  MX: 'MXN',
+  BR: 'BRL',
+  PE: 'PEN',
+  BO: 'BOB',
+  US: 'USD'
 };
 
-const StepConfirm = ({ formData, fields, onBack, isFromFavorite }) => {
-  const { quoteData, beneficiary, destCountry, originCountry, quoteTimestamp } = formData;
+// Base configurable para el checkout (Stage / Prod)
+const CHECKOUT_BASE_URL =
+  (import.meta?.env?.VITE_VITA_CHECKOUT_BASE_URL || '').replace(/\/$/, '');
 
-  // Determinamos la moneda de origen correcta
-  // 1. Usamos la del quote si existe. 
-  // 2. Si no, deducimos del país de origen.
-  // 3. Default a CLP.
+function buildCheckoutUrlFromRaw(raw) {
+  // Vita suele devolver payment_order como:
+  // { id: "3353", type: "payment_order", attributes: { public_code: "..." } }
+  const id = raw?.id;
+  const publicCode = raw?.attributes?.public_code;
+
+  if (!CHECKOUT_BASE_URL || !id || !publicCode) return null;
+
+  // El path exacto depende del ambiente; dejamos /checkout como default (configurable en BE/FE)
+  // Si Vita indica otro path, se cambia en el ENV o aquí.
+  return `${CHECKOUT_BASE_URL}/checkout?id=${encodeURIComponent(id)}&public_code=${encodeURIComponent(publicCode)}`;
+}
+
+const StepConfirm = ({ formData, fields, onBack, isFromFavorite }) => {
+  const { quoteData, beneficiary, destCountry, originCountry } = formData;
+
+  // Moneda origen segura
   const safeOriginCurrency = quoteData?.origin || COUNTRY_TO_CURRENCY[originCountry] || 'CLP';
 
   const [currentQuote, setCurrentQuote] = useState(quoteData);
@@ -40,7 +69,7 @@ const StepConfirm = ({ formData, fields, onBack, isFromFavorite }) => {
     const refreshQuote = async () => {
       try {
         setLoadingQuote(true);
-        // --- CORRECCIÓN: Usamos la moneda segura (safeOriginCurrency) ---
+
         const response = await getQuote({
           amount: currentQuote.amountIn,
           destCountry,
@@ -48,7 +77,7 @@ const StepConfirm = ({ formData, fields, onBack, isFromFavorite }) => {
           originCountry
         });
 
-        if (response.ok) {
+        if (response?.ok) {
           setCurrentQuote(response.data);
         } else {
           console.warn('No se pudo refrescar cotización, usando anterior.');
@@ -59,6 +88,7 @@ const StepConfirm = ({ formData, fields, onBack, isFromFavorite }) => {
         setLoadingQuote(false);
       }
     };
+
     refreshQuote();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -89,7 +119,6 @@ const StepConfirm = ({ formData, fields, onBack, isFromFavorite }) => {
 
   // 3. Cargar Métodos de Pago (Si no es manual)
   useEffect(() => {
-    // Si es Anchor Manual (BOB), no cargamos métodos de Vita
     if (safeOriginCurrency === 'BOB') return;
 
     if (paymentMethod === 'direct' && directMethods.length === 0) {
@@ -98,18 +127,22 @@ const StepConfirm = ({ formData, fields, onBack, isFromFavorite }) => {
           const countryCode = originCountry || 'CL';
           const res = await getPaymentMethods(countryCode);
 
-          if (res.ok && res.data.payment_methods) {
-            setDirectMethods(res.data.payment_methods);
-            if (res.data.payment_methods.length > 0) {
-              setSelectedDirectMethod(res.data.payment_methods[0]);
-            }
+          // Ojo: según tu BE actual, methods puede venir en data directamente
+          const methods = res?.data?.payment_methods || res?.payment_methods || res?.data;
+
+          if (res?.ok && Array.isArray(methods)) {
+            setDirectMethods(methods);
+            if (methods.length > 0) setSelectedDirectMethod(methods[0]);
+          } else {
+            throw new Error('Formato de métodos de pago no esperado.');
           }
         } catch (e) {
-          console.error("Pago directo no disponible:", e);
+          console.error('Pago directo no disponible:', e);
           setDirectPaymentAvailable(false);
           setPaymentMethod('redirect');
         }
       };
+
       loadMethods();
     }
   }, [paymentMethod, originCountry, safeOriginCurrency, directMethods.length]);
@@ -121,6 +154,7 @@ const StepConfirm = ({ formData, fields, onBack, isFromFavorite }) => {
   const handleConfirm = async () => {
     setLoading(true);
     setError(null);
+
     try {
       if (paymentMethod === 'direct' && selectedDirectMethod) {
         for (const field of selectedDirectMethod.required_fields) {
@@ -130,74 +164,94 @@ const StepConfirm = ({ formData, fields, onBack, isFromFavorite }) => {
         }
       }
 
-      // 1. Crear Payout (Withdrawal)
-      // --- CORRECCIÓN: Usamos safeOriginCurrency ---
+      // 1) Crear Withdrawal
       const withdrawalResult = await createWithdrawal({
         country: destCountry,
         currency: safeOriginCurrency,
         amount: currentQuote.amountIn,
-        ...beneficiary,
+        ...beneficiary
       });
 
-      if (withdrawalResult.ok) {
-        if (saveAsFavorite && !isFromFavorite) {
-          const nickname = `${beneficiary.beneficiary_first_name} ${beneficiary.beneficiary_last_name}`;
-          saveBeneficiary({ nickname, country: destCountry, beneficiaryData: beneficiary }).catch(console.warn);
-        }
-
-        // 3. Crear Orden de Pago (Pay-in)
-        let paymentOrderResult;
-
-        const orderPayload = {
-          amount: currentQuote.amountIn,
-          country: originCountry || 'CL',
-          orderId: withdrawalResult.data.order,
-        };
-
-        if (paymentMethod === 'redirect') {
-          paymentOrderResult = await createPaymentOrder(orderPayload);
-        } else {
-          paymentOrderResult = await createDirectPaymentOrder({
-            ...orderPayload,
-            payer_details: directFormData,
-            method_id: selectedDirectMethod?.method_id
-          });
-        }
-
-        if (paymentOrderResult.ok) {
-          const resData = paymentOrderResult.data || paymentOrderResult;
-
-          const paymentUrl =
-            resData.checkoutUrl ||                         // ✅ NUEVO (tu BE)
-            resData.raw?.checkout_url ||                   // ✅ fallback por si viene en raw
-            resData.raw?.redirect_url ||
-            resData.raw?.url ||
-            resData.data?.attributes?.url ||               // legacy
-            resData.data?.payment_url ||
-            resData.payment_url ||
-            resData.url;
-
-          if (paymentUrl) {
-            window.location.href = paymentUrl;
-          } else {
-            console.error("Respuesta Vita sin URL:", resData);
-            throw new Error('No se recibió la URL para completar el pago.');
-          }
-        } else {
-          throw new Error('No se pudo generar la orden de pago.');
-        }
-
-      } else {
-        throw new Error(withdrawalResult.details || withdrawalResult.error || 'Error al crear la transacción.');
+      if (!withdrawalResult?.ok) {
+        throw new Error(
+          withdrawalResult?.details ||
+          withdrawalResult?.error ||
+          'Error al crear la transacción.'
+        );
       }
+
+      // Guardar favorito (no bloqueante)
+      if (saveAsFavorite && !isFromFavorite) {
+        const nickname = `${beneficiary.beneficiary_first_name} ${beneficiary.beneficiary_last_name}`;
+        saveBeneficiary({ nickname, country: destCountry, beneficiaryData: beneficiary }).catch(console.warn);
+      }
+
+      // 2) Crear Orden de Pago (Pay-in)
+      const orderPayload = {
+        amount: currentQuote.amountIn,
+        country: originCountry || 'CL',
+        orderId: withdrawalResult.data?.order || withdrawalResult.order || withdrawalResult.data?.raw?.order
+      };
+
+      let paymentOrderResult;
+      if (paymentMethod === 'redirect') {
+        paymentOrderResult = await createPaymentOrder(orderPayload);
+      } else {
+        // Nota: tu backend aún no está 100% alineado con "direct" en FE
+        paymentOrderResult = await createDirectPaymentOrder({
+          ...orderPayload,
+          payer_details: directFormData,
+          method_id: selectedDirectMethod?.method_id
+        });
+      }
+
+      if (!paymentOrderResult?.ok) {
+        throw new Error('No se pudo generar la orden de pago.');
+      }
+
+      // Normaliza respuesta: a veces api.js devuelve {ok, data}, otras {ok, checkoutUrl}
+      const resData = paymentOrderResult?.data ?? paymentOrderResult;
+
+      // ✅ PRIORIDAD 1: backend ya entrega checkoutUrl
+      let paymentUrl = resData.checkoutUrl;
+
+      // ✅ PRIORIDAD 2: Vita podría traer url en raw
+      if (!paymentUrl) {
+        const raw = resData.raw;
+        paymentUrl =
+          raw?.checkout_url ||
+          raw?.redirect_url ||
+          raw?.url ||
+          raw?.attributes?.checkout_url ||
+          raw?.attributes?.redirect_url ||
+          raw?.attributes?.url;
+      }
+
+      // ✅ PRIORIDAD 3: construir desde raw.id + raw.attributes.public_code
+      if (!paymentUrl) {
+        paymentUrl = buildCheckoutUrlFromRaw(resData.raw);
+      }
+
+      if (paymentUrl) {
+        window.location.href = paymentUrl;
+        return;
+      }
+
+      console.error('Respuesta Vita sin URL:', resData);
+      throw new Error(
+        CHECKOUT_BASE_URL
+          ? 'No se recibió la URL para completar el pago (la respuesta no incluye checkout_url y no se pudo construir).'
+          : 'No se recibió la URL para completar el pago. Falta configurar VITE_VITA_CHECKOUT_BASE_URL en el Frontend.'
+      );
     } catch (err) {
-      let msg = err.message || "Error desconocido";
-      if (err.details) msg = typeof err.details === 'string' ? err.details : JSON.stringify(err.details);
+      let msg = err?.message || 'Error desconocido';
+      if (err?.details) msg = typeof err.details === 'string' ? err.details : JSON.stringify(err.details);
 
       if (msg.toLowerCase().includes('caducaron')) {
-        msg = "La cotización ha vencido. Por favor actualiza.";
+        msg = 'La cotización ha vencido. Por favor actualiza.';
         setIsExpired(true);
       }
+
       setError(msg);
       setLoading(false);
     }
@@ -209,11 +263,11 @@ const StepConfirm = ({ formData, fields, onBack, isFromFavorite }) => {
     return `${Math.floor(s / 60).toString().padStart(2, '0')}:${(s % 60).toString().padStart(2, '0')}`;
   };
 
-  const getFieldDetails = (k) => fields?.find(f => f.key === k);
+  const getFieldDetails = (k) => fields?.find((f) => f.key === k);
   const getDisplayValue = (k, v) => {
     const field = getFieldDetails(k);
     if (field?.type === 'select' && field.options) {
-      const opt = field.options.find(o => o.value === v);
+      const opt = field.options.find((o) => o.value === v);
       return opt ? opt.label : v;
     }
     return v;
@@ -221,19 +275,18 @@ const StepConfirm = ({ formData, fields, onBack, isFromFavorite }) => {
 
   // --- RENDERIZADO ---
 
-  // 1. Caso Anchor Manual (Bolivia)
-  // --- CORRECCIÓN: Usamos safeOriginCurrency para detectar BOB ---
+  // 1) Caso Anchor Manual (Bolivia)
   if (safeOriginCurrency === 'BOB') {
     return (
       <ManualDeposit
-        formData={{ ...formData, quoteData: currentQuote, originCountry: originCountry }} // Pasamos datos completos
-        onFinish={() => window.location.href = '/transactions'}
+        formData={{ ...formData, quoteData: currentQuote, originCountry }}
+        onFinish={() => (window.location.href = '/transactions')}
         onBack={onBack}
       />
     );
   }
 
-  // 2. Caso Expirado
+  // 2) Caso Expirado
   if (isExpired) {
     return (
       <Card className="p-4 text-center shadow-sm border-0">
@@ -255,7 +308,10 @@ const StepConfirm = ({ formData, fields, onBack, isFromFavorite }) => {
         <h4 className="mb-4">Resumen de la transacción</h4>
 
         {loadingQuote ? (
-          <div className="text-center p-5"><Spinner animation="border" variant="primary" /> <p>Actualizando cotización...</p></div>
+          <div className="text-center p-5">
+            <Spinner animation="border" variant="primary" />
+            <p>Actualizando cotización...</p>
+          </div>
         ) : (
           <Row>
             <Col md={6} className="mb-4 mb-md-0">
@@ -274,9 +330,14 @@ const StepConfirm = ({ formData, fields, onBack, isFromFavorite }) => {
                 </div>
               </div>
             </Col>
+
             <Col md={6}>
               <h5>Beneficiario:</h5>
-              <div className="mb-2"><small className="text-muted d-block">Nombre</small><span className="fw-medium">{fullName}</span></div>
+              <div className="mb-2">
+                <small className="text-muted d-block">Nombre</small>
+                <span className="fw-medium">{fullName}</span>
+              </div>
+
               {Object.entries(beneficiary).map(([key, value]) => {
                 if (!value || key.includes('name') || key === 'onComplete') return null;
                 const field = getFieldDetails(key);
@@ -300,27 +361,31 @@ const StepConfirm = ({ formData, fields, onBack, isFromFavorite }) => {
         <Form>
           <div className="mb-3">
             <Form.Check
-              type="radio" id="pay-redirect" label="Pasarela Web (Redirección)"
-              name="paymentMethod" value="redirect"
+              type="radio"
+              id="pay-redirect"
+              label="Pasarela Web (Redirección)"
+              name="paymentMethod"
+              value="redirect"
               checked={paymentMethod === 'redirect'}
               onChange={(e) => setPaymentMethod(e.target.value)}
             />
             <Form.Check
-              type="radio" id="pay-direct" label="Pago Directo (Marca Blanca)"
-              name="paymentMethod" value="direct"
+              type="radio"
+              id="pay-direct"
+              label="Pago Directo (Marca Blanca)"
+              name="paymentMethod"
+              value="direct"
               checked={paymentMethod === 'direct'}
               onChange={(e) => setPaymentMethod(e.target.value)}
               disabled={!directPaymentAvailable}
             />
           </div>
 
-          {/* Formulario Direct Payment ... */}
           {paymentMethod === 'direct' && selectedDirectMethod && (
             <div className="p-3 border rounded bg-light mb-3">
-              {/* ... Inputs dinámicos ... */}
               <h6 className="text-primary mb-3">{selectedDirectMethod.description || selectedDirectMethod.name}</h6>
               <Row>
-                {selectedDirectMethod.required_fields.map(field => (
+                {(selectedDirectMethod.required_fields || []).map((field) => (
                   <Col md={6} key={field.name}>
                     <Form.Group className="mb-3">
                       <Form.Label>{field.label}</Form.Label>
@@ -340,12 +405,18 @@ const StepConfirm = ({ formData, fields, onBack, isFromFavorite }) => {
 
         {!isFromFavorite && (
           <Form.Group className="mb-3 mt-3 border-top pt-3">
-            <Form.Check type="checkbox" label="Guardar en Mis Favoritos" checked={saveAsFavorite} onChange={(e) => setSaveAsFavorite(e.target.checked)} />
+            <Form.Check
+              type="checkbox"
+              label="Guardar en Mis Favoritos"
+              checked={saveAsFavorite}
+              onChange={(e) => setSaveAsFavorite(e.target.checked)}
+            />
           </Form.Group>
         )}
 
         <div className="d-flex justify-content-between mt-4">
           <Button variant="outline-secondary" onClick={onBack} disabled={loading}>Atrás</Button>
+
           <Button
             variant="primary"
             onClick={handleConfirm}
