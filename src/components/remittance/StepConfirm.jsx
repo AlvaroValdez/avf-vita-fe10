@@ -50,7 +50,7 @@ const StepConfirm = ({ formData, fields, onBack, isFromFavorite }) => {
   const [isExpired, setIsExpired] = useState(false);
 
   const [saveAsFavorite, setSaveAsFavorite] = useState(false);
-  const [paymentMethod, setPaymentMethod] = useState('redirect');
+  const [paymentMethod, setPaymentMethod] = useState('direct'); // ✅ DirectPay como predeterminado
 
   const [directMethods, setDirectMethods] = useState([]);
   const [selectedDirectMethod, setSelectedDirectMethod] = useState(null);
@@ -112,6 +112,7 @@ const StepConfirm = ({ formData, fields, onBack, isFromFavorite }) => {
 
   // 3) Métodos pago directo (solo si aplica)
   useEffect(() => {
+    // Bolivia usa flujo manual, no DirectPay
     if (safeOriginCurrency === 'BOB') return;
 
     if (paymentMethod === 'direct' && directMethods.length === 0) {
@@ -137,6 +138,7 @@ const StepConfirm = ({ formData, fields, onBack, isFromFavorite }) => {
           console.error('Pago directo no disponible:', e);
           setDirectPaymentAvailable(false);
           setPaymentMethod('redirect');
+          console.warn('⚠️ Cambiando a pasarela web (redirect) como fallback');
         }
       };
       loadMethods();
