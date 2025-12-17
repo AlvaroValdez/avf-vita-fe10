@@ -1,0 +1,30 @@
+/* Define las variables de color globales para la aplicación */
+:root {
+  --avf-primary: #122533;   /* Color primario institucional (azul oscuro) */
+  --avf-secondary: #ef8c20;  /* Color secundario institucional (naranja) */
+  --bs-primary-rgb: 18, 37, 51; 
+}
+
+/* Estilos base para todo el cuerpo de la página */
+body {
+  font-family: 'Poppins', sans-serif;
+  /* Se elimina el background-color: #f8f9fa; de aquí */
+}
+
+/* Regla para asegurar que el contenedor principal de React ocupe todo el ancho */
+#root {
+  width: 100%;
+  max-width: 100%;
+  margin: 0;
+  padding: 0;
+  display: flex; /* Asegura que #root pueda usar flexbox para App.jsx */
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+/* Estilo global para todas las tarjetas */
+.card {
+  border-radius: 0.75rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  border: none;
+}

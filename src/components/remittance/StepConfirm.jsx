@@ -25,34 +25,14 @@ const COUNTRY_TO_CURRENCY = {
   US: 'USD'
 };
 
-// ⚠️ Solo como ÚLTIMO recurso (ideal: que el BE te devuelva checkoutUrl real)
-const CHECKOUT_BASE_URL = (import.meta?.env?.VITE_VITA_CHECKOUT_BASE_URL || '').replace(/\/$/, '');
-
+// ✅ Extractor simplificado: confía en el backend
 function extractCheckoutUrlFromPaymentOrderResponse(resp) {
   const payload = resp?.data ?? resp;
-  const checkoutUrl =
-    payload?.checkoutUrl ||
-    payload?.raw?.checkout_url ||
-    payload?.raw?.redirect_url ||
-    payload?.raw?.url ||
-    payload?.raw?.attributes?.checkout_url ||
-    payload?.raw?.attributes?.redirect_url ||
-    payload?.raw?.attributes?.url ||
-    payload?.raw?.attributes?.checkout_url;
 
-  if (checkoutUrl) return checkoutUrl;
-
-  // Fallback extremo: construir con id + public_code
-  const raw = payload?.raw;
-  const id = raw?.id;
-  const publicCode = raw?.attributes?.public_code;
-
-  if (CHECKOUT_BASE_URL && id && publicCode) {
-    return `${CHECKOUT_BASE_URL}/checkout?id=${encodeURIComponent(id)}&public_code=${encodeURIComponent(publicCode)}`;
-  }
-
-  return null;
+  // El backend ya devuelve checkoutUrl construida correctamente
+  return payload?.checkoutUrl || null;
 }
+
 
 const StepConfirm = ({ formData, fields, onBack, isFromFavorite }) => {
   const { quoteData, beneficiary, destCountry, originCountry } = formData;
