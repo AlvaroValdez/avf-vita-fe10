@@ -102,8 +102,10 @@ const Transactions = () => {
               <th>Beneficiario</th>
               <th>País</th>
               <th>Monto</th>
+              <th>Comisión</th>
               <th>Estado</th>
               <th>Vita ID</th>
+              <th>Acciones</th>
             </tr>
           </thead>
           <tbody>
@@ -116,13 +118,27 @@ const Transactions = () => {
                 <td>{tx.country}</td>
                 {/* Asegurarse de formatear el monto y moneda correctamente */}
                 <td>{new Intl.NumberFormat('es-CL', { style: 'currency', currency: tx.currency || 'CLP', minimumFractionDigits: 0 }).format(tx.amount || 0)}</td>
+                {/* 💰 Comisión */}
+                <td>
+                  {tx.feePercent && tx.feePercent > 0 ? (
+                    <>
+                      <strong>{tx.feePercent.toFixed(2)}%</strong>
+                      <br />
+                      <small className="text-muted">
+                        ({new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP', minimumFractionDigits: 0 }).format(tx.fee || 0)})
+                      </small>
+                    </>
+                  ) : (
+                    <span className="text-muted">-</span>
+                  )}
+                </td>
                 <td>{getStatusBadge(tx.status)}</td>
                 <td>{tx.vitaResponse?.id || tx.vitaResponse?.transaction?.id || 'N/A'}</td>
                 <td>
-       <Button size="sm" variant="outline-primary" as={Link} to={`/transactions/${tx._id}`}>
-          Ver Detalle
-       </Button>
-    </td>
+                  <Button size="sm" variant="outline-primary" as={Link} to={`/transactions/${tx._id}`}>
+                    Ver Detalle
+                  </Button>
+                </td>
               </tr>
             ))}
           </tbody>

@@ -25,6 +25,9 @@ const AdminRules = () => {
     // Campos Anchor Manual
     provider: 'vita_wallet',
     manualExchangeRate: 0,
+    // 💰 Comisiones
+    feeType: 'percentage',
+    feeAmount: 0,
     bankName: '',
     accountNumber: '',
     accountType: '',
@@ -67,6 +70,9 @@ const AdminRules = () => {
             // Mapeo de datos anidados y nuevos campos
             provider: rule.provider || 'vita_wallet',
             manualExchangeRate: rule.manualExchangeRate || 0,
+            // 💰 Comisiones
+            feeType: rule.feeType || 'percentage',
+            feeAmount: rule.feeAmount || 0,
             bankName: rule.localBankDetails?.bankName || '',
             accountNumber: rule.localBankDetails?.accountNumber || '',
             accountType: rule.localBankDetails?.accountType || '',
@@ -86,6 +92,8 @@ const AdminRules = () => {
             kycLevel2: 4500000,
             provider: 'vita_wallet',
             manualExchangeRate: 0,
+            feeType: 'percentage',
+            feeAmount: 0,
             bankName: '',
             accountNumber: '',
             accountType: '',
@@ -152,6 +160,9 @@ const AdminRules = () => {
         },
         provider: formData.provider,
         manualExchangeRate: Number(formData.manualExchangeRate),
+        // 💰 Comisiones
+        feeType: formData.feeType,
+        feeAmount: Number(formData.feeAmount),
         depositQrImage: formData.depositQrImage,
         localBankDetails: {
           bankName: formData.bankName,
@@ -235,6 +246,51 @@ const AdminRules = () => {
                     </InputGroup>
                     <Form.Text className="text-muted">
                       Define cuánto vale 1 unidad de la moneda de origen en Pesos Chilenos (CLP).
+                    </Form.Text>
+                  </div>
+
+                  {/* 💰 Comisiones */}
+                  <div className="mb-3 p-3 bg-white border rounded">
+                    <Form.Label className="fw-bold text-warning">Comisión</Form.Label>
+                    <Row>
+                      <Col md={5}>
+                        <Form.Group>
+                          <Form.Label>Tipo de Comisión</Form.Label>
+                          <Form.Select name="feeType" value={formData.feeType} onChange={handleChange}>
+                            <option value="none">Sin comisión</option>
+                            <option value="percentage">Porcentaje (%)</option>
+                            <option value="fixed">Fijo (CLP)</option>
+                          </Form.Select>
+                        </Form.Group>
+                      </Col>
+                      <Col md={7}>
+                        <Form.Group>
+                          <Form.Label>
+                            {formData.feeType === 'percentage' ? 'Porcentaje (%)' : formData.feeType === 'fixed' ? 'Monto Fijo (CLP)' : 'Monto'}
+                          </Form.Label>
+                          <InputGroup>
+                            <Form.Control
+                              type="number"
+                              step={formData.feeType === 'percentage' ? '0.01' : '1'}
+                              name="feeAmount"
+                              value={formData.feeAmount}
+                              onChange={handleChange}
+                              placeholder={formData.feeType === 'percentage' ? 'Ej: 3' : 'Ej: 1000'}
+                              disabled={formData.feeType === 'none'}
+                            />
+                            <InputGroup.Text>
+                              {formData.feeType === 'percentage' ? '%' : 'CLP'}
+                            </InputGroup.Text>
+                          </InputGroup>
+                        </Form.Group>
+                      </Col>
+                    </Row>
+                    <Form.Text className="text-muted">
+                      {formData.feeType === 'percentage'
+                        ? `Ejemplo: con 3%, un envío de 100 BOB (14,000 CLP) cobrará 420 CLP de comisión.`
+                        : formData.feeType === 'fixed'
+                          ? `Ejemplo: con 1000 CLP fijo, se cobrará 1,000 CLP sin importar el monto.`
+                          : 'No se cobrará comisión para este corredor.'}
                     </Form.Text>
                   </div>
 
