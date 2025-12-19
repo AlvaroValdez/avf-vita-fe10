@@ -53,18 +53,18 @@ const TransactionDetail = () => {
     // Si el estado ya no es pending inicial o si hay IPNs, asumimos que pagó
     // (Para mayor precisión, deberíamos buscar un IPN específico de 'payment_order.succeeded', pero por ahora simplificamos)
     if (transaction.status !== 'pending' || transaction.ipnEvents?.length > 0) {
-         events.push({
-            title: 'Pago Recibido',
-            date: transaction.ipnEvents?.[0]?.createdAt ? new Date(transaction.ipnEvents[0].createdAt) : new Date(transaction.createdAt), // Aproximación
-            status: 'completed',
-            description: 'Confirmamos la recepción de tus fondos.'
-         });
+      events.push({
+        title: 'Pago Recibido',
+        date: transaction.ipnEvents?.[0]?.createdAt ? new Date(transaction.ipnEvents[0].createdAt) : new Date(transaction.createdAt), // Aproximación
+        status: 'completed',
+        description: 'Confirmamos la recepción de tus fondos.'
+      });
     } else {
-         events.push({
-            title: 'Esperando Pago',
-            status: 'current',
-            description: 'Debes completar el pago para continuar.'
-         });
+      events.push({
+        title: 'Esperando Pago',
+        status: 'current',
+        description: 'Debes completar el pago para continuar.'
+      });
     }
 
     // Evento 3: Envío al Beneficiario (Payout)
@@ -72,34 +72,34 @@ const TransactionDetail = () => {
     const finalEvent = transaction.ipnEvents?.find(e => e.type === 'payment.succeeded' || e.type === 'payment.failed');
 
     if (finalEvent) {
-        events.push({
-            title: finalEvent.type === 'payment.succeeded' ? 'Envío Completado' : 'Envío Fallido',
-            date: new Date(finalEvent.createdAt),
-            status: finalEvent.type === 'payment.succeeded' ? 'completed' : 'error',
-            description: finalEvent.type === 'payment.succeeded' 
-                ? 'El dinero ha sido enviado a la cuenta destino.' 
-                : 'Hubo un problema con el envío.'
-        });
+      events.push({
+        title: finalEvent.type === 'payment.succeeded' ? 'Envío Completado' : 'Envío Fallido',
+        date: new Date(finalEvent.createdAt),
+        status: finalEvent.type === 'payment.succeeded' ? 'completed' : 'error',
+        description: finalEvent.type === 'payment.succeeded'
+          ? 'El dinero ha sido enviado a la cuenta destino.'
+          : 'Hubo un problema con el envío.'
+      });
     } else if (transaction.status === 'succeeded') {
-        // Fallback por si el estado se actualizó pero no tenemos el IPN a mano
-         events.push({ title: 'Envío Completado', status: 'completed', date: new Date(transaction.updatedAt) });
+      // Fallback por si el estado se actualizó pero no tenemos el IPN a mano
+      events.push({ title: 'Envío Completado', status: 'completed', date: new Date(transaction.updatedAt) });
     } else {
-        events.push({ title: 'En Proceso de Envío', status: 'waiting', description: 'Estamos procesando el envío internacional.' });
+      events.push({ title: 'En Proceso de Envío', status: 'waiting', description: 'Estamos procesando el envío internacional.' });
     }
 
     return (
-        <div className="timeline mt-4">
-            {events.map((ev, index) => (
-                <div key={index} className={`timeline-item ${ev.status}`}>
-                    <div className="timeline-marker"></div>
-                    <div className="timeline-content">
-                        <h6 className="fw-bold mb-1">{ev.title}</h6>
-                        {ev.date && <small className="text-muted d-block mb-1">{ev.date.toLocaleString()}</small>}
-                        <p className="text-muted small mb-0">{ev.description}</p>
-                    </div>
-                </div>
-            ))}
-        </div>
+      <div className="timeline mt-4">
+        {events.map((ev, index) => (
+          <div key={index} className={`timeline-item ${ev.status}`}>
+            <div className="timeline-marker"></div>
+            <div className="timeline-content">
+              <h6 className="fw-bold mb-1">{ev.title}</h6>
+              {ev.date && <small className="text-muted d-block mb-1">{ev.date.toLocaleString()}</small>}
+              <p className="text-muted small mb-0">{ev.description}</p>
+            </div>
+          </div>
+        ))}
+      </div>
     );
   };
 
@@ -109,60 +109,86 @@ const TransactionDetail = () => {
   return (
     <Container className="my-5">
       <div className="d-flex justify-content-between align-items-center mb-4">
-          <h3>Detalle de Transacción</h3>
-          <Button as={Link} to="/transactions" variant="outline-secondary" size="sm">Volver al Historial</Button>
+        <h3>Detalle de Transacción</h3>
+        <Button as={Link} to="/transactions" variant="outline-secondary" size="sm">Volver al Historial</Button>
       </div>
-      
+
       <Row>
         {/* Columna Izquierda: Resumen y Datos */}
         <Col lg={7} className="mb-4">
-            <Card className="shadow-sm border-0 mb-4">
-                <Card.Header className="bg-white py-3 d-flex justify-content-between align-items-center">
-                    <span className="text-muted">Orden #{transaction.order}</span>
-                    {getStatusBadge(transaction.status)}
-                </Card.Header>
-                <Card.Body>
-                    <div className="p-3 bg-light rounded mb-4">
-                        <div className="d-flex justify-content-between align-items-center mb-2">
-                            <span className="text-muted">Monto Enviado:</span>
-                            <span className="fw-bold fs-5">{new Intl.NumberFormat('es-CL', { style: 'currency', currency: transaction.currency }).format(transaction.amount)}</span>
-                        </div>
-                        {/* Aquí podríamos mostrar el monto recibido si lo guardáramos en el modelo Transaction, 
-                            actualmente solo guardamos el enviado. Sería una mejora futura guardar 'amountOut' */}
-                    </div>
+          <Card className="shadow-sm border-0 mb-4">
+            <Card.Header className="bg-white py-3 d-flex justify-content-between align-items-center">
+              <span className="text-muted">Orden #{transaction.order}</span>
+              {getStatusBadge(transaction.status)}
+            </Card.Header>
+            <Card.Body>
+              <div className="p-3 bg-light rounded mb-4">
+                <div className="d-flex justify-content-between align-items-center mb-2">
+                  <span className="text-muted">Monto Enviado:</span>
+                  <span className="fw-bold fs-5">{new Intl.NumberFormat('es-CL', { style: 'currency', currency: transaction.currency }).format(transaction.amount)}</span>
+                </div>
 
-                    <h6 className="text-primary mb-3">Datos del Beneficiario</h6>
-                    <ListGroup variant="flush" className="small">
-                        <ListGroup.Item className="px-0 d-flex justify-content-between">
-                            <span>Nombre:</span>
-                            <strong>{transaction.beneficiary_first_name} {transaction.beneficiary_last_name} {transaction.company_name}</strong>
-                        </ListGroup.Item>
-                        <ListGroup.Item className="px-0 d-flex justify-content-between">
-                            <span>Email:</span>
-                            <strong>{transaction.beneficiary_email}</strong>
-                        </ListGroup.Item>
-                         <ListGroup.Item className="px-0 d-flex justify-content-between">
-                            <span>País Destino:</span>
-                            <strong>{transaction.country}</strong>
-                        </ListGroup.Item>
-                    </ListGroup>
-                </Card.Body>
-            </Card>
+                {/* 💰 Detalles de Comisión */}
+                {transaction.feePercent && transaction.feePercent > 0 && (
+                  <>
+                    <hr className="my-2" />
+                    <div className="d-flex justify-content-between align-items-center mb-1">
+                      <span className="text-muted">Comisión ({transaction.feePercent}%):</span>
+                      <span className="text-warning fw-bold">
+                        {new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP', minimumFractionDigits: 0 }).format(transaction.fee || 0)}
+                      </span>
+                    </div>
+                    {transaction.feeOriginAmount > 0 && transaction.currency !== 'CLP' && (
+                      <div className="text-end">
+                        <small className="text-muted">
+                          ({new Intl.NumberFormat('es-CL', { minimumFractionDigits: 2 }).format(transaction.feeOriginAmount)} {transaction.currency})
+                        </small>
+                      </div>
+                    )}
+                    <div className="d-flex justify-content-between align-items-center mt-2 pt-2 border-top">
+                      <span className="text-muted fw-bold">Total Debitado:</span>
+                      <span className="fw-bold">
+                        {new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP', minimumFractionDigits: 0 }).format(
+                          (transaction.currency === 'CLP' ? transaction.amount : 0) + (transaction.fee || 0)
+                        )} CLP
+                      </span>
+                    </div>
+                  </>
+                )}
+              </div>
+
+              <h6 className="text-primary mb-3">Datos del Beneficiario</h6>
+              <ListGroup variant="flush" className="small">
+                <ListGroup.Item className="px-0 d-flex justify-content-between">
+                  <span>Nombre:</span>
+                  <strong>{transaction.beneficiary_first_name} {transaction.beneficiary_last_name} {transaction.company_name}</strong>
+                </ListGroup.Item>
+                <ListGroup.Item className="px-0 d-flex justify-content-between">
+                  <span>Email:</span>
+                  <strong>{transaction.beneficiary_email}</strong>
+                </ListGroup.Item>
+                <ListGroup.Item className="px-0 d-flex justify-content-between">
+                  <span>País Destino:</span>
+                  <strong>{transaction.country}</strong>
+                </ListGroup.Item>
+              </ListGroup>
+            </Card.Body>
+          </Card>
         </Col>
 
         {/* Columna Derecha: Timeline de Estados */}
         <Col lg={5}>
-             <Card className="shadow-sm border-0">
-                <Card.Header className="bg-white py-3">
-                    <h5 className="mb-0 text-primary">Seguimiento</h5>
-                </Card.Header>
-                <Card.Body>
-                    {renderTimeline()}
-                </Card.Body>
-             </Card>
+          <Card className="shadow-sm border-0">
+            <Card.Header className="bg-white py-3">
+              <h5 className="mb-0 text-primary">Seguimiento</h5>
+            </Card.Header>
+            <Card.Body>
+              {renderTimeline()}
+            </Card.Body>
+          </Card>
         </Col>
       </Row>
-      
+
       {/* Estilos CSS en línea para el Timeline (puedes moverlo a un archivo CSS) */}
       <style>{`
         .timeline { position: relative; border-left: 2px solid #e9ecef; margin-left: 10px; padding-left: 20px; }
