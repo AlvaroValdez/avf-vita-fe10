@@ -64,7 +64,7 @@ const StepConfirm = ({ formData, fields, onBack, isFromFavorite }) => {
         setLoadingQuote(true);
 
         const response = await getQuote({
-          amount: quoteData?.amountIn,
+          amount: quoteData?.amount,
           destCountry,
           origin: safeOriginCurrency,
           originCountry
@@ -181,7 +181,7 @@ const StepConfirm = ({ formData, fields, onBack, isFromFavorite }) => {
       const w = await createWithdrawal({
         country: destCountry,
         currency: safeOriginCurrency,
-        amount: currentQuote.amountIn,
+        amount: currentQuote.amount,
         // 💰 Campos de comisión del quote
         fee: currentQuote.fee || 0,
         feePercent: currentQuote.feePercent || 0,
@@ -203,7 +203,7 @@ const StepConfirm = ({ formData, fields, onBack, isFromFavorite }) => {
 
       // 2) Crear Payment Order (Pay-in) — el checkoutUrl correcto debe venir de esta respuesta
       const orderPayload = {
-        amount: currentQuote.amountIn,
+        amount: currentQuote.amount,
         country: originCountry || 'CL',
         orderId: w?.data?.order,
       };
@@ -328,7 +328,7 @@ const StepConfirm = ({ formData, fields, onBack, isFromFavorite }) => {
                 <div className="d-flex justify-content-between align-items-center mb-2">
                   <span>Total a enviar:</span>
                   <span className="fw-bold fs-5">
-                    {`$ ${formatNumberForDisplay(currentQuote.amountIn)} ${currentQuote.origin}`}
+                    {`$ ${formatNumberForDisplay(currentQuote.amount)} ${currentQuote.origin}`}
                   </span>
                 </div>
 
@@ -443,7 +443,7 @@ const StepConfirm = ({ formData, fields, onBack, isFromFavorite }) => {
             style={{ backgroundColor: 'var(--avf-secondary)', borderColor: 'var(--avf-secondary)' }}
             className="px-4 fw-bold"
           >
-            {loading ? <Spinner as="span" size="sm" /> : `Pagar ${formatNumberForDisplay(currentQuote.amountIn)} ${currentQuote.origin}`}
+            {loading ? <Spinner as="span" size="sm" /> : `Pagar ${formatNumberForDisplay(currentQuote.amount)} ${currentQuote.origin}`}
           </Button>
         </div>
       </Card.Body>
