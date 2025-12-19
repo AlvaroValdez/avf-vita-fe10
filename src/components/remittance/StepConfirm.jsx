@@ -178,12 +178,15 @@ const StepConfirm = ({ formData, fields, onBack, isFromFavorite }) => {
       }
 
       // 1) Crear Withdrawal (solo para registrar la intención / payload en tu BE)
-      await createWithdrawal({
-        country, currency, amount,
-        fee: currentQuote.fee,           // ← Agregado
-        feePercent: currentQuote.feePercent,  // ← Agregado
-        feeOriginAmount: currentQuote.feeOriginAmount, // ← Agregado
-        ...beneficiary
+      const w = await createWithdrawal({
+        country: destCountry,
+        currency: safeOriginCurrency,
+        amount: currentQuote.amountIn,
+        // 💰 Campos de comisión del quote
+        fee: currentQuote.fee || 0,
+        feePercent: currentQuote.feePercent || 0,
+        feeOriginAmount: currentQuote.feeOriginAmount || 0,
+        ...beneficiary,
       });
 
       if (!w?.ok) {
