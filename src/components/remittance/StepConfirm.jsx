@@ -70,8 +70,17 @@ const StepConfirm = ({ formData, fields, onBack, isFromFavorite }) => {
           originCountry
         });
 
+        console.log('🔍 [StepConfirm] FX Response completa:', response);
+        console.log('🔍 [StepConfirm] response.data:', response?.data);
+        console.log('🔍 [StepConfirm] Fees en response:', {
+          fee: response?.data?.fee,
+          feePercent: response?.data?.feePercent,
+          feeOriginAmount: response?.data?.feeOriginAmount
+        });
+
         if (response?.ok) {
           setCurrentQuote(response.data);
+          console.log('✅ [StepConfirm] currentQuote actualizado con:', response.data);
         } else {
           console.warn('No se pudo refrescar cotización, usando anterior.');
         }
@@ -81,6 +90,7 @@ const StepConfirm = ({ formData, fields, onBack, isFromFavorite }) => {
         setLoadingQuote(false);
       }
     };
+
 
     refreshQuote();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -178,6 +188,13 @@ const StepConfirm = ({ formData, fields, onBack, isFromFavorite }) => {
       }
 
       // 1) Crear Withdrawal (solo para registrar la intención / payload en tu BE)
+      console.log('🔍 [StepConfirm] currentQuote antes de enviar:', currentQuote);
+      console.log('🔍 [StepConfirm] Fees que se enviarán:', {
+        fee: currentQuote.fee,
+        feePercent: currentQuote.feePercent,
+        feeOriginAmount: currentQuote.feeOriginAmount
+      });
+
       const w = await createWithdrawal({
         country: destCountry,
         currency: safeOriginCurrency,
