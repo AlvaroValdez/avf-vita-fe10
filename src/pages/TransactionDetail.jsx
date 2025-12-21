@@ -216,7 +216,7 @@ const TransactionDetail = () => {
                 {/* 💸 Monto en moneda destino */}
                 {transaction.vitaResponse?.estimated_amount && (
                   <ListGroup.Item className="px-0 d-flex justify-content-between bg-success bg-opacity-10">
-                    <span className="text-success fw-bold">✉️ Monto Recibido:</span>
+                    <span className="text-success fw-bold">Monto Recibido:</span>
                     <strong className="text-success">
                       {new Intl.NumberFormat('es-CL', {
                         minimumFractionDigits: 0,
