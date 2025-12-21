@@ -43,10 +43,19 @@ const StepConfirm = ({ formData, fields, onBack, isFromFavorite }) => {
     return quoteData?.origin || COUNTRY_TO_CURRENCY[originCountry] || 'CLP';
   }, [quoteData?.origin, originCountry]);
 
-  const [currentQuote, setCurrentQuote] = useState(quoteData);
-  const [loadingQuote, setLoadingQuote] = useState(true);
+  const [currentQuote, setCurrentQuote] = useState(null);
+  const [quoteExpiry, setQuoteExpiry] = useState(null);
+  const [loadingQuote, setLoadingQuote] = useState(false);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState(false);
+  const [selectedDirectMethod, setSelectedDirectMethod] = useState(null);
+  const [directFormData, setDirectFormData] = useState({});
+  const [paymentMethods, setPaymentMethods] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
+
+  // DirectPay states
+  const [showDirectPay, setShowDirectPay] = useState(false);
+  const [paymentOrderId, setPaymentOrderId] = useState(null);
 
   const [remainingTime, setRemainingTime] = useState(null);
   const [isExpired, setIsExpired] = useState(false);
@@ -54,10 +63,6 @@ const StepConfirm = ({ formData, fields, onBack, isFromFavorite }) => {
   const [saveAsFavorite, setSaveAsFavorite] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState('direct'); // ✅ DirectPay como predeterminado
 
-  const [directMethods, setDirectMethods] = useState([]);
-  const [selectedDirectMethod, setSelectedDirectMethod] = useState(null);
-  const [directFormData, setDirectFormData] = useState({});
-  const [directPaymentAvailable, setDirectPaymentAvailable] = useState(true);
 
   // 1) Refrescar cotización al cargar
   useEffect(() => {
@@ -230,25 +235,20 @@ const StepConfirm = ({ formData, fields, onBack, isFromFavorite }) => {
       const po = await createPaymentOrder(orderPayload);
       if (!po?.ok) throw new Error(po?.error || 'No se pudo generar la orden de pago.');
 
-      {
-        showDirectPay && paymentOrderId && (
-          <DirectPayForm
-            paymentOrderId={paymentOrderId}
-            method={selectedDirectMethod}
-            onSuccess={(data) => {
-              if (data.redirect_url) {
-                window.location.href = data.redirect_url;
-              }
-            }}
-            onError={(err) => {
-              setError(err);
-              setShowDirectPay(false);
-            }}
-          />
-        )
+      // Si es DirectPay, mostrar el form en lugar de redirect
+      if (paymentMethod === 'direct') {
+        const vitaOrderId = po?.data?.id || po?.raw?.id || po?.raw?.data?.id;
+        if (!vitaOrderId) {
+          throw new Error('No se recibió payment order ID para DirectPay');
+        }
+
+        setPaymentOrderId(vitaOrderId);
+        setShowDirectPay(true);
+        setLoading(false);
+        return; // No redirect, mostrar form
       }
 
-      // 4) Redirect normal: sacar checkoutUrl de po
+      // Redirect normal: sacar checkoutUrl de po
       const checkoutUrl = extractCheckoutUrlFromPaymentOrderResponse(po);
       if (!checkoutUrl) {
         console.error('Respuesta Vita sin URL:', po);
@@ -291,6 +291,40 @@ const StepConfirm = ({ formData, fields, onBack, isFromFavorite }) => {
         formData={{ ...formData, quoteData: currentQuote, originCountry }}
         onFinish={() => (window.location.href = '/transactions')}
         onBack={onBack}
+      />
+    );
+  }
+
+  // Loading state
+  if (loadingQuote || loading) {
+    return (
+      <Card className="mt-4 mb-4">
+        <Card.Body className="text-center p-5">
+          <Spinner animation="border" />
+          <p className="mt-3 mb-0">Procesando...</p>
+        </Card.Body>
+      </Card>
+    );
+  }
+
+  // DirectPay form
+  if (showDirectPay && paymentOrderId) {
+    return (
+      <DirectPayForm
+        paymentOrderId={paymentOrderId}
+        method={selectedDirectMethod}
+        onSuccess={(data) => {
+          if (data.redirect_url) {
+            window.location.href = data.redirect_url;
+          } else {
+            window.location.href = '/transactions';
+          }
+        }}
+        onError={(err) => {
+          setError(err);
+          setShowDirectPay(false);
+          setLoading(false);
+        }}
       />
     );
   }
