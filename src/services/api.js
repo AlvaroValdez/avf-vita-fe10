@@ -426,4 +426,14 @@ export const adminUpdateUser = async (userId, userData) => {
   }
 };
 
+// --- ADMIN TREASURY ---
+export const approveDeposit = async (transactionId) => {
+  try {
+    const response = await apiClient.put(`/admin/treasury/${transactionId}/approve-deposit`);
+    return response.data;
+  } catch (error) {
+    throw normalizeAxiosError(error, 'Error aprobando depósito.');
+  }
+};
+
 export default apiClient;
