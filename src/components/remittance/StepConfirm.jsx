@@ -235,10 +235,22 @@ const StepConfirm = ({ formData, fields, onBack, isFromFavorite }) => {
           throw new Error('No se recibió el id de la orden de pago (Vita) para ejecutar pago directo.');
         }
 
-        const exec = await createDirectPaymentOrder({
-          vitaOrderId,
-          payment_data: directFormData
-        });
+        // 🔍 DEBUG: Verificar data antes de enviar
+        console.log('🔍 [StepConfirm] DirectPay Data:');
+        console.log('- vitaOrderId:', vitaOrderId);
+        console.log('- selectedMethod:', selectedDirectMethod);
+        console.log('- directFormData:', directFormData);
+
+        // Construir payload con method_id si existe
+        const directPayData = {
+          uid: vitaOrderId,
+          ...(selectedDirectMethod?.id && { method_id: selectedDirectMethod.id }),
+          ...directFormData
+        };
+
+        console.log('🔍 [StepConfirm] Final directPayData:', directPayData);
+
+        const exec = await createDirectPaymentOrder(directPayData);
 
         if (!exec?.ok) {
           throw new Error(exec?.error || 'No se pudo ejecutar el pago directo.');
