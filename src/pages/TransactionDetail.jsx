@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Container, Card, Row, Col, ListGroup, Badge, Spinner, Alert, Button } from 'react-bootstrap';
 import { useParams, Link } from 'react-router-dom';
-import { getTransactionById } from '../services/api';
+import { getTransactionById, approveDeposit } from '../services/api';
 import { formatNumberForDisplay } from '../utils/formatting';
 
 const TransactionDetail = () => {
@@ -9,6 +9,9 @@ const TransactionDetail = () => {
   const [transaction, setTransaction] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [approving, setApproving] = useState(false);
+  const [approveError, setApproveError] = useState('');
+  const [approveSuccess, setApproveSuccess] = useState(false);
 
   useEffect(() => {
     const fetchDetail = async () => {
@@ -25,6 +28,28 @@ const TransactionDetail = () => {
     };
     fetchDetail();
   }, [id]);
+
+  const handleApprove = async () => {
+    if (!window.confirm('¿Aprobar este depósito y enviar a Vita?')) return;
+
+    setApproving(true);
+    setApproveError('');
+    try {
+      const res = await approveDeposit(transaction._id);
+      if (res.ok) {
+        setApproveSuccess(true);
+        // Refresh transaction
+        const updated = await getTransactionById(id);
+        if (updated.ok) setTransaction(updated.transaction);
+      } else {
+        setApproveError(res.error || 'Error al aprobar');
+      }
+    } catch (err) {
+      setApproveError(err.message || 'Error al aprobar');
+    } finally {
+      setApproving(false);
+    }
+  };
 
   const getStatusBadge = (status) => {
     switch (status) {
@@ -108,9 +133,25 @@ const TransactionDetail = () => {
 
   return (
     <Container className="my-5">
+      {approveSuccess && <Alert variant="success" className="mb-3">Depósito aprobado exitosamente</Alert>}
+      {approveError && <Alert variant="danger" className="mb-3">{approveError}</Alert>}
+
       <div className="d-flex justify-content-between align-items-center mb-4">
         <h3>Detalle de Transacción</h3>
-        <Button as={Link} to="/transactions" variant="outline-secondary" size="sm">Volver al Historial</Button>
+        <div>
+          {transaction?.status === 'pending_verification' && (
+            <Button
+              variant="success"
+              size="sm"
+              className="me-2"
+              disabled={approving}
+              onClick={handleApprove}
+            >
+              {approving ? <Spinner size="sm" animation="border" /> : 'Aprobar Depósito'}
+            </Button>
+          )}
+          <Button as={Link} to="/transactions" variant="outline-secondary" size="sm">Volver al Historial</Button>
+        </div>
       </div>
 
       <Row>
