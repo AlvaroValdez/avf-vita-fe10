@@ -47,10 +47,16 @@ const ManualDeposit = ({ formData, onBack, onFinish }) => {
             const payload = {
                 country: destCountry,
                 currency: quoteData.origin,
-                amount: quoteData.amountIn,
+                amount: quoteData.amount,  // ✅ Cambiado de amountIn
+                // 💰 Campos de comisión
+                fee: quoteData.fee || 0,
+                feePercent: quoteData.feePercent || 0,
+                feeOriginAmount: quoteData.feeOriginAmount || 0,
                 ...beneficiary,
                 proofOfPayment: uploadRes.url
             };
+
+            console.log('🔍 [ManualDeposit] Payload:', payload);
 
             const res = await createWithdrawal(payload);
 
