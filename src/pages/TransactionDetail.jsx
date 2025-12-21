@@ -198,7 +198,7 @@ const TransactionDetail = () => {
                 )}
               </div>
 
-              <h6 className="text-primary mb-3">Datos del Beneficiario</h6>
+              <h6 className="text-primary mb-3">👤 Datos del Beneficiario</h6>
               <ListGroup variant="flush" className="small">
                 <ListGroup.Item className="px-0 d-flex justify-content-between">
                   <span>Nombre:</span>
@@ -212,6 +212,39 @@ const TransactionDetail = () => {
                   <span>País Destino:</span>
                   <strong>{transaction.country}</strong>
                 </ListGroup.Item>
+
+                {/* 💸 Monto en moneda destino */}
+                {transaction.vitaResponse?.estimated_amount && (
+                  <ListGroup.Item className="px-0 d-flex justify-content-between bg-success bg-opacity-10">
+                    <span className="text-success fw-bold">✉️ Monto Recibido:</span>
+                    <strong className="text-success">
+                      {new Intl.NumberFormat('es-CL', {
+                        minimumFractionDigits: 0,
+                        maximumFractionDigits: 0
+                      }).format(transaction.vitaResponse.estimated_amount)}
+                      {' '}
+                      {transaction.country === 'CO' ? 'COP' :
+                        transaction.country === 'PE' ? 'PEN' :
+                          transaction.country === 'AR' ? 'ARS' :
+                            transaction.country === 'MX' ? 'MXN' : 'USD'}
+                    </strong>
+                  </ListGroup.Item>
+                )}
+
+                {/* 🏦 Banco destino */}
+                {transaction.withdrawalPayload?.beneficiary_bank_name && (
+                  <ListGroup.Item className="px-0 d-flex justify-content-between">
+                    <span>🏦 Banco:</span>
+                    <strong>{transaction.withdrawalPayload.beneficiary_bank_name}</strong>
+                  </ListGroup.Item>
+                )}
+
+                {transaction.withdrawalPayload?.beneficiary_bank_account && (
+                  <ListGroup.Item className="px-0 d-flex justify-content-between">
+                    <span>Cuenta:</span>
+                    <strong className="font-monospace">{transaction.withdrawalPayload.beneficiary_bank_account}</strong>
+                  </ListGroup.Item>
+                )}
               </ListGroup>
             </Card.Body>
           </Card>
