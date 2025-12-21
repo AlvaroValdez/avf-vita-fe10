@@ -169,7 +169,7 @@ const TransactionDetail = () => {
                   <span className="fw-bold fs-5">{new Intl.NumberFormat('es-CL', { style: 'currency', currency: transaction.currency }).format(transaction.amount)}</span>
                 </div>
 
-                {/* 💰 Detalles de Comisión */}
+                {/*Detalles de Comisión */}
                 {transaction.feePercent && transaction.feePercent > 0 && (
                   <>
                     <hr className="my-2" />
@@ -198,7 +198,7 @@ const TransactionDetail = () => {
                 )}
               </div>
 
-              <h6 className="text-primary mb-3">👤 Datos del Beneficiario</h6>
+              <h6 className="text-primary mb-3">Datos del Beneficiario</h6>
               <ListGroup variant="flush" className="small">
                 <ListGroup.Item className="px-0 d-flex justify-content-between">
                   <span>Nombre:</span>
@@ -213,7 +213,7 @@ const TransactionDetail = () => {
                   <strong>{transaction.country}</strong>
                 </ListGroup.Item>
 
-                {/* 💸 Monto en moneda destino */}
+                {/* Monto en moneda destino */}
                 {transaction.vitaResponse?.estimated_amount && (
                   <ListGroup.Item className="px-0 d-flex justify-content-between bg-success bg-opacity-10">
                     <span className="text-success fw-bold">Monto Recibido:</span>
@@ -231,10 +231,10 @@ const TransactionDetail = () => {
                   </ListGroup.Item>
                 )}
 
-                {/* 🏦 Banco destino */}
+                {/*Banco destino */}
                 {transaction.withdrawalPayload?.beneficiary_bank_name && (
                   <ListGroup.Item className="px-0 d-flex justify-content-between">
-                    <span>🏦 Banco:</span>
+                    <span>Banco:</span>
                     <strong>{transaction.withdrawalPayload.beneficiary_bank_name}</strong>
                   </ListGroup.Item>
                 )}
