@@ -41,6 +41,20 @@ const StepConfirm = ({ formData, fields, onBack, isFromFavorite }) => {
   console.log('formData:', formData);
   console.log('quoteData:', formData?.quoteData);
 
+  if (!formData) {
+    return (
+      <Card className="mt-4">
+        <Card.Body className="text-center p-5">
+          <Alert variant="danger">
+            <h5>Error: Datos no disponibles</h5>
+            <p>No se recibieron los datos de la cotización.</p>
+            <Button variant="primary" onClick={onBack}>Volver</Button>
+          </Alert>
+        </Card.Body>
+      </Card>
+    );
+  }
+
   const { quoteData, beneficiary, destCountry, originCountry } = formData;
 
   const safeOriginCurrency = useMemo(() => {
