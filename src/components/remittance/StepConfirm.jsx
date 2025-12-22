@@ -12,7 +12,7 @@ import {
 
 import { formatNumberForDisplay, formatRate } from '../../utils/formatting';
 import ManualDeposit from './ManualDeposit';
-import DirectPayForm from './DirectPayForm';
+//import DirectPayForm from './DirectPayForm';
 
 const QUOTE_VALIDITY_DURATION = 1.5 * 60 * 1000; // 90 segundos
 
@@ -325,29 +325,29 @@ const StepConfirm = ({ formData, fields, onBack, isFromFavorite }) => {
       </Card>
     );
   }
-
-  // DirectPay form
-  if (showDirectPay && paymentOrderId) {
-    return (
-      <DirectPayForm
-        paymentOrderId={paymentOrderId}
-        method={selectedDirectMethod}
-        onSuccess={(data) => {
-          if (data.redirect_url) {
-            window.location.href = data.redirect_url;
-          } else {
-            window.location.href = '/transactions';
-          }
-        }}
-        onError={(err) => {
-          setError(err);
-          setShowDirectPay(false);
-          setLoading(false);
-        }}
-      />
-    );
-  }
-
+  /*
+    // DirectPay form
+    if (showDirectPay && paymentOrderId) {
+      return (
+        <DirectPayForm
+          paymentOrderId={paymentOrderId}
+          method={selectedDirectMethod}
+          onSuccess={(data) => {
+            if (data.redirect_url) {
+              window.location.href = data.redirect_url;
+            } else {
+              window.location.href = '/transactions';
+            }
+          }}
+          onError={(err) => {
+            setError(err);
+            setShowDirectPay(false);
+            setLoading(false);
+          }}
+        />
+      );
+    }
+  */
   // Caso expirado
   if (isExpired) {
     return (
