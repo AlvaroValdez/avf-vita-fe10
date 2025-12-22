@@ -37,6 +37,10 @@ function extractCheckoutUrlFromPaymentOrderResponse(resp) {
 
 
 const StepConfirm = ({ formData, fields, onBack, isFromFavorite }) => {
+  console.log('=== StepConfirm RENDER ===');
+  console.log('formData:', formData);
+  console.log('quoteData:', formData?.quoteData);
+
   const { quoteData, beneficiary, destCountry, originCountry } = formData;
 
   const safeOriginCurrency = useMemo(() => {
