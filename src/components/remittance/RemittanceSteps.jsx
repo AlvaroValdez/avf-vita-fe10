@@ -87,6 +87,8 @@ const RemittanceSteps = () => {
           onComplete={handleBeneficiaryComplete}
         />;
       case 3:
+        console.log('🔍 [RemittanceSteps] formData:', formData);
+        console.log('🔍 [RemittanceSteps] keys:', Object.keys(formData));
         return <StepConfirm
           formData={formData}
           fields={beneficiaryFields}
