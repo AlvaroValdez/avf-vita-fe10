@@ -43,7 +43,8 @@ const StepConfirm = ({ formData, fields, onBack, isFromFavorite }) => {
     return quoteData?.origin || COUNTRY_TO_CURRENCY[originCountry] || 'CLP';
   }, [quoteData?.origin, originCountry]);
 
-  const [currentQuote, setCurrentQuote] = useState(null);
+  const [currentQuote, setCurrentQuote] = useState(quoteData);
+
   const [quoteExpiry, setQuoteExpiry] = useState(null);
   const [loadingQuote, setLoadingQuote] = useState(false);
   const [error, setError] = useState('');
