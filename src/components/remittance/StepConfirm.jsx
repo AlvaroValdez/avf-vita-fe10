@@ -1,18 +1,16 @@
 // frontend/src/components/remittance/StepConfirm.jsx
 import React, { useState, useEffect, useMemo } from 'react';
 import { Card, Button, Row, Col, Spinner, Alert, Form } from 'react-bootstrap';
-
 import {
   createWithdrawal,
   createPaymentOrder,
+  createDirectPaymentOrder,
   getQuote,
   saveBeneficiary,
   getPaymentMethods
 } from '../../services/api';
-
 import { formatNumberForDisplay, formatRate } from '../../utils/formatting';
 import ManualDeposit from './ManualDeposit';
-//import DirectPayForm from './DirectPayForm';
 
 const QUOTE_VALIDITY_DURATION = 1.5 * 60 * 1000; // 90 segundos
 
@@ -37,25 +35,16 @@ function extractCheckoutUrlFromPaymentOrderResponse(resp) {
 
 
 const StepConfirm = ({ formData, fields, onBack, isFromFavorite }) => {
-  const { quoteData, beneficiary, destCountry, originCountry } = formData || {};
+  const { quoteData, beneficiary, destCountry, originCountry } = formData;
+
   const safeOriginCurrency = useMemo(() => {
     return quoteData?.origin || COUNTRY_TO_CURRENCY[originCountry] || 'CLP';
   }, [quoteData?.origin, originCountry]);
 
   const [currentQuote, setCurrentQuote] = useState(quoteData);
-
-  const [quoteExpiry, setQuoteExpiry] = useState(null);
-  const [loadingQuote, setLoadingQuote] = useState(false);
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState(false);
-  const [selectedDirectMethod, setSelectedDirectMethod] = useState(null);
-  const [directFormData, setDirectFormData] = useState({});
-  const [paymentMethods, setPaymentMethods] = useState([]);
+  const [loadingQuote, setLoadingQuote] = useState(true);
   const [loading, setLoading] = useState(false);
-
-  // DirectPay states
-  const [showDirectPay, setShowDirectPay] = useState(false);
-  const [paymentOrderId, setPaymentOrderId] = useState(null);
+  const [error, setError] = useState(null);
 
   const [remainingTime, setRemainingTime] = useState(null);
   const [isExpired, setIsExpired] = useState(false);
@@ -63,15 +52,14 @@ const StepConfirm = ({ formData, fields, onBack, isFromFavorite }) => {
   const [saveAsFavorite, setSaveAsFavorite] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState('direct'); // ✅ DirectPay como predeterminado
 
+  const [directMethods, setDirectMethods] = useState([]);
+  const [selectedDirectMethod, setSelectedDirectMethod] = useState(null);
+  const [directFormData, setDirectFormData] = useState({});
+  const [directPaymentAvailable, setDirectPaymentAvailable] = useState(true);
 
   // 1) Refrescar cotización al cargar
   useEffect(() => {
     const refreshQuote = async () => {
-      if (!quoteData?.amount) {
-        console.warn('[StepConfirm] No quoteData, skipping refresh');
-        setLoadingQuote(false);
-        return;
-      }
       try {
         setLoadingQuote(true);
 
@@ -240,20 +228,55 @@ const StepConfirm = ({ formData, fields, onBack, isFromFavorite }) => {
       const po = await createPaymentOrder(orderPayload);
       if (!po?.ok) throw new Error(po?.error || 'No se pudo generar la orden de pago.');
 
-      // Si es DirectPay, mostrar el form en lugar de redirect
+      // 3) Si el usuario eligió "direct", ejecutar direct_payment (marca blanca)
       if (paymentMethod === 'direct') {
-        const vitaOrderId = po?.data?.id || po?.raw?.id || po?.raw?.data?.id;
+        const vitaOrderId = (po?.raw?.id || po?.raw?.data?.id || po?.data?.id);
         if (!vitaOrderId) {
-          throw new Error('No se recibió payment order ID para DirectPay');
+          throw new Error('No se recibió el id de la orden de pago (Vita) para ejecutar pago directo.');
         }
 
-        setPaymentOrderId(vitaOrderId);
-        setShowDirectPay(true);
-        setLoading(false);
-        return; // No redirect, mostrar form
+        // 🔍 DEBUG: Verificar data antes de enviar
+        console.log('🔍 [StepConfirm] DirectPay Data:');
+        console.log('- vitaOrderId:', vitaOrderId);
+        console.log('- selectedMethod:', selectedDirectMethod);
+        console.log('- directFormData:', directFormData);
+
+        // Construir payload con method_id si existe
+        const directPayData = {
+          uid: vitaOrderId,
+          ...(selectedDirectMethod?.id && { method_id: selectedDirectMethod.id }),
+          ...directFormData
+        };
+
+        console.log('🔍 [StepConfirm] Final directPayData:', directPayData);
+
+        const exec = await createDirectPaymentOrder(directPayData);
+
+        if (!exec?.ok) {
+          throw new Error(exec?.error || 'No se pudo ejecutar el pago directo.');
+        }
+
+        // En direct, Vita puede devolver un redirect igual
+        const execUrl =
+          exec?.data?.checkoutUrl ||
+          exec?.data?.redirect_url ||
+          exec?.data?.url ||
+          exec?.data?.raw?.checkout_url ||
+          exec?.data?.raw?.redirect_url ||
+          exec?.data?.raw?.url;
+
+        if (execUrl) {
+          await maybeSaveFavorite();
+          window.location.href = execUrl;
+          return;
+        }
+        // Si no hay URL, igual lo dejamos como success “en plataforma”
+        await maybeSaveFavorite();
+        window.location.href = `/payment-success?orderId=${encodeURIComponent(orderPayload.orderId)}`;
+        return;
       }
 
-      // Redirect normal: sacar checkoutUrl de po
+      // 4) Redirect normal: sacar checkoutUrl de po
       const checkoutUrl = extractCheckoutUrlFromPaymentOrderResponse(po);
       if (!checkoutUrl) {
         console.error('Respuesta Vita sin URL:', po);
@@ -300,40 +323,6 @@ const StepConfirm = ({ formData, fields, onBack, isFromFavorite }) => {
     );
   }
 
-  // Loading state
-  if (loadingQuote || loading) {
-    return (
-      <Card className="mt-4 mb-4">
-        <Card.Body className="text-center p-5">
-          <Spinner animation="border" />
-          <p className="mt-3 mb-0">Procesando...</p>
-        </Card.Body>
-      </Card>
-    );
-  }
-  /*
-    // DirectPay form
-    if (showDirectPay && paymentOrderId) {
-      return (
-        <DirectPayForm
-          paymentOrderId={paymentOrderId}
-          method={selectedDirectMethod}
-          onSuccess={(data) => {
-            if (data.redirect_url) {
-              window.location.href = data.redirect_url;
-            } else {
-              window.location.href = '/transactions';
-            }
-          }}
-          onError={(err) => {
-            setError(err);
-            setShowDirectPay(false);
-            setLoading(false);
-          }}
-        />
-      );
-    }
-  */
   // Caso expirado
   if (isExpired) {
     return (
