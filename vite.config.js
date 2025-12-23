@@ -4,6 +4,7 @@ import react from '@vitejs/plugin-react'
 
 export default defineConfig({
   plugins: [react()],
+  publicDir: 'public', // Ensure public files like _redirects are copied to dist
   build: {
     rollupOptions: {
       external: [
