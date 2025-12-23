@@ -33,10 +33,10 @@ const DirectPayForm = ({ paymentOrderId, method, onSuccess, onError }) => {
         try {
             const token = localStorage.getItem('token');
 
-            console.log('[DirectPayForm] Submitting to:', `/api/direct-pay/${paymentOrderId}`);
+            console.log('[DirectPayForm] Submitting to:', `/api/payment-orders/${paymentOrderId}/execute`);
             console.log('[DirectPayForm] Payment data:', formData);
 
-            const response = await fetch(`/api/direct-pay/${paymentOrderId}`, {
+            const response = await fetch(`/api/payment-orders/${paymentOrderId}/execute`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
