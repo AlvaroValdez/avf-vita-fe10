@@ -1,6 +1,7 @@
 // frontend/src/components/remittance/StepConfirm.jsx
 import React, { useState, useEffect, useMemo } from 'react';
-import { Card, Button, Row, Col, Spinner, Alert, Form } from 'react-bootstrap';
+import { useNavigate } from 'react-router-dom';
+import { Card, Button, Row, Col, Spinner, Alert, Form, Modal } from 'react-bootstrap';
 import {
   createWithdrawal,
   createPaymentOrder,
@@ -11,6 +12,7 @@ import {
 } from '../../services/api';
 import { formatNumberForDisplay, formatRate } from '../../utils/formatting';
 import ManualDeposit from './ManualDeposit';
+import DirectPayForm from './DirectPayForm';
 
 const QUOTE_VALIDITY_DURATION = 1.5 * 60 * 1000; // 90 segundos
 
@@ -35,6 +37,7 @@ function extractCheckoutUrlFromPaymentOrderResponse(resp) {
 
 
 const StepConfirm = ({ formData, fields, onBack, isFromFavorite }) => {
+  const navigate = useNavigate();
   const { quoteData, beneficiary, destCountry, originCountry } = formData;
 
   const safeOriginCurrency = useMemo(() => {
@@ -56,6 +59,10 @@ const StepConfirm = ({ formData, fields, onBack, isFromFavorite }) => {
   const [selectedDirectMethod, setSelectedDirectMethod] = useState(null);
   const [directFormData, setDirectFormData] = useState({});
   const [directPaymentAvailable, setDirectPaymentAvailable] = useState(true);
+
+  // ✅ DirectPay Modal State
+  const [showDirectPayModal, setShowDirectPayModal] = useState(false);
+  const [directPayOrderId, setDirectPayOrderId] = useState(null);
 
   // 1) Refrescar cotización al cargar
   useEffect(() => {
@@ -228,7 +235,7 @@ const StepConfirm = ({ formData, fields, onBack, isFromFavorite }) => {
       const po = await createPaymentOrder(orderPayload);
       if (!po?.ok) throw new Error(po?.error || 'No se pudo generar la orden de pago.');
 
-      // DirectPay: redirect to isolated page
+      // ✅ DirectPay: Show modal instead of redirect
       if (paymentMethod === 'direct') {
         const vitaOrderId = po?.data?.id || po?.raw?.id || po?.raw?.data?.id;
         if (!vitaOrderId) {
@@ -236,7 +243,9 @@ const StepConfirm = ({ formData, fields, onBack, isFromFavorite }) => {
         }
 
         await maybeSaveFavorite();
-        window.location.href = `/direct-payment/${vitaOrderId}`;
+        setDirectPayOrderId(vitaOrderId);
+        setShowDirectPayModal(true);
+        setLoading(false);
         return;
       }
 
@@ -440,6 +449,33 @@ const StepConfirm = ({ formData, fields, onBack, isFromFavorite }) => {
           </Button>
         </div>
       </Card.Body>
+
+      {/* ✅ DirectPay Modal */}
+      <Modal
+        show={showDirectPayModal}
+        onHide={() => setShowDirectPayModal(false)}
+        size="lg"
+        centered
+      >
+        <Modal.Header closeButton>
+          <Modal.Title>Completar Pago Directo</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          {directPayOrderId && (
+            <DirectPayForm
+              paymentOrderId={directPayOrderId}
+              onSuccess={() => {
+                setShowDirectPayModal(false);
+                navigate('/transactions');
+              }}
+              onError={(err) => {
+                setError(err);
+                setShowDirectPayModal(false);
+              }}
+            />
+          )}
+        </Modal.Body>
+      </Modal>
     </Card>
   );
 };
