@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Form, Button, Alert, Spinner, Card } from 'react-bootstrap';
+import { createDirectPaymentOrder } from '../../services/api';
 
 /**
  * DirectPayForm Component
@@ -33,32 +34,16 @@ const DirectPayForm = ({ paymentOrderId, method, onSuccess, onError }) => {
         try {
             const token = localStorage.getItem('token');
 
-            console.log('[DirectPayForm] Submitting to:', `/api/payment-orders/${paymentOrderId}/execute`);
+            console.log('[DirectPayForm] Submitting via API helper for order:', paymentOrderId);
             console.log('[DirectPayForm] Payment data:', formData);
 
-            const response = await fetch(`/api/payment-orders/${paymentOrderId}/execute`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                },
-                body: JSON.stringify({
-                    payment_data: formData
-                })
+            const response = await createDirectPaymentOrder({
+                vitaOrderId: paymentOrderId,
+                payment_data: formData
             });
 
-            console.log('[DirectPayForm] Response status:', response.status);
-
-            // Handle non-JSON responses
-            let data;
-            const contentType = response.headers.get('content-type');
-            if (contentType && contentType.includes('application/json')) {
-                data = await response.json();
-            } else {
-                const text = await response.text();
-                console.error('[DirectPayForm] Non-JSON response:', text);
-                throw new Error(`Error del servidor (${response.status}): ${text.substring(0, 100)}`);
-            }
+            console.log('[DirectPayForm] API response:', response);
+            const data = response;
 
             console.log('[DirectPayForm] Response data:', data);
 

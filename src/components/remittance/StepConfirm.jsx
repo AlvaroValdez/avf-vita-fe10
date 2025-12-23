@@ -387,12 +387,12 @@ const StepConfirm = ({ formData, fields, onBack, isFromFavorite }) => {
               checked={paymentMethod === 'redirect'}
               onChange={(e) => setPaymentMethod(e.target.value)}
             />
-            {/* ⚠️ DirectPay temporarily hidden - Vita Stage endpoint not working */}
-            {false && (
+            {/* ✅ DirectPay option enabled */}
+            {directPaymentAvailable && (
               <Form.Check
                 type="radio"
                 id="pay-direct"
-                label="Pago Directo (Marca Blanca) - Temporalmente deshabilitado"
+                label="Pago Directo (Marca Blanca)"
                 name="paymentMethod"
                 value="direct"
                 checked={paymentMethod === 'direct'}
