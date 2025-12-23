@@ -67,6 +67,11 @@ const StepConfirm = ({ formData, fields, onBack, isFromFavorite }) => {
   // 1) Refrescar cotización al cargar
   useEffect(() => {
     const refreshQuote = async () => {
+      if (!quoteData?.amount) {
+        console.warn('[StepConfirm] No quoteData, skipping refresh');
+        setLoadingQuote(false);
+        return;
+      }
       try {
         setLoadingQuote(true);
 
