@@ -18,7 +18,6 @@ import VerifyEmail from './pages/VerifyEmail.jsx';
 import Profile from './pages/Profile.jsx';
 import Favorites from './pages/Favorites.jsx';
 import DirectPaymentPage from './pages/DirectPaymentPage.jsx';
-import DirectPayWizard from './components/directpay/DirectPayWizard.jsx'; // ✅ DirectPay aislado
 
 // Componentes UI
 import AppNavbar from './components/ui/Navbar.jsx';
@@ -48,7 +47,6 @@ function AppContent() {
           <Route path="/register" element={<Register />} />
           <Route path="/payment-success" element={<PaymentSuccess />} />
           <Route path="/verify-email" element={<VerifyEmail />} />
-          <Route path="/direct-pay-wizard" element={<DirectPayWizard />} /> {/* ✅ DirectPay aislado */}
 
           {/* Rutas Protegidas (Usuario) */}
           <Route element={<ProtectedRouteWrapper />}>

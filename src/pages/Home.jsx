@@ -1,5 +1,5 @@
 import React from 'react';
-import { Container, Row, Col, Image, Card, Button } from 'react-bootstrap';
+import { Container, Row, Col, Image } from 'react-bootstrap';
 import RemittanceSteps from '../components/remittance/RemittanceSteps';
 import homeBackgroundImage from '../assets/home-background.jpg';
 
@@ -65,34 +65,6 @@ const Home = () => {
           </Col>
         </Row>
       </Container>
-
-      {/* 
-        ✅ DirectPay Wizard (Beta) - Descomenta para activar
-        Flujo completamente aislado que NO afecta código existente
-      */}
-      {/* 
-      <Container className="my-5">
-        <Row className="justify-content-center">
-          <Col md={6} className="text-center">
-            <Card className="shadow-sm">
-              <Card.Body>
-                <h4 className="mb-3">Prueba DirectPay (Beta)</h4>
-                <p className="text-muted">
-                  Flujo de pago directo sin redirección a Vita
-                </p>
-                <Button
-                  variant="outline-primary"
-                  size="lg"
-                  onClick={() => window.location.href = '/direct-pay-wizard'}
-                >
-                  Probar DirectPay →
-                </Button>
-              </Card.Body>
-            </Card>
-          </Col>
-        </Row>
-      </Container>
-      */}
     </>
   );
 };
