@@ -1,6 +1,5 @@
 // frontend/src/components/remittance/StepConfirm.jsx
 import React, { useState, useEffect, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { Card, Button, Row, Col, Spinner, Alert, Form } from 'react-bootstrap';
 import {
   createWithdrawal,
@@ -12,7 +11,6 @@ import {
 } from '../../services/api';
 import { formatNumberForDisplay, formatRate } from '../../utils/formatting';
 import ManualDeposit from './ManualDeposit';
-import DirectPayForm from './DirectPayForm';
 
 const QUOTE_VALIDITY_DURATION = 1.5 * 60 * 1000; // 90 segundos
 
@@ -37,7 +35,6 @@ function extractCheckoutUrlFromPaymentOrderResponse(resp) {
 
 
 const StepConfirm = ({ formData, fields, onBack, isFromFavorite }) => {
-  const navigate = useNavigate();
   const { quoteData, beneficiary, destCountry, originCountry } = formData;
 
   const safeOriginCurrency = useMemo(() => {
@@ -59,10 +56,6 @@ const StepConfirm = ({ formData, fields, onBack, isFromFavorite }) => {
   const [selectedDirectMethod, setSelectedDirectMethod] = useState(null);
   const [directFormData, setDirectFormData] = useState({});
   const [directPaymentAvailable, setDirectPaymentAvailable] = useState(true);
-
-  // ✅ NEW: State for inline DirectPay form
-  const [showDirectPayForm, setShowDirectPayForm] = useState(false);
-  const [vitaPaymentOrderId, setVitaPaymentOrderId] = useState(null);
 
   // 1) Refrescar cotización al cargar
   useEffect(() => {
@@ -235,7 +228,7 @@ const StepConfirm = ({ formData, fields, onBack, isFromFavorite }) => {
       const po = await createPaymentOrder(orderPayload);
       if (!po?.ok) throw new Error(po?.error || 'No se pudo generar la orden de pago.');
 
-      // ✅ DirectPay: Show form inline instead of redirecting
+      // DirectPay: redirect to isolated page
       if (paymentMethod === 'direct') {
         const vitaOrderId = po?.data?.id || po?.raw?.id || po?.raw?.data?.id;
         if (!vitaOrderId) {
@@ -243,9 +236,7 @@ const StepConfirm = ({ formData, fields, onBack, isFromFavorite }) => {
         }
 
         await maybeSaveFavorite();
-        setVitaPaymentOrderId(vitaOrderId);
-        setShowDirectPayForm(true);
-        setLoading(false);
+        window.location.href = `/direct-payment/${vitaOrderId}`;
         return;
       }
 
@@ -433,40 +424,21 @@ const StepConfirm = ({ formData, fields, onBack, isFromFavorite }) => {
           </Form.Group>
         )}
 
-        {/* ✅ DirectPay Form Inline */}
-        {showDirectPayForm && vitaPaymentOrderId && (
-          <div className="mt-4">
-            <hr />
-            <DirectPayForm
-              paymentOrderId={vitaPaymentOrderId}
-              onSuccess={() => navigate('/transactions')}
-              onError={(err) => {
-                setError(err);
-                setShowDirectPayForm(false);
-                setVitaPaymentOrderId(null);
-              }}
-            />
-          </div>
-        )}
+        <div className="d-flex justify-content-between mt-4">
+          <Button variant="outline-secondary" onClick={onBack} disabled={loading}>
+            Atrás
+          </Button>
 
-        {/* ✅ Hide payment button when DirectPay form is shown */}
-        {!showDirectPayForm && (
-          <div className="d-flex justify-content-between mt-4">
-            <Button variant="outline-secondary" onClick={onBack} disabled={loading}>
-              Atrás
-            </Button>
-
-            <Button
-              variant="primary"
-              onClick={handleConfirm}
-              disabled={loading || loadingQuote || isExpired}
-              style={{ backgroundColor: 'var(--avf-secondary)', borderColor: 'var(--avf-secondary)' }}
-              className="px-4 fw-bold"
-            >
-              {loading ? <Spinner as="span" size="sm" /> : `Pagar ${formatNumberForDisplay(currentQuote.amount)} ${currentQuote.origin}`}
-            </Button>
-          </div>
-        )}
+          <Button
+            variant="primary"
+            onClick={handleConfirm}
+            disabled={loading || loadingQuote || isExpired}
+            style={{ backgroundColor: 'var(--avf-secondary)', borderColor: 'var(--avf-secondary)' }}
+            className="px-4 fw-bold"
+          >
+            {loading ? <Spinner as="span" size="sm" /> : `Pagar ${formatNumberForDisplay(currentQuote.amount)} ${currentQuote.origin}`}
+          </Button>
+        </div>
       </Card.Body>
     </Card>
   );
