@@ -46,6 +46,7 @@ function AppContent() {
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/payment-success" element={<PaymentSuccess />} />
+          <Route path="/payment-success/:orderId" element={<PaymentSuccess />} />
           <Route path="/verify-email" element={<VerifyEmail />} />
 
           {/* Rutas Protegidas (Usuario) */}
