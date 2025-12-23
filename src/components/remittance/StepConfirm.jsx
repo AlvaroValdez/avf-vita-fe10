@@ -53,7 +53,9 @@ const StepConfirm = ({ formData, fields, onBack, isFromFavorite }) => {
   const [isExpired, setIsExpired] = useState(false);
 
   const [saveAsFavorite, setSaveAsFavorite] = useState(false);
-  const [paymentMethod, setPaymentMethod] = useState('direct'); // ✅ DirectPay como predeterminado
+  // ⚠️ DirectPay temporarily disabled: Vita Stage returns HTML instead of JSON
+  // Re-enable when testing in Production or when Vita fixes Stage endpoint
+  const [paymentMethod, setPaymentMethod] = useState('redirect'); // Changed from 'direct'
 
   const [directMethods, setDirectMethods] = useState([]);
   const [selectedDirectMethod, setSelectedDirectMethod] = useState(null);
@@ -385,16 +387,19 @@ const StepConfirm = ({ formData, fields, onBack, isFromFavorite }) => {
               checked={paymentMethod === 'redirect'}
               onChange={(e) => setPaymentMethod(e.target.value)}
             />
-            <Form.Check
-              type="radio"
-              id="pay-direct"
-              label="Pago Directo (Marca Blanca)"
-              name="paymentMethod"
-              value="direct"
-              checked={paymentMethod === 'direct'}
-              onChange={(e) => setPaymentMethod(e.target.value)}
-              disabled={!directPaymentAvailable}
-            />
+            {/* ⚠️ DirectPay temporarily hidden - Vita Stage endpoint not working */}
+            {false && (
+              <Form.Check
+                type="radio"
+                id="pay-direct"
+                label="Pago Directo (Marca Blanca) - Temporalmente deshabilitado"
+                name="paymentMethod"
+                value="direct"
+                checked={paymentMethod === 'direct'}
+                onChange={(e) => setPaymentMethod(e.target.value)}
+                disabled={!directPaymentAvailable}
+              />
+            )}
           </div>
 
           {paymentMethod === 'direct' && selectedDirectMethod && (
