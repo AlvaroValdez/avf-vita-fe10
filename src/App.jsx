@@ -17,6 +17,7 @@ import AdminTreasury from './pages/AdminTreasury.jsx'; // ✅ NUEVO
 import VerifyEmail from './pages/VerifyEmail.jsx';
 import Profile from './pages/Profile.jsx';
 import Favorites from './pages/Favorites.jsx';
+import DirectPaymentPage from './pages/DirectPaymentPage.jsx';
 
 // Componentes UI
 import AppNavbar from './components/ui/Navbar.jsx';
@@ -53,6 +54,7 @@ function AppContent() {
             <Route path="/transactions/:id" element={<TransactionDetail />} />
             <Route path="/profile" element={<Profile />} />
             <Route path="/favorites" element={<Favorites />} />
+            <Route path="/direct-payment/:orderId" element={<DirectPaymentPage />} />
           </Route>
 
           {/* Rutas Protegidas (Admin) */}

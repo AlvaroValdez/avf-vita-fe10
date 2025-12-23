@@ -228,51 +228,15 @@ const StepConfirm = ({ formData, fields, onBack, isFromFavorite }) => {
       const po = await createPaymentOrder(orderPayload);
       if (!po?.ok) throw new Error(po?.error || 'No se pudo generar la orden de pago.');
 
-      // 3) Si el usuario eligió "direct", ejecutar direct_payment (marca blanca)
+      // DirectPay: redirect to isolated page
       if (paymentMethod === 'direct') {
-        const vitaOrderId = (po?.raw?.id || po?.raw?.data?.id || po?.data?.id);
+        const vitaOrderId = po?.data?.id || po?.raw?.id || po?.raw?.data?.id;
         if (!vitaOrderId) {
-          throw new Error('No se recibió el id de la orden de pago (Vita) para ejecutar pago directo.');
+          throw new Error('No se recibió el ID de la orden de pago para DirectPay.');
         }
 
-        // 🔍 DEBUG: Verificar data antes de enviar
-        console.log('🔍 [StepConfirm] DirectPay Data:');
-        console.log('- vitaOrderId:', vitaOrderId);
-        console.log('- selectedMethod:', selectedDirectMethod);
-        console.log('- directFormData:', directFormData);
-
-        // Construir payload con method_id si existe
-        const directPayData = {
-          uid: vitaOrderId,
-          ...(selectedDirectMethod?.id && { method_id: selectedDirectMethod.id }),
-          ...directFormData
-        };
-
-        console.log('🔍 [StepConfirm] Final directPayData:', directPayData);
-
-        const exec = await createDirectPaymentOrder(directPayData);
-
-        if (!exec?.ok) {
-          throw new Error(exec?.error || 'No se pudo ejecutar el pago directo.');
-        }
-
-        // En direct, Vita puede devolver un redirect igual
-        const execUrl =
-          exec?.data?.checkoutUrl ||
-          exec?.data?.redirect_url ||
-          exec?.data?.url ||
-          exec?.data?.raw?.checkout_url ||
-          exec?.data?.raw?.redirect_url ||
-          exec?.data?.raw?.url;
-
-        if (execUrl) {
-          await maybeSaveFavorite();
-          window.location.href = execUrl;
-          return;
-        }
-        // Si no hay URL, igual lo dejamos como success “en plataforma”
         await maybeSaveFavorite();
-        window.location.href = `/payment-success?orderId=${encodeURIComponent(orderPayload.orderId)}`;
+        window.location.href = `/direct-payment/${vitaOrderId}`;
         return;
       }
 
