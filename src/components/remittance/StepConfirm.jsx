@@ -337,7 +337,7 @@ const StepConfirm = ({ formData, fields, onBack, isFromFavorite }) => {
                 </div>
 
                 <small className="text-muted d-block text-center mb-2">
-                  Tasa de cambio: 1 {currentQuote.destCurrency} = ${formatRate(1 / currentQuote.rateWithMarkup)} {currentQuote.origin}
+                  Tasa de cambio: 1 {currentQuote.origin} = ${formatRate(currentQuote.rateWithMarkup)} {currentQuote.destCurrency}
                 </small>
 
                 <div className="d-flex justify-content-between align-items-center fw-bold">

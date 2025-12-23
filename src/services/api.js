@@ -208,6 +208,20 @@ export const getQuote = async (params) => {
   }
 };
 
+// 🆕 Obtener comisiones de pay-in (Webpay)
+export const getPayinFees = async (country, amount) => {
+  try {
+    const response = await apiClient.get('/fx/payin-fees', {
+      params: { country, amount }
+    });
+    return response.data; // { ok: true, data: { ... } }
+  } catch (error) {
+    console.warn('⚠️ [API] No se pudieron obtener comisiones payin:', error?.response?.data || error.message);
+    // No throw, solo retornar null para no romper el flujo
+    return { ok: false, data: null };
+  }
+};
+
 export const getTransactionRules = async (country = 'CL') => {
   try {
     const response = await apiClient.get('/transaction-rules', { params: { country } });
