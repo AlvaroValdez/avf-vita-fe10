@@ -469,6 +469,8 @@ const StepConfirm = ({ formData, fields, onBack, isFromFavorite }) => {
           {directPayOrderId && (
             <DirectPayForm
               paymentOrderId={directPayOrderId}
+              method={selectedDirectMethod}
+              initialData={directFormData}
               onSuccess={() => {
                 setShowDirectPayModal(false);
                 navigate('/transactions');

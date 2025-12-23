@@ -303,9 +303,10 @@ export const createPaymentOrder = async (orderData) => {
 
 // ✅ Direct Payment alineado a tu BE actual:
 // POST /api/payment-orders/:vitaOrderId/execute
-export const createDirectPaymentOrder = async ({ vitaOrderId, payment_data }) => {
+export const createDirectPaymentOrder = async ({ vitaOrderId, payment_data, method_id }) => {
   try {
-    const response = await apiClient.post(`/payment-orders/${vitaOrderId}/execute`, { payment_data });
+    const payload = method_id ? { method_id, payment_data } : { payment_data };
+    const response = await apiClient.post(`/payment-orders/${vitaOrderId}/execute`, payload);
     return response.data;
   } catch (error) {
     throw normalizeAxiosError(error, 'Error ejecutando pago directo.');

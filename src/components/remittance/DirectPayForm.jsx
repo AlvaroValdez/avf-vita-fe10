@@ -13,12 +13,17 @@ import { createDirectPaymentOrder } from '../../services/api';
  * @param {function} onSuccess - Callback when payment succeeds
  * @param {function} onError - Callback when payment fails
  */
-const DirectPayForm = ({ paymentOrderId, method, onSuccess, onError }) => {
+
+//const DirectPayForm = ({ paymentOrderId, method, onSuccess, onError }) => {
+const DirectPayForm = ({ paymentOrderId, method, initialData = {}, onSuccess, onError }) => {
+
     const [formData, setFormData] = useState({
         first_name: '',
         last_name: '',
-        email: ''
+        email: '',
+        ...initialData,
     });
+
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
 
@@ -37,9 +42,12 @@ const DirectPayForm = ({ paymentOrderId, method, onSuccess, onError }) => {
             console.log('[DirectPayForm] Submitting via API helper for order:', paymentOrderId);
             console.log('[DirectPayForm] Payment data:', formData);
 
+            const methodId = method?.id || method?.method_id || method?.uid || null;
+
             const response = await createDirectPaymentOrder({
                 vitaOrderId: paymentOrderId,
-                payment_data: formData
+                payment_data: formData,
+                method_id: methodId || undefined,
             });
 
             console.log('[DirectPayForm] API response:', response);
