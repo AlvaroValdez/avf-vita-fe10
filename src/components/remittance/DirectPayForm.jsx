@@ -33,6 +33,9 @@ const DirectPayForm = ({ paymentOrderId, method, onSuccess, onError }) => {
         try {
             const token = localStorage.getItem('token');
 
+            console.log('[DirectPayForm] Submitting to:', `/api/direct-pay/${paymentOrderId}`);
+            console.log('[DirectPayForm] Payment data:', formData);
+
             const response = await fetch(`/api/direct-pay/${paymentOrderId}`, {
                 method: 'POST',
                 headers: {
@@ -44,7 +47,20 @@ const DirectPayForm = ({ paymentOrderId, method, onSuccess, onError }) => {
                 })
             });
 
-            const data = await response.json();
+            console.log('[DirectPayForm] Response status:', response.status);
+
+            // Handle non-JSON responses
+            let data;
+            const contentType = response.headers.get('content-type');
+            if (contentType && contentType.includes('application/json')) {
+                data = await response.json();
+            } else {
+                const text = await response.text();
+                console.error('[DirectPayForm] Non-JSON response:', text);
+                throw new Error(`Error del servidor (${response.status}): ${text.substring(0, 100)}`);
+            }
+
+            console.log('[DirectPayForm] Response data:', data);
 
             if (data.ok) {
                 // Success - check if Vita wants redirect
@@ -64,6 +80,7 @@ const DirectPayForm = ({ paymentOrderId, method, onSuccess, onError }) => {
             }
         } catch (err) {
             const errorMsg = err.message || 'Network error';
+            console.error('[DirectPayForm] Error:', err);
             setError(errorMsg);
             onError(errorMsg);
         } finally {
