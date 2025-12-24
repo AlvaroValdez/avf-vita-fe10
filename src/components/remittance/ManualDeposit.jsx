@@ -64,7 +64,7 @@ const ManualDeposit = ({ formData, onBack, onFinish }) => {
 
             if (res.ok) {
                 setSuccess(true);
-                if (onFinish) onFinish();
+                // ✅ No llamamos onFinish() aquí - el usuario navega al hacer clic en el botón
             } else {
                 throw new Error(res.error || "Error al crear solicitud.");
             }
