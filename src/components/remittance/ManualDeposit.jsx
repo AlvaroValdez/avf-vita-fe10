@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, Button, Form, Alert, Spinner, Image } from 'react-bootstrap';
 import { createWithdrawal, uploadImage, getTransactionRules } from '../../services/api';
 
 const ManualDeposit = ({ formData, onBack, onFinish }) => {
+    const navigate = useNavigate();
     const { quoteData, beneficiary, destCountry, originCountry } = formData;
     const [bankDetails, setBankDetails] = useState(null);
     const [depositQr, setDepositQr] = useState(null);
@@ -81,7 +83,7 @@ const ManualDeposit = ({ formData, onBack, onFinish }) => {
                     <div style={{ fontSize: '3rem' }}>✅</div>
                     <h4 className="text-success my-3">¡Solicitud Enviada!</h4>
                     <p>Hemos recibido tu comprobante. Verificaremos tu depósito y procesaremos el envío a la brevedad.</p>
-                    <Button variant="primary" href="/transactions" style={{ backgroundColor: 'var(--avf-secondary)', borderColor: 'var(--avf-secondary)' }}>Ver Mis Transacciones</Button>
+                    <Button variant="primary" onClick={() => navigate('/transactions')} style={{ backgroundColor: 'var(--avf-secondary)', borderColor: 'var(--avf-secondary)' }}>Ver Mis Transacciones</Button>
                 </Card.Body>
             </Card>
         );

@@ -292,7 +292,7 @@ const StepConfirm = ({ formData, fields, onBack, isFromFavorite }) => {
     return (
       <ManualDeposit
         formData={{ ...formData, quoteData: currentQuote, originCountry }}
-        onFinish={() => (window.location.href = '/transactions')}
+        onFinish={() => navigate('/transactions')}
         onBack={onBack}
       />
     );
