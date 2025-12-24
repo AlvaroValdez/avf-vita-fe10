@@ -402,6 +402,26 @@ const StepConfirm = ({ formData, fields, onBack, isFromFavorite }) => {
             )}
           </div>
 
+          {/* Selector de método de pago directo si hay múltiples opciones */}
+          {paymentMethod === 'direct' && directMethods.length > 1 && (
+            <div className="mb-3">
+              <Form.Label>Método de Pago</Form.Label>
+              <Form.Select
+                value={selectedDirectMethod?.method_id || ''}
+                onChange={(e) => {
+                  const selected = directMethods.find(m => m.method_id === e.target.value);
+                  setSelectedDirectMethod(selected);
+                }}
+              >
+                {directMethods.map((method) => (
+                  <option key={method.method_id} value={method.method_id}>
+                    {method.name || method.description}
+                  </option>
+                ))}
+              </Form.Select>
+            </div>
+          )}
+
           {paymentMethod === 'direct' && selectedDirectMethod && (
             <div className="p-3 border rounded bg-light mb-3">
               <h6 className="text-primary mb-3">

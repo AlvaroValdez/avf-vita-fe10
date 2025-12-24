@@ -40,14 +40,18 @@ const DirectPayForm = ({ paymentOrderId, method, initialData = {}, onSuccess, on
             const token = localStorage.getItem('token');
 
             console.log('[DirectPayForm] Submitting via API helper for order:', paymentOrderId);
+            console.log('[DirectPayForm] Method object:', method);
             console.log('[DirectPayForm] Payment data:', formData);
 
-            const methodId = method?.id || method?.method_id || method?.uid || null;
+            // Extraer method_id según documentación oficial de Vita
+            // La respuesta de /payment_methods devuelve { method_id: "4820", name: "Khipu", ... }
+            const methodId = method?.method_id || method?.id || null;
+            console.log('[DirectPayForm] Extracted method_id:', methodId);
 
             const response = await createDirectPaymentOrder({
                 vitaOrderId: paymentOrderId,
                 payment_data: formData,
-                method_id: methodId || undefined,
+                ...(methodId && { method_id: methodId }), // Solo incluir si existe
             });
 
             console.log('[DirectPayForm] API response:', response);
