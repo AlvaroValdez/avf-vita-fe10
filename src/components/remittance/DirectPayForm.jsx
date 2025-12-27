@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Form, Button, Alert, Spinner } from 'react-bootstrap';
-import { createDirectPaymentOrder } from '../../services/api';
+import { executeDirectPayment } from '../../services/api';
 
 const DirectPayForm = ({ paymentOrderId, method, initialData = {}, onSuccess, onError }) => {
     // Combinamos datos iniciales (del paso anterior) con estado local
@@ -20,10 +20,11 @@ const DirectPayForm = ({ paymentOrderId, method, initialData = {}, onSuccess, on
                 if (formData[key]) cleanData[key] = formData[key];
             });
 
-            const response = await createDirectPaymentOrder({
-                vitaOrderId: paymentOrderId,
-                payment_data: cleanData,
-                method_id: method?.method_id || method?.id
+            // ✅ CORRECTO: Usar payment_method (código del método)
+            const response = await executeDirectPayment({
+                paymentOrderId: paymentOrderId,
+                payment_method: method?.code || method?.payment_method,  // "pse", "nequi", "fintoc", etc.
+                payment_data: cleanData
             });
 
             if (response.ok || response.data?.ok) {

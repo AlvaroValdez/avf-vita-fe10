@@ -301,20 +301,29 @@ export const createPaymentOrder = async (orderData) => {
   }
 };
 
-// ✅ Direct Payment alineado con backend actualizado
-// POST /api/direct-pay/:paymentOrderId
-// Requiere: method_id y payment_data según PROMTBusinessAPI.txt
-export const createDirectPaymentOrder = async ({ vitaOrderId, payment_data, method_id }) => {
+// ✅ Direct Payment alineado con Vita Wallet Business API
+// POST /api/direct-payment/:paymentOrderId
+// 
+// Según PROMTBusinessAPI.txt líneas 1172-1179:
+// Request Body: { "payment_method": "pse", "payment_data": {...} }
+// 
+// ⚠️ IMPORTANTE: payment_method es el CÓDIGO del método ("pse", "nequi", "fintoc")
+//                NO es el ID numérico
+export const executeDirectPayment = async ({ paymentOrderId, payment_method, payment_data }) => {
   try {
-    // Validar que method_id esté presente (requerido por backend)
-    if (!method_id) {
-      throw new Error('method_id es requerido para DirectPay');
+    // Validar payment_method
+    if (!payment_method) {
+      throw new Error('payment_method es requerido (ej: "pse", "nequi", "fintoc")');
     }
 
-    const payload = { method_id, payment_data };
+    const payload = {
+      payment_method,  // ✅ CORRECTO: código del método
+      payment_data
+    };
 
-    // ✅ CORREGIDO: Endpoint actualizado a /direct-pay/:id
-    const response = await apiClient.post(`/direct-pay/${vitaOrderId}`, payload);
+    console.log('[API] DirectPayment payload:', payload);
+
+    const response = await apiClient.post(`/direct-payment/${paymentOrderId}`, payload);
     return response.data;
   } catch (error) {
     throw normalizeAxiosError(error, 'Error ejecutando pago directo.');
