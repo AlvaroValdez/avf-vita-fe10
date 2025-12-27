@@ -134,14 +134,12 @@ const StepConfirm = ({ formData, fields, onBack, isFromFavorite }) => {
       if (!w?.ok) throw new Error(w?.error || 'Error al iniciar transacción');
 
       // B. Crear Payment Order en Vita
-      // ⚠️ AQUÍ ESTABA EL ERROR: Enviamos moneda y país explícitos
       const orderPayload = {
         amount: currentQuote.amount,
-        currency: safeOriginCurrency, // 'CLP' para Chile
-        country: originCountry || 'CL', // 'CL' para Chile
+        currency: safeOriginCurrency,
+        country: originCountry || 'CL',
         orderId: w?.data?.order,
         payer: {
-          // Si el usuario llenó email en el form directo, úsalo, si no el del login
           email: directFormData.email || formData.email || undefined
         }
       };
@@ -149,9 +147,21 @@ const StepConfirm = ({ formData, fields, onBack, isFromFavorite }) => {
       const po = await createPaymentOrder(orderPayload);
       if (!po?.ok) throw new Error(po?.error || 'Error creando orden de pago');
 
-      // C. Manejo Direct Pay
-      if (paymentMethod === 'direct') {
-        const vitaOrderId = po?.data?.id || po?.raw?.id || po?.raw?.data?.id;
+      // C. Determinar si el método soporta DirectPay o requiere Redirect
+      const vitaOrderId = po?.data?.id || po?.raw?.id || po?.raw?.data?.id;
+      const checkoutUrl = extractCheckoutUrlFromPaymentOrderResponse(po);
+
+      // ⚠️ IMPORTANTE: Webpay y otros métodos de redirect SIEMPRE devuelven checkout_url
+      // Solo usar DirectPay si:
+      // 1. El usuario seleccionó "direct"
+      // 2. El método soporta DirectPay (ej: Fintoc, PSE, Nequi)
+      // 3. NO hay checkout_url en la respuesta
+
+      const methodSupportsDirectPay = selectedDirectMethod?.code &&
+        ['fintoc', 'pse', 'nequi', 'daviplata'].includes(selectedDirectMethod.code.toLowerCase());
+
+      if (paymentMethod === 'direct' && methodSupportsDirectPay && !checkoutUrl) {
+        // Flujo DirectPay (Fintoc, PSE, Nequi)
         if (!vitaOrderId) throw new Error('No se recibió ID de orden Vita');
 
         await maybeSaveFavorite();
@@ -161,13 +171,14 @@ const StepConfirm = ({ formData, fields, onBack, isFromFavorite }) => {
         return;
       }
 
-      // D. Manejo Redirect
-      const checkoutUrl = extractCheckoutUrlFromPaymentOrderResponse(po);
+      // D. Flujo Redirect (Webpay, Khipu, etc.)
+      // Si hay checkout_url, SIEMPRE redirigir (incluso si seleccionó "direct")
       if (checkoutUrl) {
         await maybeSaveFavorite();
+        console.log('[StepConfirm] Redirigiendo a:', checkoutUrl);
         window.location.href = checkoutUrl;
       } else {
-        throw new Error('No se recibió URL de pago');
+        throw new Error('No se recibió URL de pago ni método DirectPay válido');
       }
 
     } catch (err) {
