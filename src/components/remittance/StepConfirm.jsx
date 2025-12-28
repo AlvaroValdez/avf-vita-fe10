@@ -153,8 +153,8 @@ const StepConfirm = ({ formData, fields, onBack, isFromFavorite }) => {
         status: 'pending_payment',
         payinStatus: 'pending',
         payoutStatus: 'pending',
-        purpose: formData.purpose || 'FAMSUP', // Código estándar para Remesa Familiar
-        purpose_comentary: formData.purpose_comentary || 'Family Support'
+        purpose: formData.purpose || 'MISC', // Código genérico fallback
+        purpose_comentary: formData.purpose_comentary || 'Family Remittance'
       };
 
       const transactionResponse = await createWithdrawal(transactionPayload);
