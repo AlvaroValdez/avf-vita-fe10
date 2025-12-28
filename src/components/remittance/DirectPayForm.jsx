@@ -18,10 +18,15 @@ const DirectPayForm = ({ paymentOrderId, method, initialData = {}, onSuccess, on
         setError('');
 
         try {
-            // Limpieza de datos vacíos
+            // Limpiar datos antes de enviar
             const cleanData = {};
             Object.keys(formData).forEach(key => {
-                if (formData[key]) cleanData[key] = formData[key];
+                if (key === 'rut') {
+                    // Enviar RUT sin puntos (formato raw: 12345678-9)
+                    cleanData[key] = formData[key].replace(/\./g, '');
+                } else {
+                    cleanData[key] = formData[key];
+                }
             });
 
             // ✅ CORRECTO: Usar ID del método si existe (requerido por Vita), sino el código
