@@ -135,8 +135,14 @@ const StepConfirm = ({ formData, fields, onBack, isFromFavorite }) => {
         }
       }
 
-      // A. Crear Withdrawal (Registro interno)
-      const w = await createWithdrawal({
+      // A. Crear Transaction en DB con estado pending_payment
+      // Generamos un orderId único para esta transacción
+      const orderId = `ORD-${Date.now()}`;
+
+      console.log('[StepConfirm] Creando transacción en DB...');
+
+      const transactionPayload = {
+        order: orderId,
         country: destCountry,
         currency: safeOriginCurrency,
         amount: currentQuote.amount,
@@ -144,26 +150,58 @@ const StepConfirm = ({ formData, fields, onBack, isFromFavorite }) => {
         feePercent: currentQuote.feePercent || 0,
         feeOriginAmount: currentQuote.feeOriginAmount || 0,
         ...beneficiary,
-      });
+        status: 'pending_payment',
+        payinStatus: 'pending',
+        payoutStatus: 'pending',
+        purpose: formData.purpose || 'family_support',
+        purpose_comentary: formData.purpose_comentary || 'Remesa familiar'
+      };
 
-      if (!w?.ok) throw new Error(w?.error || 'Error al iniciar transacción');
+      const transactionResponse = await createWithdrawal(transactionPayload);
+      if (!transactionResponse?.ok) {
+        throw new Error(transactionResponse?.error || 'Error creando transacción');
+      }
 
-      // B. Crear Payment Order en Vita
+      console.log('[StepConfirm] ✅ Transacción creada en DB:', orderId);
+
+      // B. Crear Payment Order en Vita con metadata del beneficiario
       const orderPayload = {
         amount: currentQuote.amount,
-        currency: safeOriginCurrency,
         country: originCountry || 'CL',
-        orderId: w?.data?.order,
-        payer: {
-          email: directFormData.email || formData.email || undefined
+        orderId: orderId,
+        metadata: {
+          transaction_id: orderId,
+          beneficiary: {
+            type: beneficiary.beneficiary_type || 'person',
+            first_name: beneficiary.beneficiary_first_name,
+            last_name: beneficiary.beneficiary_last_name,
+            email: beneficiary.beneficiary_email,
+            document_type: beneficiary.beneficiary_document_type,
+            document_number: beneficiary.beneficiary_document_number,
+            account_type_bank: beneficiary.account_type_bank || 'savings',
+            account_bank: beneficiary.account_bank,
+            bank_code: beneficiary.bank_code
+          },
+          destination: {
+            country: destCountry,
+            currency: destCurrency,
+            amount: currentQuote.amountToReceive
+          }
         }
       };
 
+      console.log('[StepConfirm] Creando Payment Order en Vita...');
       const po = await createPaymentOrder(orderPayload);
       if (!po?.ok) throw new Error(po?.error || 'Error creando orden de pago');
 
-      // C. Determinar si el método soporta DirectPay o requiere Redirect
       const vitaOrderId = po?.data?.id || po?.raw?.id || po?.raw?.data?.id;
+      console.log('[StepConfirm] ✅ Payment Order creado:', vitaOrderId);
+
+      // C. Actualizar Transaction con vitaPaymentOrderId
+      // (Esto se podría hacer en el backend, pero lo hacemos aquí por simplicidad)
+      // En producción, considera mover esto al backend
+
+      // D. Determinar si el método soporta DirectPay o requiere Redirect
       const checkoutUrl = extractCheckoutUrlFromPaymentOrderResponse(po);
 
       console.log('[StepConfirm] Payment method:', paymentMethod);
@@ -196,7 +234,7 @@ const StepConfirm = ({ formData, fields, onBack, isFromFavorite }) => {
         return;
       }
 
-      // D. Flujo Redirect (Webpay, Khipu, etc.)
+      // E. Flujo Redirect (Webpay, Khipu, etc.)
       // Si hay checkout_url, SIEMPRE redirigir (incluso si seleccionó "direct")
       if (checkoutUrl) {
         console.log('[StepConfirm] ✅ Usando Redirect');

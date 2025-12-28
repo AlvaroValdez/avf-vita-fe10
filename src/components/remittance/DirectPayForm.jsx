@@ -24,10 +24,14 @@ const DirectPayForm = ({ paymentOrderId, method, initialData = {}, onSuccess, on
                 if (formData[key]) cleanData[key] = formData[key];
             });
 
-            // ✅ CORRECTO: Usar payment_method (código del método)
+            // ✅ CORRECTO: Usar ID del método si existe (requerido por Vita), sino el código
+            const methodValue = method?.id || method?.payment_method || method?.code;
+
+            console.log('[DirectPayForm] Enviando método:', methodValue, '(Original:', method?.code, ')');
+
             const response = await executeDirectPayment({
                 paymentOrderId: paymentOrderId,
-                payment_method: method?.code || method?.payment_method,  // "pse", "nequi", "fintoc", etc.
+                payment_method: methodValue,
                 payment_data: cleanData
             });
 
