@@ -158,6 +158,11 @@ const StepConfirm = ({ formData, fields, onBack, isFromFavorite }) => {
       const vitaOrderId = po?.data?.id || po?.raw?.id || po?.raw?.data?.id;
       const checkoutUrl = extractCheckoutUrlFromPaymentOrderResponse(po);
 
+      console.log('[StepConfirm] Payment method:', paymentMethod);
+      console.log('[StepConfirm] Selected method:', selectedDirectMethod?.name, selectedDirectMethod?.code);
+      console.log('[StepConfirm] Checkout URL:', checkoutUrl);
+      console.log('[StepConfirm] Vita Order ID:', vitaOrderId);
+
       // ⚠️ IMPORTANTE: Webpay y otros métodos de redirect SIEMPRE devuelven checkout_url
       // Solo usar DirectPay si:
       // 1. El usuario seleccionó "direct"
@@ -167,8 +172,11 @@ const StepConfirm = ({ formData, fields, onBack, isFromFavorite }) => {
       const methodSupportsDirectPay = selectedDirectMethod?.code &&
         ['fintoc', 'pse', 'nequi', 'daviplata'].includes(selectedDirectMethod.code.toLowerCase());
 
+      console.log('[StepConfirm] Method supports DirectPay:', methodSupportsDirectPay);
+
       if (paymentMethod === 'direct' && methodSupportsDirectPay && !checkoutUrl) {
         // Flujo DirectPay (Fintoc, PSE, Nequi)
+        console.log('[StepConfirm] ✅ Usando DirectPay');
         if (!vitaOrderId) throw new Error('No se recibió ID de orden Vita');
 
         await maybeSaveFavorite();
@@ -181,6 +189,7 @@ const StepConfirm = ({ formData, fields, onBack, isFromFavorite }) => {
       // D. Flujo Redirect (Webpay, Khipu, etc.)
       // Si hay checkout_url, SIEMPRE redirigir (incluso si seleccionó "direct")
       if (checkoutUrl) {
+        console.log('[StepConfirm] ✅ Usando Redirect');
         await maybeSaveFavorite();
         console.log('[StepConfirm] Redirigiendo a:', checkoutUrl);
         window.location.href = checkoutUrl;
@@ -220,11 +229,33 @@ const StepConfirm = ({ formData, fields, onBack, isFromFavorite }) => {
           </div>
 
           {/* Campos Dinámicos de Direct Pay */}
-          {paymentMethod === 'direct' && selectedDirectMethod && (
+          {paymentMethod === 'direct' && directMethods.length > 0 && (
             <div className="p-3 bg-light rounded mb-3">
-              <h6>{selectedDirectMethod.name}</h6>
+              {/* Selector de Método DirectPay */}
+              {directMethods.length > 1 && (
+                <Form.Group className="mb-3">
+                  <Form.Label>Selecciona el método de pago</Form.Label>
+                  <Form.Select
+                    value={directMethods.indexOf(selectedDirectMethod)}
+                    onChange={(e) => setSelectedDirectMethod(directMethods[parseInt(e.target.value)])}
+                  >
+                    {directMethods.map((method, index) => (
+                      <option key={index} value={index}>
+                        {method.name} - {method.description || ''}
+                      </option>
+                    ))}
+                  </Form.Select>
+                </Form.Group>
+              )}
+
+              {/* Mostrar método seleccionado */}
+              {directMethods.length === 1 && (
+                <h6 className="mb-3">{selectedDirectMethod?.name}</h6>
+              )}
+
+              {/* Campos requeridos del método */}
               <Row>
-                {(selectedDirectMethod.required_fields || []).map(field => (
+                {(selectedDirectMethod?.required_fields || []).map(field => (
                   <Col md={12} key={field.name}>
                     <Form.Group className="mb-2">
                       <Form.Label>{field.label}</Form.Label>
