@@ -153,8 +153,8 @@ const StepConfirm = ({ formData, fields, onBack, isFromFavorite }) => {
         status: 'pending_payment',
         payinStatus: 'pending',
         payoutStatus: 'pending',
-        purpose: formData.purpose || 'MISC', // Código genérico fallback
-        purpose_comentary: formData.purpose_comentary || 'Family Remittance'
+        purpose: formData.purpose || 'EPFAMT', // Código correcto VITA para "Family maintenance"
+        purpose_comentary: formData.purpose_comentary || 'Family maintenance'
       };
 
       const transactionResponse = await createWithdrawal(transactionPayload);
