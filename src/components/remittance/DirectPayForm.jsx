@@ -8,6 +8,10 @@ const DirectPayForm = ({ paymentOrderId, method, initialData = {}, onSuccess, on
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
 
+    const handleChange = (e) => {
+        setFormData({ ...formData, [e.target.name]: e.target.value });
+    };
+
     const handleSubmit = async (e) => {
         if (e) e.preventDefault(); // Puede llamarse automáticamente
         setLoading(true);
@@ -74,23 +78,47 @@ const DirectPayForm = ({ paymentOrderId, method, initialData = {}, onSuccess, on
 
             <Form onSubmit={handleSubmit}>
                 {fields.map(field => (
-                    <Form.Group className="mb-3" key={field.name}>
-                        <Form.Label>{field.label}</Form.Label>
-                        <Form.Control
-                            type={field.type || 'text'}
-                            value={formData[field.name] || ''}
-                            onChange={(e) => setFormData({ ...formData, [field.name]: e.target.value })}
-                            required={field.required}
-                            disabled={loading}
-                        />
+                    <Form.Group key={field.name} className="mb-3">
+                        <Form.Label>{field.label} {field.required && <span className="text-danger">*</span>}</Form.Label>
+
+                        {/* Campo SELECT (para bank_id de Fintoc) */}
+                        {field.type === 'select' && field.options && (
+                            <Form.Select
+                                name={field.name}
+                                value={formData[field.name] || ''}
+                                onChange={handleChange}
+                                required={field.required}
+                            >
+                                <option value="">Selecciona {field.label}</option>
+                                {field.options.map(option => (
+                                    <option key={option.value} value={option.value}>
+                                        {option.label}
+                                    </option>
+                                ))}
+                            </Form.Select>
+                        )}
+
+                        {/* Campos de texto, email, etc */}
+                        {field.type !== 'select' && (
+                            <Form.Control
+                                type={field.type || 'text'}
+                                name={field.name}
+                                value={formData[field.name] || ''}
+                                onChange={handleChange}
+                                placeholder={field.placeholder}
+                                required={field.required}
+                            />
+                        )}
+
+                        {field.validation?.message && (
+                            <Form.Text className="text-muted">{field.validation.message}</Form.Text>
+                        )}
                     </Form.Group>
                 ))}
 
-                <div className="d-grid gap-2 mt-4">
-                    <Button type="submit" variant="success" size="lg" disabled={loading}>
-                        {loading ? <Spinner size="sm" animation="border" /> : 'Finalizar Pago'}
-                    </Button>
-                </div>
+                <Button variant="success" type="submit" disabled={loading} className="w-100">
+                    {loading ? <Spinner animation="border" size="sm" /> : 'Finalizar Pago'}
+                </Button>
             </Form>
         </div>
     );
