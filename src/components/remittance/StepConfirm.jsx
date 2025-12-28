@@ -21,7 +21,14 @@ const COUNTRY_TO_CURRENCY = {
 
 function extractCheckoutUrlFromPaymentOrderResponse(resp) {
   const payload = resp?.data ?? resp;
-  return payload?.checkoutUrl || null;
+
+  // Vita devuelve la URL en diferentes lugares según el flujo:
+  // - Redirect: attributes.url (ej: "https://stage.vitawallet.io/s/Yxeu42")
+  // - Legacy: checkoutUrl
+  return payload?.attributes?.url ||
+    payload?.checkoutUrl ||
+    payload?.data?.attributes?.url ||
+    null;
 }
 
 const StepConfirm = ({ formData, fields, onBack, isFromFavorite }) => {

@@ -60,6 +60,7 @@ const DirectPayForm = ({ paymentOrderId, method, initialData = {}, onSuccess, on
     // Si el método no tiene campos requeridos (o ya se llenaron), 
     // podríamos mostrar solo un botón de "Confirmar Pago"
     const fields = method?.required_fields || [];
+    const hasFields = fields.length > 0;
 
     return (
         <div>
@@ -67,7 +68,8 @@ const DirectPayForm = ({ paymentOrderId, method, initialData = {}, onSuccess, on
 
             <p className="mb-3 text-muted">
                 Estás pagando con <strong>{method?.name}</strong>.
-                {fields.length === 0 && " Haz clic en confirmar para proceder."}
+                {!hasFields && " Haz clic en confirmar para proceder."}
+                {hasFields && " Completa los siguientes datos:"}
             </p>
 
             <Form onSubmit={handleSubmit}>
