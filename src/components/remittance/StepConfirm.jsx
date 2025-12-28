@@ -39,6 +39,10 @@ const StepConfirm = ({ formData, fields, onBack, isFromFavorite }) => {
     return quoteData?.origin || COUNTRY_TO_CURRENCY[originCountry] || 'CLP';
   }, [quoteData?.origin, originCountry]);
 
+  const safeDestCurrency = useMemo(() => {
+    return quoteData?.dest || quoteData?.to || COUNTRY_TO_CURRENCY[destCountry] || 'COP';
+  }, [quoteData, destCountry]);
+
   const [currentQuote, setCurrentQuote] = useState(quoteData);
   const [loadingQuote, setLoadingQuote] = useState(true);
   const [loading, setLoading] = useState(false);
@@ -184,7 +188,7 @@ const StepConfirm = ({ formData, fields, onBack, isFromFavorite }) => {
           },
           destination: {
             country: destCountry,
-            currency: destCurrency,
+            currency: safeDestCurrency,
             amount: currentQuote.amountToReceive
           }
         }
