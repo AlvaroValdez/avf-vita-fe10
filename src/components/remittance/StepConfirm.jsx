@@ -171,20 +171,22 @@ const StepConfirm = ({ formData, fields, onBack, isFromFavorite }) => {
       console.log('[StepConfirm] Checkout URL:', checkoutUrl);
       console.log('[StepConfirm] Vita Order ID:', vitaOrderId);
 
-      // ⚠️ IMPORTANTE: Webpay y otros métodos de redirect SIEMPRE devuelven checkout_url
-      // Solo usar DirectPay si:
-      // 1. El usuario seleccionó "direct"
-      // 2. El método soporta DirectPay (ej: Fintoc, PSE, Nequi)
-      // 3. NO hay checkout_url en la respuesta
+      // ⚠️ CAMBIO IMPORTANTE: Vita SIEMPRE devuelve checkout_url
+      // Pero si el usuario seleccionó DirectPay (Fintoc), debemos ignorarlo
+      // y usar DirectPay en su lugar
 
       const methodSupportsDirectPay = selectedDirectMethod?.code &&
         ['fintoc', 'pse', 'nequi', 'daviplata'].includes(selectedDirectMethod.code.toLowerCase());
 
       console.log('[StepConfirm] Method supports DirectPay:', methodSupportsDirectPay);
+      console.log('[StepConfirm] Evaluando condición:',
+        'paymentMethod:', paymentMethod,
+        'methodSupportsDirectPay:', methodSupportsDirectPay,
+        'Resultado:', paymentMethod === 'direct' && methodSupportsDirectPay);
 
-      if (paymentMethod === 'direct' && methodSupportsDirectPay && !checkoutUrl) {
-        // Flujo DirectPay (Fintoc, PSE, Nequi)
-        console.log('[StepConfirm] ✅ Usando DirectPay');
+      if (paymentMethod === 'direct' && methodSupportsDirectPay) {
+        // PRIORIDAD 1: Usar DirectPay (ignorar checkout_url)
+        console.log('[StepConfirm] ✅ Usando DirectPay (ignorando checkout_url)');
         if (!vitaOrderId) throw new Error('No se recibió ID de orden Vita');
 
         await maybeSaveFavorite();
