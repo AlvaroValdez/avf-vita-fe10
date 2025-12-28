@@ -87,17 +87,25 @@ const StepConfirm = ({ formData, fields, onBack, isFromFavorite }) => {
       const loadMethods = async () => {
         try {
           const countryCode = originCountry || 'CL';
+          console.log('[StepConfirm] Cargando métodos para país:', countryCode);
+
           const res = await getPaymentMethods(countryCode);
+          console.log('[StepConfirm] Respuesta completa:', res);
+
           const methods = res?.data?.payment_methods || res?.payment_methods || res?.data || [];
+          console.log('[StepConfirm] Métodos extraídos:', methods);
+          console.log('[StepConfirm] Cantidad de métodos:', methods.length);
 
           if (res?.ok && Array.isArray(methods) && methods.length > 0) {
             setDirectMethods(methods);
             setSelectedDirectMethod(methods[0]);
+            console.log('[StepConfirm] ✅ Métodos cargados:', methods.map(m => m.name));
           } else {
+            console.warn('[StepConfirm] ⚠️ No se encontraron métodos válidos');
             throw new Error('Sin métodos directos');
           }
         } catch (e) {
-          console.warn('Fallback a redirect:', e);
+          console.warn('[StepConfirm] ❌ Error cargando métodos:', e);
           setDirectPaymentAvailable(false);
           setPaymentMethod('redirect');
         }
