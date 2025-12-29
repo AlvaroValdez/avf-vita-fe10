@@ -60,22 +60,22 @@ const DirectPayForm = ({ paymentOrderId, method, initialData = {}, onSuccess, on
                 const data = response.data || response;
 
                 // 1. Verificar si hay redirección (Común en Chile/Khipu)
-                // 1. Verificar si hay redirección (Común en Chile/Khipu/Fintoc)
-                // Buscamos en varias ubicaciones posibles por inconsistencias de API
+                // 1. Verificar si hay redirección (Backend ya lo normalizó)
                 const redirectUrl =
+                    (response.ok && response.redirect_url) || // Prioridad: normalizado por mi backend
                     data.redirect_url ||
                     data.url ||
                     data.attributes?.url ||
                     data.attributes?.payment_info?.provider_url ||
-                    data.data?.redirect_url ||           // Estructura anidada
-                    data.data?.attributes?.url ||        // JSON:API anidado
-                    data.payload?.redirect_url;          // Otra variante posible
+                    data.data?.redirect_url ||
+                    data.data?.attributes?.url ||
+                    data.payload?.redirect_url;
 
                 if (redirectUrl) {
                     console.log('🔄 Redirigiendo a pasarela:', redirectUrl);
                     window.location.href = redirectUrl;
                 } else {
-                    // 2. Éxito directo (sin redirección)
+                    console.log('✅ Pago exitoso sin redirección (o URL no encontrada)');
                     onSuccess(data);
                 }
             } else {
