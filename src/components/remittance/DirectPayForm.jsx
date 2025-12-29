@@ -26,7 +26,13 @@ const DirectPayForm = ({ paymentOrderId, method, initialData = {}, onSuccess, on
 
             // ✅ CORRECTO: Usar ID del método si existe (requerido por Vita), sino el código
             const methodValue = method?.id || method?.payment_method || method?.code;
-
+            if (!methodValue) {
+                const errMsg = 'Método de pago no válido o no seleccionado';
+                console.error(errMsg);
+                setError(errMsg);
+                setLoading(false);
+                return;
+            }
             console.log('[DirectPayForm] Enviando método:', methodValue, '(Original:', method?.code, ')');
 
             const response = await executeDirectPayment(
