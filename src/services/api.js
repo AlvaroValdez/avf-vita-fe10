@@ -309,17 +309,17 @@ export const createPaymentOrder = async (orderData) => {
 // 
 // ⚠️ IMPORTANTE: payment_method es el CÓDIGO del método ("pse", "nequi", "fintoc")
 //                NO es el ID numérico
-export const executeDirectPayment = async ({ paymentOrderId, payment_method, payment_data }) => {
+export const executeDirectPayment = async ({ paymentOrderId, payment_method, payment_data, method_id }) => {
   try {
-    // Validar payment_method
-    if (!payment_method) {
-      throw new Error('payment_method es requerido (ej: "pse", "nequi", "fintoc")');
+    // Validar payment_method o method_id
+    if (!payment_method && !method_id) {
+      throw new Error('payment_method o method_id es requerido (ej: "pse", "nequi", "fintoc")');
     }
 
-    const payload = {
-      payment_method,  // ✅ CORRECTO: código del método
-      payment_data
-    };
+    // Construir payload dinámicamente
+    const payload = method_id
+      ? { method_id, payment_data }
+      : { payment_method, payment_data };
 
     console.log('[API] DirectPayment payload:', payload);
 
