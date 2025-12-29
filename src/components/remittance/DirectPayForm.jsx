@@ -35,20 +35,21 @@ const DirectPayForm = ({ paymentOrderId, method, initialData = {}, onSuccess, on
             }
             console.log('[DirectPayForm] Enviando método:', methodValue, '(Original:', method?.code, ')');
 
-            const response = await executeDirectPayment(
-                // For Fintoc the documentation requires an empty payment_data object
-                method?.code === 'fintoc'
-                    ? {
-                        paymentOrderId: paymentOrderId,
-                        method_id: methodValue,
-                        payment_data: {}
-                    }
-                    : {
-                        paymentOrderId: paymentOrderId,
-                        payment_method: methodValue,
-                        payment_data: cleanData
-                    }
-            );
+            const payload = {
+                paymentOrderId: paymentOrderId,
+                payment_method: methodValue,
+                payment_data: cleanData
+            };
+
+            // For Fintoc, the documentation requires an empty payment_data object
+            // and uses method_id instead of payment_method
+            if (method?.code === 'fintoc') {
+                payload.method_id = methodValue;
+                delete payload.payment_method;
+                payload.payment_data = {};
+            }
+
+            const response = await executeDirectPayment(payload);
 
             if (response.ok || response.data?.ok) {
                 const data = response.data || response;
