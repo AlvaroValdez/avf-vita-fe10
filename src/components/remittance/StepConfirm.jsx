@@ -170,7 +170,7 @@ const StepConfirm = ({ formData, fields, onBack, isFromFavorite }) => {
 
       // B. Crear Payment Order en Vita con metadata del beneficiario
       const orderPayload = {
-        amount: currentQuote.amount,
+        amount: currentQuote.clpAmount || currentQuote.amount, // ✅ Para flujos manuales (BOB), enviamos el equivalente en CLP
         country: originCountry || 'CL',
         orderId: orderId,
         metadata: {

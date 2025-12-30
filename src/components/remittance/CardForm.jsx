@@ -281,7 +281,14 @@ const CardForm = ({ onQuoteSuccess }) => {
             <div className="mt-3 p-3 bg-light rounded" style={{ fontSize: '0.9rem' }}>
               <div className="d-flex justify-content-between align-items-center mb-2">
                 <span className="text-muted">Tasa de cambio:</span>
-                <span className="fw-bold">1 {quote.destCurrency} = {formatRate(1 / quote.rateWithMarkup)} {quote.origin}</span>
+                <span className="fw-bold">
+                  1 {quote.destCurrency} = {formatRate(1 / quote.rateWithMarkup)} {quote.origin}
+                  {quote.isManual && (
+                    <span className="ms-2 badge bg-success" style={{ fontSize: '0.7em', verticalAlign: 'middle' }}>
+                      Tasa Garantizada
+                    </span>
+                  )}
+                </span>
               </div>
 
               <hr className="my-2" />
