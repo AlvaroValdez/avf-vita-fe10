@@ -295,7 +295,7 @@ const CardForm = ({ onQuoteSuccess }) => {
 
               <div className="d-flex justify-content-between fw-bold fs-6" style={{ color: 'var(--avf-primary)' }}>
                 <span>Total a pagar:</span>
-                <span>{formatNumberForDisplay(quote.amountIn)} {quote.origin} *</span>
+                <span>{formatNumberForDisplay(quote.clpAmountWithFee || quote.amountIn)} {quote.origin} *</span>
               </div>
             </div>
           )}
