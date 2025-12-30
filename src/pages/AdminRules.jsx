@@ -160,6 +160,7 @@ const AdminRules = () => {
       manualExchangeRate: 0,
       feeType: 'percentage',
       feeAmount: 0,
+      payoutFixedFee: 0,
       isEnabled: true
     }];
     setFormData(prev => ({ ...prev, destinations: newDests }));
@@ -380,7 +381,7 @@ const AdminRules = () => {
                         <Form.Control type="number" step="0.0001" value={dest.manualExchangeRate} onChange={e => handleDestChange(idx, 'manualExchangeRate', e.target.value)} />
                       </Form.Group>
                     </Col>
-                    <Col md={3}>
+                    <Col md={2}>
                       <Form.Group>
                         <Form.Label className="small">Fee Type</Form.Label>
                         <Form.Select value={dest.feeType} onChange={e => handleDestChange(idx, 'feeType', e.target.value)}>
@@ -395,13 +396,19 @@ const AdminRules = () => {
                         <Form.Control type="number" step="0.01" value={dest.feeAmount} onChange={e => handleDestChange(idx, 'feeAmount', e.target.value)} />
                       </Form.Group>
                     </Col>
-                    <Col md={3}>
+                    <Col md={2}>
                       <Form.Group>
                         <Form.Label className="small">Estado</Form.Label>
                         <Form.Select value={dest.isEnabled} onChange={e => handleDestChange(idx, 'isEnabled', e.target.value === 'true')}>
                           <option value="true">Activo</option>
                           <option value="false">Inactivo</option>
                         </Form.Select>
+                      </Form.Group>
+                    </Col>
+                    <Col md={2}>
+                      <Form.Group>
+                        <Form.Label className="small">Payout Fee</Form.Label>
+                        <Form.Control type="number" step="1" value={dest.payoutFixedFee || 0} onChange={e => handleDestChange(idx, 'payoutFixedFee', e.target.value)} />
                       </Form.Group>
                     </Col>
                   </Row>
