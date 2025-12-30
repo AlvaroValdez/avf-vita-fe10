@@ -33,7 +33,8 @@ const AdminRules = () => {
     accountType: '',
     holderName: '',
     holderId: '',
-    depositQrImage: ''
+    depositQrImage: '',
+    destinations: []
   });
 
   // 1. Cargar países disponibles
@@ -78,7 +79,8 @@ const AdminRules = () => {
             accountType: rule.localBankDetails?.accountType || '',
             holderName: rule.localBankDetails?.holderName || '',
             holderId: rule.localBankDetails?.holderId || '',
-            depositQrImage: rule.depositQrImage || ''
+            depositQrImage: rule.depositQrImage || '',
+            destinations: rule.destinations || []
           });
         } else {
           // Defaults para nuevo país
@@ -99,7 +101,8 @@ const AdminRules = () => {
             accountType: '',
             holderName: '',
             holderId: '',
-            depositQrImage: ''
+            depositQrImage: '',
+            destinations: []
           });
         }
       } catch (err) {
@@ -144,6 +147,29 @@ const AdminRules = () => {
     }
   };
 
+  // --- Handlers para Destinos Manuales ---
+  const handleDestChange = (index, field, value) => {
+    const newDests = [...formData.destinations];
+    newDests[index] = { ...newDests[index], [field]: value };
+    setFormData(prev => ({ ...prev, destinations: newDests }));
+  };
+
+  const addDestination = () => {
+    const newDests = [...formData.destinations, {
+      countryCode: '',
+      manualExchangeRate: 0,
+      feeType: 'percentage',
+      feeAmount: 0,
+      isEnabled: true
+    }];
+    setFormData(prev => ({ ...prev, destinations: newDests }));
+  };
+
+  const removeDestination = (index) => {
+    const newDests = formData.destinations.filter((_, i) => i !== index);
+    setFormData(prev => ({ ...prev, destinations: newDests }));
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSaving(true); setError(''); setSuccess('');
@@ -170,7 +196,8 @@ const AdminRules = () => {
           accountType: formData.accountType,
           holderName: formData.holderName,
           holderId: formData.holderId
-        }
+        },
+        destinations: formData.destinations
       };
 
       const response = await updateTransactionRules(payload);
@@ -320,6 +347,67 @@ const AdminRules = () => {
                   </Form.Group>
                 </>
               )}
+            </div>
+
+            {/* --- SECCIÓN DESTINOS MANUALES (Override) --- */}
+            <div className="p-3 bg-light rounded mb-4 border">
+              <div className="d-flex justify-content-between align-items-center mb-3">
+                <h5 className="text-secondary mb-0">Destinos Manuales (Overrides)</h5>
+                <Button variant="outline-primary" size="sm" onClick={addDestination}>+ Agregar Destino</Button>
+              </div>
+              <p className="text-muted small">Configura tasas específicas para ciertos destinos (ej: Bolivia).</p>
+
+              {formData.destinations && formData.destinations.map((dest, idx) => (
+                <div key={idx} className="card mb-3 p-3 shadow-sm">
+                  <div className="d-flex justify-content-between mb-2">
+                    <div className="d-flex align-items-center gap-2">
+                      <span className="fw-bold">Destino:</span>
+                      <Form.Control
+                        type="text"
+                        placeholder="Código (ej: BO)"
+                        value={dest.countryCode}
+                        onChange={(e) => handleDestChange(idx, 'countryCode', e.target.value.toUpperCase())}
+                        style={{ width: '80px' }}
+                      />
+                    </div>
+                    <Button variant="outline-danger" size="sm" onClick={() => removeDestination(idx)}>Eliminar</Button>
+                  </div>
+
+                  <Row className="g-2">
+                    <Col md={3}>
+                      <Form.Group>
+                        <Form.Label className="small">Manual Rate</Form.Label>
+                        <Form.Control type="number" step="0.0001" value={dest.manualExchangeRate} onChange={e => handleDestChange(idx, 'manualExchangeRate', e.target.value)} />
+                      </Form.Group>
+                    </Col>
+                    <Col md={3}>
+                      <Form.Group>
+                        <Form.Label className="small">Fee Type</Form.Label>
+                        <Form.Select value={dest.feeType} onChange={e => handleDestChange(idx, 'feeType', e.target.value)}>
+                          <option value="percentage">%</option>
+                          <option value="fixed">$</option>
+                        </Form.Select>
+                      </Form.Group>
+                    </Col>
+                    <Col md={3}>
+                      <Form.Group>
+                        <Form.Label className="small">Fee Amount</Form.Label>
+                        <Form.Control type="number" step="0.01" value={dest.feeAmount} onChange={e => handleDestChange(idx, 'feeAmount', e.target.value)} />
+                      </Form.Group>
+                    </Col>
+                    <Col md={3}>
+                      <Form.Group>
+                        <Form.Label className="small">Estado</Form.Label>
+                        <Form.Select value={dest.isEnabled} onChange={e => handleDestChange(idx, 'isEnabled', e.target.value === 'true')}>
+                          <option value="true">Activo</option>
+                          <option value="false">Inactivo</option>
+                        </Form.Select>
+                      </Form.Group>
+                    </Col>
+                  </Row>
+                </div>
+              ))}
+              {(!formData.destinations || formData.destinations.length === 0) && <p className="text-center text-muted fst-italic">No hay destinos manuales configurados.</p>}
             </div>
 
             <h5 className="text-muted mb-3">Límites y Costos</h5>
