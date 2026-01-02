@@ -3,6 +3,8 @@ import { Nav } from 'react-bootstrap';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 
+import logo from '../../assets/images/logo.png';
+
 const Sidebar = () => {
     const { user, logout } = useAuth();
     const location = useLocation();
@@ -13,7 +15,8 @@ const Sidebar = () => {
         <div className="sidebar d-none d-lg-flex flex-column p-3" style={{ width: '280px', position: 'fixed', top: 0, bottom: 0, left: 0 }}>
             {/* Brand */}
             <Link to="/" className="d-flex align-items-center mb-3 mb-md-0 me-md-auto link-body-emphasis text-decoration-none">
-                <span className="fs-4 fw-bold text-white px-3 py-2">Alyto</span>
+                <img src={logo} alt="Alyto" style={{ height: '40px' }} className="me-2" />
+                {/* Optional: <span className="fs-4 fw-bold text-white">Alyto</span> if logo doesn't have text */}
             </Link>
             <hr className="text-white-50" />
 

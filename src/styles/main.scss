@@ -12,6 +12,31 @@ body {
     -moz-osx-font-smoothing: grayscale;
 }
 
+// Global Spacing Adjustments
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+    margin-bottom: 1.5rem; // Increase bottom margin for headings
+}
+
+.container,
+.container-fluid {
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+
+    @include media-breakpoint-up(md) {
+        padding-left: 2rem;
+        padding-right: 2rem;
+    }
+}
+
+p {
+    margin-bottom: 1.25rem;
+}
+
 // 3. Componentes Personalizados
 @import "components";
 

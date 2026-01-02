@@ -3,6 +3,8 @@ import { Navbar, Container, Nav, Button } from 'react-bootstrap';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 
+import logo from '../../assets/images/logo.png';
+
 const AppNavbar = () => {
   const { token, user, logout } = useAuth();
   const navigate = useNavigate();
@@ -15,8 +17,9 @@ const AppNavbar = () => {
   return (
     <Navbar bg="white" expand="lg" className="shadow-sm py-3">
       <Container>
-        <Navbar.Brand as={Link} to="/" className="fw-bold text-dark">
-          AV Finance
+        <Navbar.Brand as={Link} to="/" className="fw-bold text-dark d-flex align-items-center">
+          <img src={logo} alt="Alyto" style={{ height: '40px' }} className="me-2" />
+          {/* Alyto */}
         </Navbar.Brand>
 
         <Navbar.Toggle aria-controls="basic-navbar-nav" />
@@ -48,17 +51,12 @@ const AppNavbar = () => {
           <Nav className="align-items-lg-center">
             {token ? (
               <>
-                {/* ✅ CTA destacado para enviar (estilo Afex) */}
+                {/* ✅ CTA destacado para enviar (estilo Alyto) */}
                 <Button
                   as={Link}
                   to="/"
-                  className="me-2"
-                  style={{
-                    backgroundColor: '#ef8c20',
-                    borderColor: '#ef8c20',
-                    color: '#122533',
-                    fontWeight: 700
-                  }}
+                  variant="primary"
+                  className="me-2 fw-bold text-primary"
                 >
                   Enviar ahora
                 </Button>
@@ -74,7 +72,7 @@ const AppNavbar = () => {
                   </>
                 )}
 
-                <Button variant="outline-secondary" size="sm" onClick={handleLogout}>
+                <Button variant="outline-primary" size="sm" onClick={handleLogout}>
                   Cerrar Sesión
                 </Button>
               </>
@@ -84,13 +82,8 @@ const AppNavbar = () => {
                 <Button
                   as={Link}
                   to="/"
-                  className="me-2"
-                  style={{
-                    backgroundColor: '#ef8c20',
-                    borderColor: '#ef8c20',
-                    color: '#122533',
-                    fontWeight: 700
-                  }}
+                  variant="primary"
+                  className="me-2 fw-bold text-primary"
                 >
                   Cotizar
                 </Button>

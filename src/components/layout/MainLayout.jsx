@@ -24,10 +24,14 @@ const MainLayout = ({ children }) => {
                     `}
                 </style>
 
-                {/* Top Navbar: Visible on Landing (not logged in) OR Mobile Header (logged in) */}
-                <div className={showNav ? "d-lg-none" : ""}>
-                    <AppNavbar />
-                </div>
+                {/* Top Navbar: ONLY Visible for Guests (Landing Page) 
+                    User requested to remove top menu (hamburger) for logged in users on mobile.
+                */}
+                {!showNav && (
+                    <div className="d-lg-none">
+                        <AppNavbar />
+                    </div>
+                )}
 
                 <main className="p-3 p-md-4">
                     {children}
