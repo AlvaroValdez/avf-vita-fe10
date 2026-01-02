@@ -6,10 +6,12 @@ import { useAppContext } from '../../context/AppContext';
 import { useAuth } from '../../context/AuthContext';
 import { getQuote, getTransactionRules, getEnabledOrigins } from '../../services/api';
 import { formatNumberForDisplay, parseFormattedNumber, formatRate } from '../../utils/formatting';
+import logo from '../../assets/images/logo.png'; // Importación correcta del logo
 
 const CardForm = ({ onQuoteSuccess }) => {
   const { countries, loading: loadingCountries } = useAppContext();
   const { user } = useAuth();
+  // ...
 
   // --- Origin States ---
   const [originCountries, setOriginCountries] = useState([]);
@@ -187,6 +189,9 @@ const CardForm = ({ onQuoteSuccess }) => {
   return (
     <Card className="p-4 shadow-lg border-0" style={{ borderRadius: '15px' }}>
       <Card.Body>
+        <div className="text-center mb-3">
+          <img src={logo} alt="Alyto" style={{ height: '40px' }} />
+        </div>
         <h4 className="mb-4 text-center fw-bold">Cotizar envío</h4>
 
         {alertMessage && (
@@ -278,6 +283,8 @@ const CardForm = ({ onQuoteSuccess }) => {
             </div>
           )}
 
+// ... (imports)
+
           {quote && !loading && !error && (
             <div className="mt-3 p-3 bg-light rounded" style={{ fontSize: '0.9rem' }}>
               <div className="d-flex justify-content-between align-items-center mb-2">
@@ -303,7 +310,7 @@ const CardForm = ({ onQuoteSuccess }) => {
 
               <hr className="my-2" />
 
-              <div className="d-flex justify-content-between fw-bold fs-6" style={{ color: 'var(--avf-primary)' }}>
+              <div className="d-flex justify-content-between fw-bold fs-6 text-primary">
                 <span>Total a pagar:</span>
                 <span>{formatNumberForDisplay(quote.amountIn)} {quote.origin} *</span>
               </div>
@@ -315,7 +322,7 @@ const CardForm = ({ onQuoteSuccess }) => {
           {/* Upgrade Link if Limit Error */}
           {limitError && user && error.includes('límite') && (
             <div className="text-center mt-2">
-              <Link to="/profile" className="text-decoration-none fw-bold" style={{ color: 'var(--avf-secondary)' }}>
+              <Link to="/profile" className="text-decoration-none fw-bold text-accent">
                 Aumentar mis límites &rarr;
               </Link>
             </div>
@@ -325,8 +332,8 @@ const CardForm = ({ onQuoteSuccess }) => {
             <Button
               onClick={handleNextStep}
               disabled={!quote || loading || !!error}
-              style={{ backgroundColor: 'var(--avf-secondary)', borderColor: 'var(--avf-secondary)', color: 'white', borderRadius: '10px' }}
-              className="py-3 fw-bold fs-6"
+              variant="primary"
+              className="py-3 fw-bold fs-6 text-primary"
             >
               {loading ? 'Cotizando...' : 'Continuar'}
             </Button>
