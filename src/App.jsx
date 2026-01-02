@@ -18,6 +18,7 @@ import VerifyEmail from './pages/VerifyEmail.jsx';
 import Profile from './pages/Profile.jsx';
 import Favorites from './pages/Favorites.jsx';
 import DirectPaymentPage from './pages/DirectPaymentPage.jsx';
+import SendMoney from './pages/SendMoney.jsx'; // ✅ NUEVO
 
 // Componentes UI
 // Componentes UI
@@ -50,6 +51,7 @@ function AppContent() {
 
         {/* Rutas Protegidas (Usuario) */}
         <Route element={<ProtectedRouteWrapper />}>
+          <Route path="/send" element={<SendMoney />} /> {/* ✅ NUEVO: Ruta para enviar dinero */}
           <Route path="/transactions" element={<Transactions />} />
           <Route path="/transactions/:id" element={<TransactionDetail />} />
           <Route path="/profile" element={<Profile />} />

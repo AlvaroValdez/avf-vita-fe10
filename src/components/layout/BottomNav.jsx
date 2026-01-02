@@ -25,7 +25,7 @@ const BottomNav = () => {
 
                 {/* Central "Send" Button - Floating effect */}
                 <Nav.Item style={{ marginTop: '-25px' }}>
-                    <Nav.Link as={Link} to="/" className="d-flex flex-column align-items-center">
+                    <Nav.Link as={Link} to="/send" className="d-flex flex-column align-items-center">
                         <div className="rounded-circle shadow d-flex align-items-center justify-content-center"
                             style={{ width: '56px', height: '56px', backgroundColor: '#233E58', border: '3px solid white' }}>
                             {/* User wants "Enviar" here. Usually points to transfer flow. keeping href="/" for now or /transfer */}

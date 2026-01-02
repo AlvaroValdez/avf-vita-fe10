@@ -110,7 +110,36 @@ const Home = () => {
           </Col>
         </Row>
 
-        {/* Floating Action Button for Mobile maybe? Or stick to Top Actions */}
+        {/* Quick Actions (Dashboard Desktop) - Optional. Can we hide on mobile as we have BottomNav? 
+           User said "menu... in the part below". 
+           Let's hide this block on mobile (d-none d-lg-flex) to avoid duplication.
+       */}
+        <div className="quick-actions mb-5 justify-content-start d-none d-lg-flex">
+          <Link to="/send" className="action-btn">
+            <div className="icon-circle text-primary">
+              <i className="bi bi-send-fill"></i>
+            </div>
+            <span className="fw-bold">Enviar</span>
+          </Link>
+          <Link to="/transactions" className="action-btn">
+            <div className="icon-circle text-primary">
+              <i className="bi bi-arrow-down-left"></i>
+            </div>
+            <span className="fw-bold">Recibir</span>
+          </Link>
+          <div className="action-btn" style={{ cursor: 'pointer' }} onClick={() => alert('Próximamente')}>
+            <div className="icon-circle text-primary">
+              <i className="bi bi-arrow-repeat"></i>
+            </div>
+            <span className="fw-bold">Canjear</span>
+          </div>
+          <div className="action-btn" style={{ cursor: 'pointer' }}>
+            <div className="icon-circle text-primary">
+              <i className="bi bi-grid"></i>
+            </div>
+            <span className="fw-bold">Más</span>
+          </div>
+        </div>
       </Container>
     );
   }

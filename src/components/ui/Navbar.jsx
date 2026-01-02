@@ -38,7 +38,7 @@ const AppNavbar = () => {
             {token && (
               <>
                 {/* ✅ HABILITADO: acceso al flujo principal */}
-                <Nav.Link as={Link} to="/" className="me-3">Cotizar / Enviar</Nav.Link>
+                <Nav.Link as={Link} to="/send" className="me-3">Cotizar / Enviar</Nav.Link>
 
                 <Nav.Link as={Link} to="/transactions" className="me-3">Transacciones</Nav.Link>
                 <Nav.Link as={Link} to="/profile" className="me-3">Perfil</Nav.Link>
@@ -54,7 +54,7 @@ const AppNavbar = () => {
                 {/* ✅ CTA destacado para enviar (estilo Alyto) */}
                 <Button
                   as={Link}
-                  to="/"
+                  to="/send"
                   variant="primary"
                   className="me-2 fw-bold text-primary"
                 >
