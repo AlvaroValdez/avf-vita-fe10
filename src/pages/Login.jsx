@@ -33,7 +33,7 @@ const Login = () => {
     <Container className="d-flex justify-content-center align-items-center" style={{ minHeight: '80vh' }}>
       <Card className="shadow-sm border-0" style={{ width: '400px' }}>
         <Card.Body className="p-4">
-          <Card.Title as="h3" className="text-center mb-4" style={{ color: 'var(--avf-primary)' }}>
+          <Card.Title as="h3" className="text-center mb-4 fw-bold text-primary">
             Iniciar Sesión
           </Card.Title>
           <Form onSubmit={handleSubmit}>
@@ -63,7 +63,7 @@ const Login = () => {
             <div className="text-end mb-4">
               <Link
                 to="/forgot-password"
-                style={{ fontSize: '0.9rem', textDecoration: 'none', color: 'var(--avf-secondary)' }}
+                className="text-decoration-none text-muted small"
               >
                 ¿Olvidaste tu contraseña?
               </Link>
@@ -74,8 +74,9 @@ const Login = () => {
             <div className="d-grid">
               <Button
                 type="submit"
+                variant="primary"
                 disabled={loading}
-                style={{ backgroundColor: 'var(--avf-primary)', borderColor: 'var(--avf-primary)' }}
+                className="py-2"
               >
                 {loading ? <Spinner as="span" animation="border" size="sm" /> : 'Ingresar'}
               </Button>

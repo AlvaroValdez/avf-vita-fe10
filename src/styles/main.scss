@@ -1,0 +1,33 @@
+// main.scss
+// Archivo principal de estilos para Remesas App (Alyto Design)
+
+// 1. Configuracion y Bootstrap
+@import "bootstrap_overrides";
+
+// 2. Estilos Globales
+body {
+    background-color: $body-bg;
+    color: $body-color;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+// 3. Componentes Personalizados
+@import "components";
+
+// 4. Utilidades extra (si corresponde)
+.text-accent {
+    color: $accent !important;
+}
+
+.bg-accent {
+    background-color: $accent !important;
+}
+
+.text-primary {
+    color: $primary !important;
+}
+
+.bg-primary-dark {
+    background-color: darken($primary, 5%) !important;
+}

@@ -51,41 +51,41 @@ const Register = () => {
     <Container className="d-flex justify-content-center align-items-center" style={{ minHeight: '80vh' }}>
       <Card className="shadow-sm" style={{ width: '450px' }}>
         <Card.Body className="p-4">
-          <Card.Title as="h3" className="text-center mb-4" style={{ color: 'var(--avf-primary)' }}>
+          <Card.Title as="h3" className="text-center mb-4 fw-bold text-primary">
             Crear Cuenta
           </Card.Title>
-          
+
           {/* Si el registro fue exitoso, muestra el mensaje y oculta el formulario */}
           {success ? (
             <Alert variant="success">
               {success}
               <div className="text-center mt-3">
-                <Link to="/login">Ir a Iniciar Sesión</Link>
+                <Link to="/login" className="fw-bold">Ir a Iniciar Sesión</Link>
               </div>
             </Alert>
           ) : (
             <Form onSubmit={handleSubmit}>
               <Form.Group className="mb-3">
                 <Form.Label>Nombre Completo</Form.Label>
-                <Form.Control type="text" value={name} onChange={(e) => setName(e.target.value)} required />
+                <Form.Control type="text" value={name} onChange={(e) => setName(e.target.value)} required placeholder="Nombre y Apellido" />
               </Form.Group>
               <Form.Group className="mb-3">
                 <Form.Label>Correo Electrónico</Form.Label>
-                <Form.Control type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+                <Form.Control type="email" value={email} onChange={(e) => setEmail(e.target.value)} required placeholder="correo@ejemplo.com" />
               </Form.Group>
               <Form.Group className="mb-3">
                 <Form.Label>Contraseña</Form.Label>
-                <Form.Control type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
+                <Form.Control type="password" value={password} onChange={(e) => setPassword(e.target.value)} required placeholder="Mínimo 6 caracteres" />
               </Form.Group>
               <Form.Group className="mb-3">
                 <Form.Label>Confirmar Contraseña</Form.Label>
-                <Form.Control type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} required />
+                <Form.Control type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} required placeholder="Repite tu contraseña" />
               </Form.Group>
 
               {error && <Alert variant="danger" className="py-2">{error}</Alert>}
 
               <div className="d-grid">
-                <Button type="submit" disabled={loading} style={{ backgroundColor: 'var(--avf-primary)' }}>
+                <Button type="submit" variant="primary" disabled={loading} className="py-2">
                   {loading ? <Spinner as="span" size="sm" /> : 'Registrarse'}
                 </Button>
               </div>

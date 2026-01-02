@@ -20,9 +20,9 @@ import Favorites from './pages/Favorites.jsx';
 import DirectPaymentPage from './pages/DirectPaymentPage.jsx';
 
 // Componentes UI
-import AppNavbar from './components/ui/Navbar.jsx';
-import Footer from './components/ui/Footer.jsx';
+// Componentes UI
 import Toaster from './components/ui/Toaster.jsx';
+import MainLayout from './components/layout/MainLayout.jsx';
 
 const ProtectedRouteWrapper = () => {
   const { token } = useAuth();
@@ -38,43 +38,39 @@ const AdminRouteWrapper = () => {
 
 function AppContent() {
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
-      <AppNavbar />
-      <main className="flex-grow-1">
-        <Routes>
-          {/* Rutas Públicas */}
-          <Route path="/" element={<Home />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-          <Route path="/payment-success" element={<PaymentSuccess />} />
-          <Route path="/payment-success/:orderId" element={<PaymentSuccess />} />
-          <Route path="/verify-email" element={<VerifyEmail />} />
+    <MainLayout>
+      <Routes>
+        {/* Rutas Públicas */}
+        <Route path="/" element={<Home />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
+        <Route path="/payment-success" element={<PaymentSuccess />} />
+        <Route path="/payment-success/:orderId" element={<PaymentSuccess />} />
+        <Route path="/verify-email" element={<VerifyEmail />} />
 
-          {/* Rutas Protegidas (Usuario) */}
-          <Route element={<ProtectedRouteWrapper />}>
-            <Route path="/transactions" element={<Transactions />} />
-            <Route path="/transactions/:id" element={<TransactionDetail />} />
-            <Route path="/profile" element={<Profile />} />
-            <Route path="/favorites" element={<Favorites />} />
-            <Route path="/direct-payment/:orderId" element={<DirectPaymentPage />} />
-          </Route>
+        {/* Rutas Protegidas (Usuario) */}
+        <Route element={<ProtectedRouteWrapper />}>
+          <Route path="/transactions" element={<Transactions />} />
+          <Route path="/transactions/:id" element={<TransactionDetail />} />
+          <Route path="/profile" element={<Profile />} />
+          <Route path="/favorites" element={<Favorites />} />
+          <Route path="/direct-payment/:orderId" element={<DirectPaymentPage />} />
+        </Route>
 
-          {/* Rutas Protegidas (Admin) */}
-          <Route element={<AdminRouteWrapper />}>
-            <Route path="/admin/markup" element={<AdminMarkup />} />
-            <Route path="/admin/users" element={<AdminUsers />} />
-            <Route path="/admin/kyc" element={<AdminKyc />} />
-            <Route path="/admin/rules" element={<AdminRules />} />
-            <Route path="/admin/treasury" element={<AdminTreasury />} /> {/* ✅ NUEVO */}
-          </Route>
+        {/* Rutas Protegidas (Admin) */}
+        <Route element={<AdminRouteWrapper />}>
+          <Route path="/admin/markup" element={<AdminMarkup />} />
+          <Route path="/admin/users" element={<AdminUsers />} />
+          <Route path="/admin/kyc" element={<AdminKyc />} />
+          <Route path="/admin/rules" element={<AdminRules />} />
+          <Route path="/admin/treasury" element={<AdminTreasury />} /> {/* ✅ NUEVO */}
+        </Route>
 
-          {/* (Opcional) fallback */}
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-      </main>
-      <Footer />
+        {/* (Opcional) fallback */}
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
       <Toaster />
-    </div>
+    </MainLayout>
   );
 }
 

@@ -1,0 +1,168 @@
+// _components.scss
+// Componentes específicos de Alyto
+
+// Cards
+.card {
+    border: none;
+    background-color: white;
+    border-radius: $border-radius-lg;
+    box-shadow: $box-shadow-sm;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+
+    &:hover {
+        box-shadow: $box-shadow;
+        transform: translateY(-2px);
+    }
+}
+
+// Saldo Card (Hero)
+.card-balance {
+    background-color: $primary;
+    color: white;
+    border-radius: $border-radius-lg;
+    box-shadow: $box-shadow-lg;
+
+    h1,
+    h2,
+    h3 {
+        color: white;
+    }
+
+    .text-muted {
+        color: rgba(255, 255, 255, 0.7) !important;
+    }
+}
+
+// Buttons
+.btn-primary {
+    background-color: $accent;
+    border-color: $accent;
+    color: $primary; // Dark text on Yellow button
+    font-weight: 700;
+    border-radius: $border-radius;
+    padding: 0.75rem 1.5rem;
+    box-shadow: 0 4px 15px rgba(245, 212, 16, 0.3); // Yellow shadow
+
+    &:hover,
+    &:focus,
+    &:active {
+        background-color: lighten($accent, 5%);
+        border-color: lighten($accent, 5%);
+        color: $primary;
+        box-shadow: 0 6px 20px rgba(245, 212, 16, 0.4);
+    }
+}
+
+.btn-secondary {
+    background-color: transparent;
+    border: 2px solid $primary;
+    color: $primary;
+    font-weight: 600;
+    border-radius: $border-radius;
+
+    &:hover {
+        background-color: rgba($primary, 0.05);
+        color: $primary;
+        border-color: $primary;
+    }
+}
+
+.btn-ghost {
+    background-color: transparent;
+    color: $primary;
+    font-weight: 500;
+    border: none;
+
+    &:hover {
+        color: lighten($primary, 10%);
+        text-decoration: underline;
+    }
+}
+
+// Inputs
+.form-control,
+.form-select {
+    border-radius: $border-radius;
+    border: 1px solid $gray-300;
+    padding: 0.8rem 1rem;
+    background-color: white;
+    font-size: 1rem;
+
+    &:focus {
+        border-color: $primary;
+        box-shadow: 0 0 0 4px rgba($primary, 0.1);
+    }
+}
+
+.input-group-text {
+    border-radius: $border-radius;
+    background-color: $gray-100;
+    border: 1px solid $gray-300;
+}
+
+// Navigation Sidebar (Desktop)
+.sidebar {
+    background-color: $primary;
+    color: white;
+    min-height: 100vh;
+
+    .nav-link {
+        color: rgba(255, 255, 255, 0.7);
+        padding: 1rem 1.5rem;
+        border-radius: $border-radius;
+        margin-bottom: 0.5rem;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        transition: all 0.2s;
+
+        &:hover,
+        &.active {
+            background-color: rgba(255, 255, 255, 0.1);
+            color: white;
+            font-weight: 600;
+        }
+
+        i,
+        svg {
+            font-size: 1.2rem;
+        }
+    }
+}
+
+// Mobile Bottom Nav or Quick Actions
+.quick-actions {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+
+    .action-btn {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        font-size: 0.8rem;
+        color: $primary;
+        text-decoration: none;
+
+        .icon-circle {
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background-color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 0.5rem;
+            box-shadow: $box-shadow-sm;
+            font-size: 1.5rem;
+            color: $primary;
+            transition: transform 0.2s;
+        }
+
+        &:hover .icon-circle {
+            transform: scale(1.1);
+            background-color: $accent;
+            color: $primary;
+        }
+    }
+}

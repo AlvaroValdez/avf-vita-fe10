@@ -1,0 +1,13 @@
+// _bootstrap_overrides.scss
+// Import Bootstrap SCSS logic
+
+// 1. Include functions first (so we can use color-contrast, etc., if needed)
+@import "../../node_modules/bootstrap/scss/functions";
+
+// 2. Include variables to override default values (our _variables.scss already defined the overrides)
+@import "variables";
+
+// 3. Include Custom Variables (if any additional not covered by global vars)
+
+// 4. Import Bootstrap
+@import "../../node_modules/bootstrap/scss/bootstrap";

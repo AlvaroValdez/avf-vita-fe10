@@ -1,0 +1,49 @@
+// _variables.scss
+// Alyto Design System Tokens
+
+// 1. Color System
+$primary: #233E58; // Azul Alyto
+$secondary: #ef8c20; // Naranja original (keep for legacy compatibility if needed) or map to Accent?
+$accent: #F5D410; // Amarillo Alyto (Call-to-Action)
+
+// Functional Colors
+$success: #20c997; // Mint/Teal
+$danger: #dc3545; // Soft Red for errors
+$warning: #ffc107;
+$info: #0dcaf0;
+
+// Neutrals
+$dark-bg: #1A1A1A; // Gris Profundo (Textos principales, Fondos oscuros)
+$light-bg: #F2F2F2; // Gris Claro (Fondos de pantalla)
+$white: #ffffff;
+$gray-100: #f8f9fa;
+$gray-200: #e9ecef;
+$gray-300: #dee2e6;
+$gray-400: #ced4da;
+$gray-500: #adb5bd;
+$gray-600: #6c757d;
+$gray-700: #495057;
+$gray-800: #343a40;
+$gray-900: #212529;
+
+// 2. Typography
+$font-family-sans-serif: 'Inter', system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+$font-family-base: $font-family-sans-serif;
+
+// 3. Spacing & Shapes
+$border-radius: 1rem; // 16px
+$border-radius-lg: 1.5rem; // 24px
+$border-radius-sm: 0.5rem; // 8px
+
+// 4. Shadows (Soft System)
+$box-shadow: 0 8px 24px rgba(35, 62, 88, 0.08); // Blueish shadow
+$box-shadow-sm: 0 4px 12px rgba(35, 62, 88, 0.05);
+$box-shadow-lg: 0 16px 48px rgba(35, 62, 88, 0.12);
+
+// 5. Override Bootstrap Defaults (will be used by bootstrap import)
+$body-bg: $light-bg;
+$body-color: $dark-bg;
+$link-color: $primary;
+$link-decoration: none;
+$component-active-bg: $accent; // Highlights use yellow
+$component-active-color: $primary; // Text on highlights is dark blue
