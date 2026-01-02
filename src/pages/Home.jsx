@@ -41,40 +41,12 @@ const Home = () => {
             <h1 className="display-4 fw-bold mt-2 mb-3">$ 0.00 <small className="fs-6">CLP</small></h1>
             <div className="d-flex gap-2">
               <span className="badge bg-white bg-opacity-25 fw-normal px-3 py-2 rounded-pill border border-white border-opacity-10">
-                <i className="bi bi-shield-check me-2"></i>Protegido por Vita
+                <i className="bi bi-shield-check me-2"></i>Protegido por Stellar
               </span>
             </div>
           </div>
           {/* Decorative Circle */}
           <div className="position-absolute rounded-circle bg-white opacity-10" style={{ width: 300, height: 300, top: -100, right: -100 }}></div>
-        </div>
-
-        {/* Quick Actions (Component 2 - Accesos Rápidos) */}
-        <div className="quick-actions mb-5 justify-content-center justify-content-md-start">
-          <Link to="/" className="action-btn">
-            <div className="icon-circle text-primary">
-              <i className="bi bi-send-fill"></i>
-            </div>
-            <span className="fw-bold">Enviar</span>
-          </Link>
-          <Link to="/transactions" className="action-btn">
-            <div className="icon-circle text-primary">
-              <i className="bi bi-arrow-down-left"></i>
-            </div>
-            <span className="fw-bold">Recibir</span>
-          </Link>
-          <div className="action-btn" style={{ cursor: 'pointer' }} onClick={() => alert('Próximamente')}>
-            <div className="icon-circle text-primary">
-              <i className="bi bi-arrow-repeat"></i>
-            </div>
-            <span className="fw-bold">Canjear</span>
-          </div>
-          <div className="action-btn" style={{ cursor: 'pointer' }}>
-            <div className="icon-circle text-primary">
-              <i className="bi bi-grid"></i>
-            </div>
-            <span className="fw-bold">Más</span>
-          </div>
         </div>
 
         {/* Dashboard Content Grid (Desktop) */}
