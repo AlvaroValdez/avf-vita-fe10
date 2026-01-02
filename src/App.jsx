@@ -22,6 +22,7 @@ import DirectPaymentPage from './pages/DirectPaymentPage.jsx';
 // Componentes UI
 import AppNavbar from './components/ui/Navbar.jsx';
 import Footer from './components/ui/Footer.jsx';
+import Toaster from './components/ui/Toaster.jsx';
 
 const ProtectedRouteWrapper = () => {
   const { token } = useAuth();
@@ -72,6 +73,7 @@ function AppContent() {
         </Routes>
       </main>
       <Footer />
+      <Toaster />
     </div>
   );
 }

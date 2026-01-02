@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Card, Form, Row, Col, InputGroup, Button, Spinner, Alert } from 'react-bootstrap';
+import { toast } from 'sonner';
 import { Link } from 'react-router-dom';
 import { useAppContext } from '../../context/AppContext';
 import { useAuth } from '../../context/AuthContext';
@@ -172,7 +173,7 @@ const CardForm = ({ onQuoteSuccess }) => {
   const handleNextStep = () => {
     if (limitError) return;
     if (!quote || error) {
-      alert("Por favor, obtenga una cotización válida antes de continuar.");
+      toast.error("Por favor, obtenga una cotización válida antes de continuar.");
       return;
     }
     onQuoteSuccess({
@@ -295,7 +296,7 @@ const CardForm = ({ onQuoteSuccess }) => {
               {quote.destCurrency === 'BOB' && (
                 <div className="d-flex justify-content-end mb-2">
                   <span className="text-secondary small fst-italic">
-                    Tasa de cambio: {quote.rateWithMarkup}
+                    Tasa de cambio Preferencial: {quote.rateWithMarkup}
                   </span>
                 </div>
               )}
