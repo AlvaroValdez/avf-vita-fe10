@@ -291,6 +291,15 @@ const CardForm = ({ onQuoteSuccess }) => {
                 </span>
               </div>
 
+              {/* Tasa específica para Bolivia (formato directo 0.0103) */}
+              {quote.destCurrency === 'BOB' && (
+                <div className="d-flex justify-content-end mb-2">
+                  <span className="text-secondary small fst-italic">
+                    Tasa de cambio: {quote.rateWithMarkup}
+                  </span>
+                </div>
+              )}
+
               <hr className="my-2" />
 
               <div className="d-flex justify-content-between fw-bold fs-6" style={{ color: 'var(--avf-primary)' }}>
