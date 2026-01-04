@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Card, Form, Row, Col, InputGroup, Button, Spinner, Alert } from 'react-bootstrap';
+import { Card, Form, Row, Col, InputGroup, Button, Spinner, Alert, Modal, ListGroup } from 'react-bootstrap';
 import { toast } from 'sonner';
 import { Link } from 'react-router-dom';
 import { useAppContext } from '../../context/AppContext';
@@ -8,8 +8,78 @@ import { getQuote, getTransactionRules, getEnabledOrigins } from '../../services
 import { formatNumberForDisplay, parseFormattedNumber, formatRate } from '../../utils/formatting';
 import logo from '../../assets/images/logo.png'; // Importación correcta del logo
 
+// Import flags directly for better reliability
+import flagCL from '../../assets/flags/cl.svg';
+import flagCO from '../../assets/flags/co.svg';
+import flagBO from '../../assets/flags/bo.svg';
+import flagPE from '../../assets/flags/pe.svg';
+import flagMX from '../../assets/flags/mx.svg';
+import flagVE from '../../assets/flags/ve.svg';
+import flagBR from '../../assets/flags/br.svg';
+import flagAR from '../../assets/flags/ar.svg';
+import flagUS from '../../assets/flags/us.svg';
+import flagCR from '../../assets/flags/cr.svg';
+import flagDO from '../../assets/flags/do.svg';
+import flagEC from '../../assets/flags/ec.svg';
+import flagES from '../../assets/flags/es.svg';
+import flagEU from '../../assets/flags/eu.svg';
+import flagGB from '../../assets/flags/gb.svg';
+import flagGT from '../../assets/flags/gt.svg';
+import flagHT from '../../assets/flags/ht.svg';
+import flagPA from '../../assets/flags/pa.svg';
+import flagPL from '../../assets/flags/pl.svg';
+import flagPY from '../../assets/flags/py.svg';
+import flagSV from '../../assets/flags/sv.svg';
+import flagUY from '../../assets/flags/uy.svg';
+import flagAU from '../../assets/flags/au.svg';
+import flagCN from '../../assets/flags/cn.svg';
+
+// Flag map for easy access
+const FLAGS = {
+  CL: flagCL,
+  CO: flagCO,
+  BO: flagBO,
+  PE: flagPE,
+  MX: flagMX,
+  VE: flagVE,
+  BR: flagBR,
+  AR: flagAR,
+  US: flagUS,
+  CR: flagCR,
+  DO: flagDO,
+  EC: flagEC,
+  ES: flagES,
+  EU: flagEU,
+  GB: flagGB,
+  GT: flagGT,
+  HT: flagHT,
+  PA: flagPA,
+  PL: flagPL,
+  PY: flagPY,
+  SV: flagSV,
+  UY: flagUY,
+  AU: flagAU,
+  CN: flagCN
+};
+
+// Helper to get flag by country code
+const getFlagUrl = (code) => {
+  if (!code) return '';
+  return FLAGS[code.toUpperCase()] || '';
+};
+
+// Country to Currency mapping
+const COUNTRY_TO_CURRENCY = {
+  CL: 'CLP', CO: 'COP', AR: 'ARS', MX: 'MXN',
+  BR: 'BRL', PE: 'PEN', BO: 'BOB', US: 'USD', VE: 'VES',
+  CR: 'CRC', DO: 'DOP', EC: 'USD', ES: 'EUR', EU: 'EUR',
+  GB: 'GBP', GT: 'GTQ', HT: 'HTG', PA: 'PAB', PL: 'PLN',
+  PY: 'PYG', SV: 'USD', UY: 'UYU', AU: 'AUD', CN: 'CNY'
+};
+
 const CardForm = ({ onQuoteSuccess }) => {
   const { countries, loading: loadingCountries } = useAppContext();
+  // ...
   const { user } = useAuth();
   // ...
 
@@ -33,6 +103,10 @@ const CardForm = ({ onQuoteSuccess }) => {
   const [minAmount, setMinAmount] = useState(5000);
   const [alertMessage, setAlertMessage] = useState('');
   const [limitError, setLimitError] = useState(false);
+
+  // Modal States for Country Selection
+  const [showOriginModal, setShowOriginModal] = useState(false);
+  const [showDestModal, setShowDestModal] = useState(false);
 
   // 1. Load Enabled Origin Countries
   useEffect(() => {
@@ -189,9 +263,7 @@ const CardForm = ({ onQuoteSuccess }) => {
   return (
     <Card className="p-4 shadow-lg border-0" style={{ borderRadius: '15px' }}>
       <Card.Body>
-        <div className="text-center mb-3">
-          <img src={logo} alt="Alyto" style={{ height: '40px' }} />
-        </div>
+
         <h4 className="mb-4 text-center fw-bold">Cotizar envío</h4>
 
         {alertMessage && (
@@ -201,80 +273,47 @@ const CardForm = ({ onQuoteSuccess }) => {
         )}
 
         <Form>
-          {/* Country Selection Row */}
-          <Row className="mb-3">
-            <Col md={6}>
-              <Form.Group>
-                <Form.Label className="text-muted small">Envías desde</Form.Label>
-                <Form.Select
-                  value={originCountry}
-                  onChange={handleOriginChange}
-                  disabled={loadingOrigins || originCountries.length === 0} // Deshabilitar si no hay opciones
-                  className="border-0 bg-light fw-bold"
-                  style={{ minHeight: '50px', fontSize: '1.0rem' }}
-                >
-                  {loadingOrigins ? (
-                    <option>Cargando...</option>
-                  ) : originCountries.length === 0 ? (
-                    <option value="">No disponible</option> // Mensaje si todo está desactivado
-                  ) : (
-                    originCountries.map(c => (
-                      <option key={c.code} value={c.code}>{c.name} ({c.currency})</option>
-                    ))
-                  )}
-                </Form.Select>
-              </Form.Group>
-            </Col>
-            <Col md={6}>
-              <Form.Group>
-                <Form.Label className="text-muted small">Reciben en</Form.Label>
-                <Form.Select
-                  value={destCountry}
-                  onChange={(e) => setDestCountry(e.target.value)}
-                  disabled={loadingCountries}
-                  className="border-0 bg-light fw-bold"
-                  style={{ minHeight: '50px', fontSize: '1.0rem' }}
-                >
-                  {loadingCountries ? <option>Cargando...</option> : countries.map(c => (
-                    <option key={c.code} value={c.code}>{c.name}</option>
-                  ))}
-                </Form.Select>
-              </Form.Group>
-            </Col>
-          </Row>
+          {/* Compact "Estás enviando" Section with clickable country selector */}
+          <div className="mb-3 p-3 bg-light rounded-3">
+            <small className="text-muted d-block mb-2">Tú envías</small>
+            <div className="d-flex align-items-center justify-content-between">
+              <div
+                className="d-flex align-items-center gap-2 cursor-pointer"
+                style={{ minWidth: '140px', cursor: 'pointer' }}
+                onClick={() => setShowOriginModal(true)}
+              >
+                {getFlagUrl(originCountry) && (
+                  <img
+                    src={getFlagUrl(originCountry)}
+                    alt={originCountry}
+                    style={{ width: '32px', height: '32px', borderRadius: '50%', objectFit: 'cover' }}
+                  />
+                )}
+                <span className="fw-bold" style={{ fontSize: '16px' }}>{originCurrency}</span>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <polyline points="6 9 12 15 18 9"></polyline>
+                </svg>
+              </div>
+              <Form.Control
+                type="text"
+                inputMode="numeric"
+                placeholder="0"
+                value={displayAmount}
+                onChange={handleAmountChange}
+                className={`border-0 bg-transparent text-end fw-bold p-0 ${error ? 'is-invalid' : ''}`}
+                style={{ fontSize: '24px', maxWidth: '200px' }}
+              />
+            </div>
+          </div>
 
-          {/* Amount Inputs Row */}
-          <Row className="mb-3">
-            <Col>
-              <Form.Label className="text-muted">Tú envías</Form.Label>
-              <InputGroup>
-                <Form.Control
-                  type="text"
-                  inputMode="numeric"
-                  placeholder="0"
-                  value={displayAmount}
-                  onChange={handleAmountChange}
-                  className={`border-0 bg-light py-2 ps-3 pe-0 ${error ? 'is-invalid' : ''}`}
-                  style={{ minHeight: '50px', fontSize: '1.1rem' }}
-                />
-                <InputGroup.Text className="bg-light border-0 fw-bold fs-6">{originCurrency}</InputGroup.Text>
-              </InputGroup>
-            </Col>
-            <Col>
-              <Form.Label className="text-muted">Ellos reciben</Form.Label>
-              <InputGroup>
-                <Form.Control
-                  type="text"
-                  readOnly
-                  placeholder="Calculado"
-                  value={quote ? formatNumberForDisplay(quote.amountOut) : '0'}
-                  className="border-0 bg-light py-2 ps-3 pe-0"
-                  style={{ minHeight: '50px', fontSize: '1.1rem' }}
-                />
-                <InputGroup.Text className="bg-light border-0 fw-bold fs-6">{quote ? quote.destCurrency : '---'}</InputGroup.Text>
-              </InputGroup>
-            </Col>
-          </Row>
+          {/* Exchange Rate - Centered */}
+          {quote && !loading && !error && (
+            <div className="text-center my-2">
+              <small className="text-dark fw-bold">
+                1 {quote.destCurrency} = {formatRate(1 / quote.rateWithMarkup)} {quote.origin}
+              </small>
+            </div>
+          )}
 
           {loading && (
             <div className="text-center my-2 text-muted small">
@@ -283,34 +322,56 @@ const CardForm = ({ onQuoteSuccess }) => {
             </div>
           )}
 
-// ... (imports)
-
-          {quote && !loading && !error && (
-            <div className="mt-3 p-3 bg-light rounded" style={{ fontSize: '0.9rem' }}>
-              <div className="d-flex justify-content-between align-items-center mb-2">
-                <span className="text-muted">Tasa de cambio:</span>
-                <span className="fw-bold">
-                  1 {quote.destCurrency} = {formatRate(1 / quote.rateWithMarkup)} {quote.origin}
-                  {quote.isManual && (
-                    <span className="ms-2 badge bg-success" style={{ fontSize: '0.7em', verticalAlign: 'middle' }}>
-                      Tasa Garantizada
-                    </span>
-                  )}
+          {/* Compact "Ellos reciben" Section with clickable country selector */}
+          <div className="mb-4 p-3 bg-light rounded-3">
+            <small className="text-muted d-block mb-2">Ellos reciben</small>
+            <div className="d-flex align-items-center justify-content-between">
+              <div
+                className="d-flex align-items-center gap-2"
+                style={{ minWidth: '140px', cursor: 'pointer' }}
+                onClick={() => setShowDestModal(true)}
+              >
+                {getFlagUrl(destCountry) && (
+                  <img
+                    src={getFlagUrl(destCountry)}
+                    alt={destCountry}
+                    style={{ width: '32px', height: '32px', borderRadius: '50%', objectFit: 'cover' }}
+                  />
+                )}
+                <span className="fw-bold" style={{ fontSize: '16px' }}>
+                  {COUNTRY_TO_CURRENCY[destCountry] || destCountry}
                 </span>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <polyline points="6 9 12 15 18 9"></polyline>
+                </svg>
               </div>
+              <span className="fw-bold text-end" style={{ fontSize: '24px' }}>
+                {quote ? formatNumberForDisplay(quote.amountOut) : '0'}
+              </span>
+            </div>
+          </div>
 
-              {/* Tasa específica para Bolivia (formato directo 0.0103) */}
+          {/* Quote Details */}
+          {quote && !loading && !error && (
+            <div className="mb-3">
+              {/* Tasa específica para Bolivia */}
+              {quote.isManual && (
+                <div className="d-flex justify-content-center mb-2">
+                  <span className="badge bg-success">
+                    Tasa Garantizada
+                  </span>
+                </div>
+              )}
+
               {quote.destCurrency === 'BOB' && (
-                <div className="d-flex justify-content-end mb-2">
+                <div className="d-flex justify-content-center mb-2">
                   <span className="text-secondary small fst-italic">
                     Tasa de cambio Preferencial: {quote.rateWithMarkup}
                   </span>
                 </div>
               )}
 
-              <hr className="my-2" />
-
-              <div className="d-flex justify-content-between fw-bold fs-6 text-primary">
+              <div className="d-flex justify-content-between fw-bold" style={{ fontSize: '1.1rem' }}>
                 <span>Total a pagar:</span>
                 <span>{formatNumberForDisplay(quote.amountIn)} {quote.origin} *</span>
               </div>
@@ -333,12 +394,94 @@ const CardForm = ({ onQuoteSuccess }) => {
               onClick={handleNextStep}
               disabled={!quote || loading || !!error}
               variant="primary"
-              className="py-3 fw-bold fs-6 text-primary"
+              className="py-3 fw-bold fs-6 text-white"
             >
               {loading ? 'Cotizando...' : 'Continuar'}
             </Button>
           </div>
         </Form>
+
+        {/* Origin Country Selection Modal */}
+        <Modal show={showOriginModal} onHide={() => setShowOriginModal(false)} centered>
+          <Modal.Header closeButton>
+            <Modal.Title>Selecciona país de origen</Modal.Title>
+          </Modal.Header>
+          <Modal.Body style={{ maxHeight: '400px', overflowY: 'auto' }}>
+            <ListGroup variant="flush">
+              {loadingOrigins ? (
+                <ListGroup.Item>Cargando...</ListGroup.Item>
+              ) : originCountries.length === 0 ? (
+                <ListGroup.Item>No hay países disponibles</ListGroup.Item>
+              ) : (
+                originCountries.map(c => (
+                  <ListGroup.Item
+                    key={c.code}
+                    action
+                    active={c.code === originCountry}
+                    onClick={() => {
+                      handleOriginChange({ target: { value: c.code } });
+                      setShowOriginModal(false);
+                    }}
+                    className="d-flex align-items-center gap-3"
+                    style={{ cursor: 'pointer' }}
+                  >
+                    {getFlagUrl(c.code) && (
+                      <img
+                        src={getFlagUrl(c.code)}
+                        alt={c.code}
+                        style={{ width: '32px', height: '32px', borderRadius: '50%', objectFit: 'cover' }}
+                      />
+                    )}
+                    <div>
+                      <div className="fw-bold">{c.name}</div>
+                      <small className="text-muted">{c.currency}</small>
+                    </div>
+                  </ListGroup.Item>
+                ))
+              )}
+            </ListGroup>
+          </Modal.Body>
+        </Modal>
+
+        {/* Destination Country Selection Modal */}
+        <Modal show={showDestModal} onHide={() => setShowDestModal(false)} centered>
+          <Modal.Header closeButton>
+            <Modal.Title>Selecciona país destino</Modal.Title>
+          </Modal.Header>
+          <Modal.Body style={{ maxHeight: '400px', overflowY: 'auto' }}>
+            <ListGroup variant="flush">
+              {loadingCountries ? (
+                <ListGroup.Item>Cargando...</ListGroup.Item>
+              ) : (
+                countries.map(c => (
+                  <ListGroup.Item
+                    key={c.code}
+                    action
+                    active={c.code === destCountry}
+                    onClick={() => {
+                      setDestCountry(c.code);
+                      setShowDestModal(false);
+                    }}
+                    className="d-flex align-items-center gap-3"
+                    style={{ cursor: 'pointer' }}
+                  >
+                    {getFlagUrl(c.code) && (
+                      <img
+                        src={getFlagUrl(c.code)}
+                        alt={c.code}
+                        style={{ width: '32px', height: '32px', borderRadius: '50%', objectFit: 'cover' }}
+                      />
+                    )}
+                    <div>
+                      <div className="fw-bold">{c.name}</div>
+                      <small className="text-muted">{COUNTRY_TO_CURRENCY[c.code] || c.code}</small>
+                    </div>
+                  </ListGroup.Item>
+                ))
+              )}
+            </ListGroup>
+          </Modal.Body>
+        </Modal>
       </Card.Body>
     </Card>
   );

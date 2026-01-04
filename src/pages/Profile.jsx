@@ -3,6 +3,7 @@ import { Container, Row, Col, Card, ListGroup, Badge, Spinner, Button } from 're
 import { useAuth } from '../context/AuthContext';
 import KycLevel2Form from '../components/auth/KycLevel2Form';
 import { uploadAvatar } from '../services/api';
+import logo from '../assets/images/logo.png';
 
 const Profile = () => {
   const { user, updateUserSession } = useAuth();
@@ -52,8 +53,13 @@ const Profile = () => {
   };
 
   return (
-    <Container className="my-5">
-      <h2 className="mb-4" style={{ color: 'var(--avf-primary)' }}>Mi Perfil</h2>
+    <Container className="my-4">
+      {/* Logo Header */}
+      <div className="text-center mb-4">
+        <img src={logo} alt="Alyto" style={{ height: '90px' }} />
+      </div>
+
+      <h2 className="mb-4 fw-bold" style={{ color: 'var(--avf-primary)' }}>Mi Perfil</h2>
       <Row>
         {/* --- Columna Izquierda: Datos Personales --- */}
         <Col lg={4} className="mb-4">
@@ -117,6 +123,36 @@ const Profile = () => {
                   <strong>Dirección:</strong> <br /> {user?.address || 'No registrado'}
                 </ListGroup.Item>
               </ListGroup>
+
+              <hr />
+
+              {/* Transaction Limits Section */}
+              <div className="mt-3">
+                <h6 className="fw-bold mb-3">Límites de Transacción</h6>
+                <div className="small">
+                  <div className="d-flex justify-content-between mb-2">
+                    <span className="text-muted">Nivel Actual:</span>
+                    <Badge bg="primary">{user?.kyc?.level || 1}</Badge>
+                  </div>
+                  <div className="d-flex justify-content-between mb-2">
+                    <span className="text-muted">Límite por Transacción:</span>
+                    <strong>
+                      {user?.kyc?.level === 3 ? '$50.000.000' :
+                        user?.kyc?.level === 2 ? '$4.500.000' :
+                          '$450.000'} CLP
+                    </strong>
+                  </div>
+                  {user?.kyc?.level < 3 && (
+                    <div className="mt-2 p-2 bg-light rounded">
+                      <small className="text-muted">
+                        ⬆️ Nivel {(user?.kyc?.level || 1) + 1}: {
+                          (user?.kyc?.level || 1) === 1 ? '$4.500.000' : '$50.000.000'
+                        } CLP
+                      </small>
+                    </div>
+                  )}
+                </div>
+              </div>
             </Card.Body>
           </Card>
         </Col>

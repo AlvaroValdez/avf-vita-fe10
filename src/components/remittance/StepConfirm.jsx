@@ -326,9 +326,24 @@ const StepConfirm = ({ formData, fields, onBack, isFromFavorite }) => {
           )}
         </Form>
 
-        <Button onClick={handleConfirm} disabled={loading} className="w-100 mt-3" variant="primary">
-          {loading ? <Spinner size="sm" /> : 'Confirmar y Pagar'}
-        </Button>
+        <div className="d-flex justify-content-between gap-3 mt-4">
+          <Button
+            variant="outline-secondary"
+            onClick={onBack}
+            disabled={loading}
+            className="flex-shrink-0"
+          >
+            Atrás
+          </Button>
+          <Button
+            onClick={handleConfirm}
+            disabled={loading}
+            className="flex-grow-1 text-white fw-bold"
+            variant="primary"
+          >
+            {loading ? <Spinner size="sm" /> : 'Ir a Pagar'}
+          </Button>
+        </div>
       </Card.Body>
 
       <Modal show={showDirectPayModal} onHide={() => setShowDirectPayModal(false)} backdrop="static" centered>

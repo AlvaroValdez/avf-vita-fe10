@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import { getTransactions } from '../services/api';
 import { useAppContext } from '../context/AppContext';
 import { useAuth } from '../context/AuthContext';
+import logo from '../assets/images/logo.png';
 
 const TRANSACTIONS_PER_PAGE = 10; // Número de transacciones por página
 
@@ -37,12 +38,33 @@ const Transactions = () => {
           ...activeFilters
         });
 
-        if (response.ok) {
-          setTransactions(response.transactions);
-          setTotalPages(Math.ceil(response.total / TRANSACTIONS_PER_PAGE));
-        } else {
-          throw new Error(response.error || 'Error al obtener transacciones del backend.');
+        // Robust Response Handling
+        let txList = [];
+        let totalCount = 0;
+
+        if (Array.isArray(response)) {
+          // Direct Array Response
+          txList = response;
+          totalCount = response.length;
+        } else if (response?.transactions && Array.isArray(response.transactions)) {
+          // Object with transactions key
+          txList = response.transactions;
+          totalCount = response.total || response.transactions.length;
+        } else if (response?.data && Array.isArray(response.data)) {
+          // Object with data key
+          txList = response.data;
+          totalCount = response.total || response.data.length;
+        } else if (response?.ok && Array.isArray(response?.data)) {
+          // Wrapper with ok: true
+          txList = response.data;
+          totalCount = response.total || response.data.length;
         }
+
+        // Only if we found nothing and response was an object implying failure? 
+        // But getTransactions throws on http error. So if we are here, we likely have success or empty structure.
+
+        setTransactions(txList);
+        setTotalPages(totalCount > 0 ? Math.ceil(totalCount / TRANSACTIONS_PER_PAGE) : 1);
       } catch (err) {
         setError(err.message || 'No se pudieron cargar las transacciones.');
         setTransactions([]); // Limpia en caso de error
@@ -174,10 +196,17 @@ const Transactions = () => {
   };
 
   return (
-    <Container className="my-5">
-      <Card>
-        <Card.Header as="h4">
-          Historial de Transacciones {isAdmin && <Badge bg="primary" className="ms-2">Admin</Badge>}
+    <Container className="my-4">
+      {/* Logo Header */}
+      <div className="text-center mb-4">
+        <img src={logo} alt="Alyto" style={{ height: '90px' }} />
+      </div>
+
+      <Card className="shadow-sm border-0">
+        <Card.Header className="bg-white border-bottom-0 py-3" style={{ borderRadius: '10px 10px 0 0' }}>
+          <h4 className="fw-bold mb-0">
+            Historial de Transacciones {isAdmin && <Badge bg="primary" className="ms-2">Admin</Badge>}
+          </h4>
         </Card.Header>
         <Card.Body>
           {/* --- Formulario de Filtros --- */}

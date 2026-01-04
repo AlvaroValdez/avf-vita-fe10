@@ -12,15 +12,27 @@ const Login = () => {
   const { login } = useAuth();
   const navigate = useNavigate();
 
+  // Detectar si llegamos aquí por sesión expirada
+  React.useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('expired') === 'true') {
+      setError('Tu sesión ha expirado. Por favor, inicia sesión nuevamente.');
+      toast.warning('Sesión expirada', {
+        description: 'Por seguridad, tu sesión ha caducado. Inicia sesión de nuevo.'
+      });
+    }
+  }, []);
+
   const handleSubmit = async (e) => {
-    e.preventDefault();
+    +
+      e.preventDefault();
     setError('');
     setLoading(true);
     try {
       const success = await login(email, password);
       if (success) {
         toast.success('¡Bienvenido de nuevo!'); // ✅ Login Toast
-        navigate('/transactions');
+        navigate('/'); // Redirect to home instead of transactions
       }
     } catch (err) {
       setError(err.message || 'No se pudo iniciar sesión. Verifica tus credenciales.');
@@ -30,8 +42,8 @@ const Login = () => {
   };
 
   return (
-    <Container className="d-flex justify-content-center align-items-center" style={{ minHeight: '80vh' }}>
-      <Card className="shadow-sm border-0" style={{ width: '400px' }}>
+    <Container className="d-flex justify-content-center align-items-center px-3" style={{ minHeight: '80vh' }}>
+      <Card className="shadow-sm border-0 w-100" style={{ maxWidth: '400px' }}>
         <Card.Body className="p-4">
           <Card.Title as="h3" className="text-center mb-4 fw-bold text-primary">
             Iniciar Sesión

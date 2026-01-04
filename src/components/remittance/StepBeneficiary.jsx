@@ -3,6 +3,23 @@ import { Card, Form, Button, Col, Row, Spinner } from 'react-bootstrap';
 import { getBeneficiaries } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
 
+// Import flags
+import flagCL from '../../assets/flags/cl.svg';
+import flagCO from '../../assets/flags/co.svg';
+import flagBO from '../../assets/flags/bo.svg';
+import flagPE from '../../assets/flags/pe.svg';
+import flagMX from '../../assets/flags/mx.svg';
+import flagVE from '../../assets/flags/ve.svg';
+import flagBR from '../../assets/flags/br.svg';
+import flagAR from '../../assets/flags/ar.svg';
+import flagUS from '../../assets/flags/us.svg';
+
+const FLAGS = {
+  CL: flagCL, CO: flagCO, BO: flagBO, PE: flagPE,
+  MX: flagMX, VE: flagVE, BR: flagBR, AR: flagAR, US: flagUS
+};
+const getFlagUrl = (code) => FLAGS[code?.toUpperCase()] || '';
+
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 const StepBeneficiary = ({ formData, fields, onBack, onComplete }) => {
@@ -22,8 +39,16 @@ const StepBeneficiary = ({ formData, fields, onBack, onComplete }) => {
     if (token) {
       setLoadingFavorites(true);
       getBeneficiaries()
-        .then(res => { if (res.ok) setFavorites(res.beneficiaries || []); })
-        .catch(console.warn)
+        .then(res => {
+          console.log("👥 Beneficiaries Response:", res);
+          let list = [];
+          if (Array.isArray(res)) list = res;
+          else if (res?.beneficiaries && Array.isArray(res.beneficiaries)) list = res.beneficiaries;
+          else if (res?.data && Array.isArray(res.data)) list = res.data;
+
+          setFavorites(list);
+        })
+        .catch(err => console.error("Error loading favorites:", err))
         .finally(() => setLoadingFavorites(false));
     }
   }, [token]);
@@ -144,10 +169,15 @@ const StepBeneficiary = ({ formData, fields, onBack, onComplete }) => {
         {token && (
           <Form.Group className="mb-4 p-3 bg-light rounded">
             <Form.Label className="fw-bold text-primary">Cargar Favorito</Form.Label>
-            <Form.Select value={selectedFavorite} onChange={handleFavoriteSelect} disabled={loadingFavorites}>
-              <option value="">{loadingFavorites ? 'Cargando...' : 'Selecciona un contacto...'}</option>
-              {favorites.map(fav => <option key={fav._id} value={fav._id}>{fav.nickname}</option>)}
+            <Form.Select value={selectedFavorite} onChange={handleFavoriteSelect}>
+              <option value="">-- Nuevo destinatario --</option>
+              {favorites.map(fav => (
+                <option key={fav._id} value={fav._id}>
+                  {fav.beneficiaryData?.beneficiary_first_name} {fav.beneficiaryData?.beneficiary_last_name} ({fav.country})
+                </option>
+              ))}
             </Form.Select>
+            {loadingFavorites && <Spinner animation="border" size="sm" className="mt-2" />}
           </Form.Group>
         )}
 
@@ -168,7 +198,7 @@ const StepBeneficiary = ({ formData, fields, onBack, onComplete }) => {
             <Button
               variant="primary"
               onClick={handleNext}
-              style={{ backgroundColor: 'var(--avf-secondary)', borderColor: 'var(--avf-secondary)', color: 'white' }}
+              className="text-white fw-bold"
             >
               Continuar
             </Button>

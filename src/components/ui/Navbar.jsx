@@ -15,10 +15,10 @@ const AppNavbar = () => {
   };
 
   return (
-    <Navbar bg="white" expand="lg" className="shadow-sm py-3">
+    <Navbar bg="white" expand="lg" className="shadow-sm py-3 fixed-top">
       <Container>
         <Navbar.Brand as={Link} to="/" className="fw-bold text-dark d-flex align-items-center">
-          <img src={logo} alt="Alyto" style={{ height: '40px' }} className="me-2" />
+          <img src={logo} alt="Alyto" style={{ height: '90px' }} className="me-2" />
           {/* Alyto */}
         </Navbar.Brand>
 
@@ -33,13 +33,10 @@ const AppNavbar = () => {
                 <Nav.Link as={Link} to="/" className="me-3">Inicio</Nav.Link>
               </>
             )}
-
-            {/* Usuario logueado */}
+            {/* ... (Logged in links remain same) */}
             {token && (
               <>
-                {/* ✅ HABILITADO: acceso al flujo principal */}
                 <Nav.Link as={Link} to="/send" className="me-3">Cotizar / Enviar</Nav.Link>
-
                 <Nav.Link as={Link} to="/transactions" className="me-3">Transacciones</Nav.Link>
                 <Nav.Link as={Link} to="/profile" className="me-3">Perfil</Nav.Link>
                 <Nav.Link as={Link} to="/favorites" className="me-3">Favoritos</Nav.Link>
@@ -47,11 +44,11 @@ const AppNavbar = () => {
             )}
           </Nav>
 
-          {/* Área derecha (CTA + Admin + Auth) */}
+          {/* Área derecha (Order: Login, Register, Cotizar for Guests) */}
           <Nav className="align-items-lg-center">
             {token ? (
+              // ... (Logged in right area remains same)
               <>
-                {/* ✅ CTA destacado para enviar (estilo Alyto) */}
                 <Button
                   as={Link}
                   to="/send"
@@ -61,7 +58,6 @@ const AppNavbar = () => {
                   Enviar ahora
                 </Button>
 
-                {/* Admin */}
                 {user?.role === 'admin' && (
                   <>
                     <Nav.Link as={Link} to="/admin/treasury" className="me-3">Tesorería</Nav.Link>
@@ -78,18 +74,18 @@ const AppNavbar = () => {
               </>
             ) : (
               <>
-                {/* ✅ CTA público: cotizar lleva al home */}
+                {/* Orden: Login -> Registro -> Cotizar */}
+                <Nav.Link as={Link} to="/login" className="me-3">Login</Nav.Link>
+                <Nav.Link as={Link} to="/register" className="me-3">Registrarse</Nav.Link>
+
                 <Button
                   as={Link}
                   to="/"
                   variant="primary"
-                  className="me-2 fw-bold text-primary"
+                  className="fw-bold text-primary"
                 >
                   Cotizar
                 </Button>
-
-                <Nav.Link as={Link} to="/login" className="me-3">Login</Nav.Link>
-                <Nav.Link as={Link} to="/register">Registro</Nav.Link>
               </>
             )}
           </Nav>

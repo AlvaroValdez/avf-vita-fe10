@@ -26,6 +26,24 @@ apiClient.interceptors.request.use((config) => {
   return config;
 });
 
+// ✅ Interceptor de respuesta para manejar tokens expirados
+apiClient.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    // Si recibimos 401 (Token expirado/inválido), limpiar sesión
+    if (error?.response?.status === 401) {
+      console.warn('⚠️ Token expirado o inválido. Cerrando sesión...');
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      // Redirigir a login si no estamos ya ahí
+      if (window.location.pathname !== '/login') {
+        window.location.href = '/login?expired=true';
+      }
+    }
+    return Promise.reject(error);
+  }
+);
+
 // ✅ Normalizador de errores (para que el FE no reviente con shapes distintos)
 function normalizeAxiosError(error, defaultMsg = 'Error inesperado.') {
   const status = error?.response?.status;

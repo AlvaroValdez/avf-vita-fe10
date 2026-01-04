@@ -6,49 +6,76 @@ const BottomNav = () => {
     const location = useLocation();
     const isActive = (path) => location.pathname === path;
 
+    // Custom Icons (SVG)
+    const Icons = {
+        Home: ({ active }) => (
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M2 12.2033C2 9.91549 3.23316 7.85059 5.17881 6.84073L10.3639 4.14925C11.396 3.61352 12.604 3.61352 13.6361 4.14925L18.8212 6.84073C20.7668 7.85059 22 9.91549 22 12.2033V15.7071C22 18.0673 20.0864 19.9808 17.7262 19.9808H6.27376C3.91365 19.9808 2 18.0673 2 15.7071V12.2033Z" fill={active ? "white" : "#A0A0A0"} />
+            </svg>
+        ),
+        Cards: ({ active }) => (
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path fillRule="evenodd" clipRule="evenodd" d="M3.75 5.25C2.50736 5.25 1.5 6.25736 1.5 7.5V16.5C1.5 17.7426 2.50736 18.75 3.75 18.75H20.25C21.4926 18.75 22.5 17.7426 22.5 16.5V7.5C22.5 6.25736 21.4926 5.25 20.25 5.25H3.75ZM3 9V16.5C3 16.9142 3.33579 17.25 3.75 17.25H20.25C20.6642 17.25 21 16.9142 21 16.5V9H3Z" fill={active ? "white" : "#A0A0A0"} />
+                <rect x="5.25" y="12.75" width="4.5" height="1.5" rx="0.75" fill={active ? "white" : "#A0A0A0"} />
+            </svg>
+        ),
+        Activity: ({ active }) => (
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path fillRule="evenodd" clipRule="evenodd" d="M8 2.25C7.58579 2.25 7.25 2.58579 7.25 3V4.5H6C4.34315 4.5 3 5.84315 3 7.5V19.5C3 21.1569 4.34315 22.5 6 22.5H18C19.6569 22.5 21 21.1569 21 19.5V7.5C21 5.84315 19.6569 4.5 18 4.5H16.75V3C16.75 2.58579 16.4142 2.25 16 2.25C15.5858 2.25 15.25 2.58579 15.25 3V4.5H8.75V3C8.75 2.58579 8.41421 2.25 8 2.25ZM6 6H18C18.8284 6 19.5 6.67157 19.5 7.5V19.5C19.5 20.3284 18.8284 21 18 21H6C5.17157 21 4.5 20.3284 4.5 19.5V7.5C4.5 6.67157 5.17157 6 6 6ZM8 10.5C7.58579 10.5 7.25 10.8358 7.25 11.25V11.25C7.25 11.6642 7.58579 12 8 12H16C16.4142 12 16.75 11.6642 16.75 11.25V11.25C16.75 10.8358 16.4142 10.5 16 10.5H8ZM8 15C7.58579 15 7.25 15.3358 7.25 15.75V15.75C7.25 16.1642 7.58579 16.5 8 16.5H13C13.4142 16.5 13.75 16.1642 13.75 15.75V15.75C13.75 15.3358 13.4142 15 13 15H8Z" fill={active ? "white" : "#A0A0A0"} />
+            </svg>
+        ),
+        Profile: ({ active }) => (
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path fillRule="evenodd" clipRule="evenodd" d="M12 2.25C9.37665 2.25 7.25 4.37665 7.25 7C7.25 9.62335 9.37665 11.75 12 11.75C14.6234 11.75 16.75 9.62335 16.75 7C16.75 4.37665 14.6234 2.25 12 2.25ZM12 13.25C16.2802 13.25 19.75 16.7198 19.75 21C19.75 21.4142 19.4142 21.75 19 21.75H5C4.58579 21.75 4.25 21.4142 4.25 21C4.25 16.7198 7.71979 13.25 12 13.25Z" fill={active ? "white" : "#A0A0A0"} />
+            </svg>
+        )
+    };
+
+    const navItemClass = "d-flex align-items-center justify-content-center flex-grow-1 text-decoration-none";
+    const activeStyle = {
+        backgroundColor: '#233E58', // Alyto Blue
+        color: 'white',
+        borderRadius: '25px',
+        padding: '10px 20px',
+        transition: 'all 0.3s ease',
+        fontWeight: '600',
+        gap: '8px'
+    };
+    const inactiveStyle = {
+        padding: '10px',
+        backgroundColor: 'transparent',
+        transition: 'all 0.3s ease'
+    };
+
     return (
-        <div className="bottom-nav d-lg-none fixed-bottom bg-white border-top shadow-lg" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
-            <Nav className="justify-content-around py-2">
-                <Nav.Item>
-                    <Nav.Link as={Link} to="/" className={`d-flex flex-column align-items-center small ${isActive('/') ? 'text-primary fw-bold' : 'text-muted'}`}>
-                        <i className={`bi ${isActive('/') ? 'bi-house-door-fill' : 'bi-house-door'} fs-4 mb-0 text-primary`}></i>
-                        <span style={{ fontSize: '0.7rem' }}>Inicio</span>
-                    </Nav.Link>
-                </Nav.Item>
+        <div className="d-block d-lg-none fixed-bottom bg-white border-top shadow-lg" style={{ paddingBottom: 'env(safe-area-inset-bottom)', height: '80px', borderRadius: '25px 25px 0 0' }}>
+            <div className="d-flex justify-content-between align-items-center h-100 px-4">
 
-                <Nav.Item>
-                    <Nav.Link as={Link} to="/favorites" className={`d-flex flex-column align-items-center small ${isActive('/favorites') ? 'text-primary fw-bold' : 'text-muted'}`}>
-                        <i className={`bi ${isActive('/favorites') ? 'bi-people-fill' : 'bi-people'} fs-4 mb-0 text-primary`}></i>
-                        <span style={{ fontSize: '0.7rem' }}>Destinatarios</span>
-                    </Nav.Link>
-                </Nav.Item>
+                {/* Inicio */}
+                <Link to="/" className={navItemClass} style={isActive('/') ? activeStyle : inactiveStyle}>
+                    <Icons.Home active={isActive('/')} />
+                    {isActive('/') && <span style={{ fontSize: '0.9rem' }}>Inicio</span>}
+                </Link>
 
-                {/* Central "Send" Button - Floating effect */}
-                <Nav.Item style={{ marginTop: '-25px' }}>
-                    <Nav.Link as={Link} to="/send" className="d-flex flex-column align-items-center">
-                        <div className="rounded-circle shadow d-flex align-items-center justify-content-center"
-                            style={{ width: '56px', height: '56px', backgroundColor: '#233E58', border: '3px solid white' }}>
-                            {/* User wants "Enviar" here. Usually points to transfer flow. keeping href="/" for now or /transfer */}
-                            <i className="bi bi-send-fill text-white fs-4"></i>
-                        </div>
-                        <span className="small fw-bold mt-1 text-primary">Enviar</span>
-                    </Nav.Link>
-                </Nav.Item>
+                {/* Contactos/Favoritos */}
+                <Link to="/favorites" className={navItemClass} style={isActive('/favorites') ? activeStyle : inactiveStyle}>
+                    <Icons.Cards active={isActive('/favorites')} />
+                    {isActive('/favorites') && <span style={{ fontSize: '0.9rem' }}>Contactos</span>}
+                </Link>
 
-                <Nav.Item>
-                    <Nav.Link as={Link} to="/transactions" className={`d-flex flex-column align-items-center small ${isActive('/transactions') ? 'text-primary fw-bold' : 'text-muted'}`}>
-                        <i className={`bi ${isActive('/transactions') ? 'bi-clock-history' : 'bi-clock'} fs-4 mb-0 text-primary`}></i>
-                        <span style={{ fontSize: '0.7rem' }}>Seguimiento</span>
-                    </Nav.Link>
-                </Nav.Item>
+                {/* Historial */}
+                <Link to="/transactions" className={navItemClass} style={isActive('/transactions') ? activeStyle : inactiveStyle}>
+                    <Icons.Activity active={isActive('/transactions')} />
+                    {isActive('/transactions') && <span style={{ fontSize: '0.9rem' }}>Historial</span>}
+                </Link>
 
-                <Nav.Item>
-                    <Nav.Link as={Link} to="/profile" className={`d-flex flex-column align-items-center small ${isActive('/profile') ? 'text-primary fw-bold' : 'text-muted'}`}>
-                        <i className={`bi ${isActive('/profile') ? 'bi-person-fill' : 'bi-person'} fs-4 mb-0 text-primary`}></i>
-                        <span style={{ fontSize: '0.7rem' }}>Perfil</span>
-                    </Nav.Link>
-                </Nav.Item>
-            </Nav>
+                {/* Perfil */}
+                <Link to="/profile" className={navItemClass} style={isActive('/profile') ? activeStyle : inactiveStyle}>
+                    <Icons.Profile active={isActive('/profile')} />
+                    {isActive('/profile') && <span style={{ fontSize: '0.9rem' }}>Perfil</span>}
+                </Link>
+
+            </div>
         </div>
     );
 };

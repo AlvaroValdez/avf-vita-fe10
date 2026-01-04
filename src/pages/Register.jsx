@@ -48,49 +48,53 @@ const Register = () => {
   };
 
   return (
-    <Container className="d-flex justify-content-center align-items-center" style={{ minHeight: '80vh' }}>
-      <Card className="shadow-sm" style={{ width: '450px' }}>
-        <Card.Body className="p-4">
-          <Card.Title as="h3" className="text-center mb-4 fw-bold text-primary">
-            Crear Cuenta
-          </Card.Title>
+    // Se usa 'min-vh-100' para asegurar altura completa y 'py-5' para espaciado en móviles
+    <Container className="d-flex justify-content-center align-items-center py-5" style={{ minHeight: '100vh' }}>
+      <Card className="shadow-sm border-0" style={{ width: '100%', maxWidth: '450px' }}>
+        <Card.Body className="p-4 p-md-5">
+          <div className="text-center mb-4">
+            <h3 className="fw-bold text-dark">Crear Cuenta</h3>
+            <p className="text-muted small">Únete a Alyto en minutos</p>
+          </div>
 
           {/* Si el registro fue exitoso, muestra el mensaje y oculta el formulario */}
           {success ? (
-            <Alert variant="success">
+            <Alert variant="success" className="text-center">
+              <div className="mb-2 fs-1">🎉</div>
               {success}
-              <div className="text-center mt-3">
-                <Link to="/login" className="fw-bold">Ir a Iniciar Sesión</Link>
+              <div className="mt-3">
+                <Link to="/login" className="btn btn-primary fw-bold text-primary w-100">Iniciar Sesión</Link>
               </div>
             </Alert>
           ) : (
             <Form onSubmit={handleSubmit}>
               <Form.Group className="mb-3">
-                <Form.Label>Nombre Completo</Form.Label>
-                <Form.Control type="text" value={name} onChange={(e) => setName(e.target.value)} required placeholder="Nombre y Apellido" />
+                <Form.Label className="small fw-bold text-muted">Nombre Completo</Form.Label>
+                <Form.Control type="text" value={name} onChange={(e) => setName(e.target.value)} required placeholder="Ej: Juan Pérez" className="py-2" />
               </Form.Group>
               <Form.Group className="mb-3">
-                <Form.Label>Correo Electrónico</Form.Label>
-                <Form.Control type="email" value={email} onChange={(e) => setEmail(e.target.value)} required placeholder="correo@ejemplo.com" />
+                <Form.Label className="small fw-bold text-muted">Correo Electrónico</Form.Label>
+                <Form.Control type="email" value={email} onChange={(e) => setEmail(e.target.value)} required placeholder="correo@ejemplo.com" className="py-2" />
               </Form.Group>
               <Form.Group className="mb-3">
-                <Form.Label>Contraseña</Form.Label>
-                <Form.Control type="password" value={password} onChange={(e) => setPassword(e.target.value)} required placeholder="Mínimo 6 caracteres" />
+                <Form.Label className="small fw-bold text-muted">Contraseña</Form.Label>
+                <Form.Control type="password" value={password} onChange={(e) => setPassword(e.target.value)} required placeholder="Mínimo 6 caracteres" className="py-2" />
               </Form.Group>
-              <Form.Group className="mb-3">
-                <Form.Label>Confirmar Contraseña</Form.Label>
-                <Form.Control type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} required placeholder="Repite tu contraseña" />
+              <Form.Group className="mb-4">
+                <Form.Label className="small fw-bold text-muted">Confirmar Contraseña</Form.Label>
+                <Form.Control type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} required placeholder="Repite tu contraseña" className="py-2" />
               </Form.Group>
 
-              {error && <Alert variant="danger" className="py-2">{error}</Alert>}
+              {error && <Alert variant="danger" className="py-2 text-center small">{error}</Alert>}
 
-              <div className="d-grid">
-                <Button type="submit" variant="primary" disabled={loading} className="py-2">
+              <div className="d-grid mb-3">
+                <Button type="submit" variant="primary" disabled={loading} className="py-3 fw-bold text-primary">
                   {loading ? <Spinner as="span" size="sm" /> : 'Registrarse'}
                 </Button>
               </div>
-              <div className="text-center mt-3">
-                <Link to="/login">¿Ya tienes cuenta? Inicia Sesión</Link>
+              <div className="text-center">
+                <span className="text-muted small">¿Ya tienes cuenta? </span>
+                <Link to="/login" className="text-accent fw-bold text-decoration-none">Inicia Sesión</Link>
               </div>
             </Form>
           )}

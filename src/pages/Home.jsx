@@ -5,220 +5,412 @@ import { Link } from 'react-router-dom';
 import RemittanceSteps from '../components/remittance/RemittanceSteps';
 import { useAuth } from '../context/AuthContext';
 import homeBackgroundImage from '../assets/home-background.jpg';
+import logo from '../assets/images/logo-white.png';
 
 // URLs de los assets
 const googlePlayUrl = 'https://play.google.com/intl/en_us/badges/static/images/badges/es_badge_web_generic.png';
 const appStoreUrl = 'https://developer.apple.com/assets/elements/badges/download-on-the-app-store.svg';
 
 const Home = () => {
-  const { token, user } = useAuth();
+  const { token, user, logout } = useAuth();
 
-  // --- VIEW: LOGGED IN (ALYTO DASHBOARD) ---
+  // --- STATES FOR REAL DATA ---
+  const [transactions, setTransactions] = React.useState([]);
+  const [loadingData, setLoadingData] = React.useState(false);
+  const [showBalance, setShowBalance] = React.useState(true);
+
+  React.useEffect(() => {
+    if (token) {
+      const fetchData = async () => {
+        setLoadingData(true);
+        try {
+          // Fetch transactions with robust handling
+          const api = await import('../services/api');
+          const response = await api.getTransactions({ limit: 20 });
+          console.log("📊 Dashboard Content:", response);
+
+          let dataList = [];
+          if (Array.isArray(response)) {
+            dataList = response;
+          } else if (Array.isArray(response?.data)) {
+            dataList = response.data;
+          } else if (Array.isArray(response?.transactions)) {
+            dataList = response.transactions;
+          }
+
+          // Sort by created_at desc if not sorted (frontend fallback)
+          if (dataList.length > 0 && dataList[0]?.created_at) {
+            dataList.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+          }
+
+          setTransactions(dataList);
+        } catch (error) {
+          console.error("❌ Error loading dashboard:", error);
+        } finally {
+          setLoadingData(false);
+        }
+      };
+
+      fetchData();
+    }
+  }, [token]);
+
+  // --- VIEW: LOGGED IN (ALYTO APP BAR DESIGN) ---
   if (token) {
+    // Current Date formatted like "14 Oktober 2024"
+    const today = new Date().toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' });
+
     return (
-      <Container className="py-4">
-        {/* Header / Greeting */}
-        <div className="d-flex justify-content-between align-items-center mb-4">
-          <div>
-            <h5 className="text-muted fw-normal mb-0">Hola,</h5>
-            <h2 className="fw-bold">{user?.name?.split(' ')[0] || 'Usuario'} 👋</h2>
-          </div>
-          <div className="position-relative">
-            <i className="bi bi-bell fs-4 text-primary"></i>
-            <span className="position-absolute top-0 start-100 translate-middle p-1 bg-danger border border-light rounded-circle">
-              <span className="visually-hidden">New alerts</span>
-            </span>
-          </div>
-        </div>
+      <div style={{
+        backgroundColor: '#F8F9FD',
+        minHeight: '100vh',
+        position: 'relative',
+        fontFamily: "'Inter', sans-serif",
+        overflow: 'hidden'
+      }}>
 
-        {/* Balance Card (Component 2 - Focal Point) */}
-        <div className="card card-balance p-4 mb-4 position-relative overflow-hidden">
-          <div className="position-relative z-1">
-            <div className="d-flex justify-content-between align-items-start text-white-50">
-              <small className="text-uppercase fw-bold letter-spacing-1">Saldo Total</small>
-              <i className="bi bi-eye"></i>
-            </div>
-            <h1 className="display-4 fw-bold mt-2 mb-3">$ 0.00 <small className="fs-6">CLP</small></h1>
-            <div className="d-flex gap-2">
-              <span className="badge bg-white bg-opacity-25 fw-normal px-3 py-2 rounded-pill border border-white border-opacity-10">
-                <i className="bi bi-shield-check me-2"></i>Protegido por Stellar
+        {/* 1. APP BAR (Blue Background, Logo, Actions) */}
+        <div className="d-flex justify-content-between align-items-center px-4 py-3 shadow-sm w-100 position-relative"
+          style={{ backgroundColor: '#233E58', color: 'white', zIndex: 10 }}>
+          {/* Left: Logo (Image) */}
+          <div className="d-flex align-items-center">
+            <Image src={logo} alt="Alyto" height="30" />
+          </div>
+
+          {/* Right: Actions */}
+          <div className="d-flex align-items-center gap-4">
+            {/* Show/Hide Balance */}
+            <button onClick={() => setShowBalance(!showBalance)} className="btn p-0 border-0 text-white" title={showBalance ? "Ocultar saldo" : "Mostrar saldo"}>
+              {showBalance ? (
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                  <circle cx="12" cy="12" r="3"></circle>
+                </svg>
+              ) : (
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07-2.3 2.3"></path>
+                  <line x1="1" y1="1" x2="23" y2="23"></line>
+                </svg>
+              )}
+            </button>
+
+            {/* Notifications (Bell) */}
+            <button className="btn p-0 border-0 text-white position-relative">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+              </svg>
+              <span className="position-absolute top-0 start-100 translate-middle p-1 bg-warning border border-light rounded-circle"
+                style={{ width: '8px', height: '8px' }}>
               </span>
-            </div>
+            </button>
           </div>
-          {/* Decorative Circle */}
-          <div className="position-absolute rounded-circle bg-white opacity-10" style={{ width: 300, height: 300, top: -100, right: -100 }}></div>
         </div>
 
-        {/* Dashboard Content Grid (Desktop) */}
-        <Row>
-          <Col lg={8}>
-            {/* Transactions List (Component 2/3) */}
+        {/* BACKGROUND BLOBS */}
+        <div style={{
+          position: 'absolute', top: 0, left: -50, width: 300, height: 300,
+          background: 'radial-gradient(circle, rgba(35,62,88,0.1) 0%, rgba(255,255,255,0) 70%)',
+          filter: 'blur(40px)', zIndex: 0
+        }}></div>
+
+        <Container className="py-2 pb-5 position-relative" style={{ zIndex: 1, maxWidth: '500px' }}>
+
+          {/* 1. USER GREETING (Restored "As Before") */}
+          <div className="d-flex justify-content-between align-items-start mt-3 mb-2 px-2">
+            <div className="d-flex align-items-center gap-3">
+              <div>
+                <h5 className="fw-bold mb-0 text-dark">{user?.name || 'Usuario'}</h5>
+                <small className="text-muted" style={{ fontSize: '0.8rem' }}>{today}</small>
+              </div>
+              {/* Logout button */}
+              <button
+                onClick={logout}
+                className="btn btn-sm btn-outline-danger rounded-pill px-3"
+                style={{ fontSize: '0.75rem' }}
+              >
+                Salir
+              </button>
+            </div>
+            {/* Avatar - Restored */}
+            <div className="position-relative">
+              <Link to="/profile" className="rounded-circle d-flex align-items-center justify-content-center overflow-hidden border border-2 border-white shadow-sm text-decoration-none" style={{ width: 45, height: 45, backgroundColor: '#E0E7FF' }}>
+                <span className="fw-bold fs-5" style={{ color: '#233E58' }}>{user?.name?.charAt(0) || 'U'}</span>
+              </Link>
+              <div className="position-absolute rounded-circle bg-warning" style={{ width: 10, height: 10, top: 0, right: 0, border: '2px solid white' }}></div>
+            </div>
+          </div>
+
+          {/* 2. MAIN BALANCE */}
+          <div className="text-center mb-4">
+            <p className="text-muted mb-1 small">Balance Total</p>
+            <div className="d-flex align-items-center justify-content-center">
+              <h1 className="display-4 fw-bold mb-0" style={{ color: '#1A1A1A', letterSpacing: showBalance ? 'normal' : '5px' }}>
+                {showBalance ? '$ 0.00' : '•••••••'}
+              </h1>
+              {/* Currency floating */}
+              {showBalance && <span className="fs-6 fw-bold ms-2 align-top text-warning">CLP</span>}
+            </div>
+          </div>
+
+          {/* 3. ACTION GRID (4 Buttons with Custom SVGs) */}
+          <div className="d-flex justify-content-between mb-4 px-2">
+            {/* Withdraw */}
+            <div className="text-center" style={{ cursor: 'pointer' }}>
+              <div className="rounded-circle d-flex align-items-center justify-content-center mb-2 mx-auto shadow-sm transition-hover"
+                style={{ width: 60, height: 60, backgroundColor: '#233E58', color: 'white' }}>
+                {/* Icon: Arrow Up / Withdraw */}
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="12" y1="19" x2="12" y2="5"></line>
+                  <polyline points="5 12 12 5 19 12"></polyline>
+                </svg>
+              </div>
+              <small className="fw-bold text-dark" style={{ fontSize: '0.75rem' }}>Retirar</small>
+            </div>
+
+            {/* Transfer (Send) */}
+            <Link to="/send" className="text-decoration-none text-center">
+              <div className="rounded-circle d-flex align-items-center justify-content-center mb-2 mx-auto shadow-sm transition-hover"
+                style={{ width: 60, height: 60, backgroundColor: '#233E58', color: 'white' }}>
+                {/* Icon: Paper Plane */}
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginLeft: '-2px', marginTop: '2px' }}>
+                  <line x1="22" y1="2" x2="11" y2="13"></line>
+                  <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                </svg>
+              </div>
+              <small className="fw-bold text-dark" style={{ fontSize: '0.75rem' }}>Enviar</small>
+            </Link>
+
+            {/* Top Up (Load) */}
+            <div className="text-center" style={{ cursor: 'pointer' }}>
+              <div className="rounded-circle d-flex align-items-center justify-content-center mb-2 mx-auto shadow-sm transition-hover"
+                style={{ width: 60, height: 60, backgroundColor: '#233E58', color: 'white' }}>
+                {/* Icon: Plus */}
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="12" y1="5" x2="12" y2="19"></line>
+                  <line x1="5" y1="12" x2="19" y2="12"></line>
+                </svg>
+              </div>
+              <small className="fw-bold text-dark" style={{ fontSize: '0.75rem' }}>Cargar</small>
+            </div>
+
+            {/* Historial */}
+            <Link to="/transactions" className="text-decoration-none text-center">
+              <div className="rounded-circle d-flex align-items-center justify-content-center mb-2 mx-auto shadow-sm transition-hover"
+                style={{ width: 60, height: 60, backgroundColor: '#233E58', color: 'white' }}>
+                {/* Icon: Receipt/History */}
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                  <polyline points="14 2 14 8 20 8"></polyline>
+                  <line x1="16" y1="13" x2="8" y2="13"></line>
+                  <line x1="16" y1="17" x2="8" y2="17"></line>
+                  <polyline points="10 9 9 9 8 9"></polyline>
+                </svg>
+              </div>
+              <small className="fw-bold text-dark" style={{ fontSize: '0.75rem' }}>Historial</small>
+            </Link>
+          </div>
+
+          {/* 4. PROMO BANNER (Purple Gradient -> Blue/Yellow Gradient) */}
+          <div className="card border-0 mb-4 overflow-hidden shadow-sm"
+            style={{
+              borderRadius: '20px',
+              background: 'linear-gradient(135deg, #233E58 0%, #4A6F9E 100%)',
+              color: 'white',
+              position: 'relative'
+            }}>
+            {/* Fixed Overlay Decor (Yellow) */}
+            <div className="position-absolute rounded-circle bg-warning opacity-25" style={{ width: 150, height: 150, top: -75, right: -75, zIndex: 0 }}></div>
+
+            <div className="card-body p-3 d-flex justify-content-between align-items-center position-relative" style={{ zIndex: 1 }}>
+              {/* Content */}
+              <div style={{ maxWidth: '70%' }}>
+                <h6 className="fw-bold mb-1">Tu reporte financiero</h6>
+                <p className="mb-2 small opacity-75" style={{ fontSize: '0.75rem', lineHeight: '1.2' }}>
+                  Explora tus movimientos y analiza tus gastos mensuales.
+                </p>
+                <button className="btn btn-sm bg-white text-dark fw-bold rounded-pill px-3 shadow-sm border-0"
+                  style={{ fontSize: '0.7rem' }}>
+                  <span className="text-warning me-1">Ver más</span> <i className="bi bi-arrow-right text-dark"></i>
+                </button>
+              </div>
+
+              {/* Decor (Coins) */}
+              <div className="position-absolute" style={{ right: 15, top: 15 }}>
+                <i className="bi bi-pie-chart-fill text-warning" style={{ fontSize: '3.5rem', opacity: 0.9 }}></i>
+              </div>
+            </div>
+          </div>
+
+          {/* 5. TRANSACTION LIST */}
+          <div>
             <div className="d-flex justify-content-between align-items-center mb-3">
-              <h5 className="fw-bold m-0">Movimientos Recientes</h5>
-              <Link to="/transactions" className="text-decoration-none small fw-bold">Ver todos</Link>
+              <h5 className="fw-bold m-0 text-dark">Transacciones</h5>
+              <Link to="/transactions" className="text-decoration-none small text-muted">Ver todas</Link>
             </div>
 
-            <div className="card p-3 mb-4">
-              {/* Placeholder de transacciones para demo */}
-              <div className="list-group list-group-flush">
-                <div className="list-group-item border-0 px-0 py-3 d-flex justify-content-between align-items-center">
-                  <div className="d-flex align-items-center">
-                    <div className="rounded-circle bg-light d-flex align-items-center justify-content-center me-3" style={{ width: 48, height: 48 }}>
-                      <i className="bi bi-send text-danger"></i>
-                    </div>
-                    <div>
-                      <h6 className="mb-0 fw-bold">Envío a Juan Pérez</h6>
-                      <small className="text-muted">Hoy, 10:23 AM</small>
-                    </div>
-                  </div>
-                  <div className="text-end">
-                    <h6 className="mb-0 fw-bold text-danger">- $50,000 CLP</h6>
-                    <small className="badge bg-success-subtle text-success rounded-pill">Completado</small>
-                  </div>
+            <div className="d-flex flex-column gap-3">
+              {loadingData ? (
+                <div className="text-center py-4"><span className="spinner-border text-primary"></span></div>
+              ) : transactions.length === 0 ? (
+                <div className="text-center py-4 text-muted bg-white rounded-4 shadow-sm">
+                  <i className="bi bi-receipt fs-1 mb-2 d-block opacity-50"></i>
+                  <span className="small">Sin movimientos aún</span>
                 </div>
-
-                <div className="list-group-item border-0 px-0 py-3 d-flex justify-content-between align-items-center">
-                  <div className="d-flex align-items-center">
-                    <div className="rounded-circle bg-light d-flex align-items-center justify-content-center me-3" style={{ width: 48, height: 48 }}>
-                      <i className="bi bi-wallet2 text-success"></i>
+              ) : (
+                transactions.map((tx) => (
+                  <div key={tx._id || tx.id} className="d-flex align-items-center bg-transparent border-0 py-1">
+                    {/* Icon */}
+                    <div className="rounded-circle d-flex align-items-center justify-content-center me-3 flex-shrink-0 shadow-sm"
+                      style={{
+                        width: 50,
+                        height: 50,
+                        background: 'linear-gradient(135deg, rgba(35,62,88,0.15) 0%, rgba(35,62,88,0.25) 100%)'
+                      }}>
+                      {/* Paper plane icon in white */}
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <line x1="22" y1="2" x2="11" y2="13"></line>
+                        <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                      </svg>
                     </div>
-                    <div>
-                      <h6 className="mb-0 fw-bold">Carga de Saldo</h6>
-                      <small className="text-muted">Ayer, 04:15 PM</small>
+
+                    {/* Content */}
+                    <div className="flex-grow-1">
+                      <h6 className="mb-0 fw-bold text-dark" style={{ fontSize: '0.95rem' }}>
+                        {tx.company_name ||
+                          (tx.beneficiary_first_name && tx.beneficiary_last_name
+                            ? `${tx.beneficiary_first_name} ${tx.beneficiary_last_name}`
+                            : 'Envío')}
+                      </h6>
+                      <small className="text-muted" style={{ fontSize: '0.75rem' }}>
+                        {new Date(tx.createdAt).toLocaleDateString('es-CL')} • {new Date(tx.createdAt).toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit' })}
+                      </small>
+                    </div>
+
+                    {/* Amount & Status */}
+                    <div className="text-end">
+                      <span className="fw-bold d-block text-danger">
+                        - ${Math.abs(tx.amount).toLocaleString('es-CL')}
+                      </span>
+                      <span className={`badge rounded-pill ${tx.status === 'succeeded' ? 'bg-success-subtle text-success' :
+                        (tx.status === 'pending' || tx.status === 'processing' ||
+                          tx.status?.includes('pending') || tx.status === 'created') ? 'bg-warning-subtle text-warning' :
+                          'bg-danger-subtle text-danger'
+                        }`} style={{ fontSize: '0.65rem', padding: '0.3em 0.8em' }}>
+                        {tx.status === 'succeeded' ? 'Exitoso' :
+                          (tx.status === 'pending' || tx.status === 'processing' ||
+                            tx.status?.includes('pending') || tx.status === 'created') ? 'Pendiente' :
+                            'Fallido'}
+                      </span>
                     </div>
                   </div>
-                  <div className="text-end">
-                    <h6 className="mb-0 fw-bold text-success">+ $100,000 CLP</h6>
-                    <small className="badge bg-success-subtle text-success rounded-pill">Aprobado</small>
-                  </div>
-                </div>
-              </div>
+                ))
+              )}
             </div>
-          </Col>
-
-          {/* Side Content (Chart Placeholder for Desktop) */}
-          <Col lg={4} className="d-none d-lg-block">
-            <div className="card p-4 h-100">
-              <h5 className="fw-bold mb-4">Estadísticas</h5>
-              <div className="d-flex align-items-center justify-content-center flex-grow-1 bg-light rounded" style={{ minHeight: 200 }}>
-                <div className="text-center text-muted">
-                  <i className="bi bi-pie-chart-fill fs-1 mb-2 d-block"></i>
-                  <span>Resumen de gastos</span>
-                </div>
-              </div>
-            </div>
-          </Col>
-        </Row>
-
-        {/* Quick Actions (Dashboard Desktop) - Optional. Can we hide on mobile as we have BottomNav? 
-           User said "menu... in the part below". 
-           Let's hide this block on mobile (d-none d-lg-flex) to avoid duplication.
-       */}
-        <div className="quick-actions mb-5 justify-content-start d-none d-lg-flex">
-          <Link to="/send" className="action-btn">
-            <div className="icon-circle text-primary">
-              <i className="bi bi-send-fill"></i>
-            </div>
-            <span className="fw-bold">Enviar</span>
-          </Link>
-          <Link to="/transactions" className="action-btn">
-            <div className="icon-circle text-primary">
-              <i className="bi bi-arrow-down-left"></i>
-            </div>
-            <span className="fw-bold">Recibir</span>
-          </Link>
-          <div className="action-btn" style={{ cursor: 'pointer' }} onClick={() => alert('Próximamente')}>
-            <div className="icon-circle text-primary">
-              <i className="bi bi-arrow-repeat"></i>
-            </div>
-            <span className="fw-bold">Canjear</span>
           </div>
-          <div className="action-btn" style={{ cursor: 'pointer' }}>
-            <div className="icon-circle text-primary">
-              <i className="bi bi-grid"></i>
-            </div>
-            <span className="fw-bold">Más</span>
-          </div>
-        </div>
-      </Container>
+
+        </Container>
+      </div>
     );
   }
 
   // --- VIEW: GUEST (LANDING PAGE) ---
   return (
     <>
-      {/* ... (Existing Landing Page Code) ... */}
-      <div
-        style={{
-          backgroundImage: `url(${homeBackgroundImage})`,
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-          minHeight: '600px', // Altura mínima para que quepa todo
-          display: 'flex',
-          alignItems: 'center',
-          position: 'relative',
-          color: 'white'
-        }}
-      >
-        {/* Overlay oscuro para legibilidad */}
-        <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: 'rgba(0, 0, 0, 0.5)', zIndex: 0 }}></div>
+      {/* Hero Section - Clean White Background */}
+      <div style={{ backgroundColor: '#ffffff', minHeight: '80vh', display: 'flex', alignItems: 'center' }}>
+        <Container className="py-5">
+          <Row className="align-items-center justify-content-center">
 
-        {/* Contenido PRINCIPAL: Texto + Formulario en la misma fila */}
-        <Container className="py-5 position-relative" style={{ zIndex: 1 }}>
-          <Row className="align-items-center">
+            {/* Columna Izquierda: Texto y Logo */}
+            <Col lg={5} className="mb-5 mb-lg-0 text-center text-lg-start">
+              <div className="mb-4">
+                {/* Logo Vistoso - Solo visible en Desktop (d-none d-lg-inline-block) */}
+                <div className="d-none d-lg-inline-block">
+                  <Image src={logo} alt="Alyto" fluid style={{ height: '80px', marginBottom: '1.5rem' }} />
+                </div>
+              </div>
 
-            {/* Columna Izquierda: Texto Promocional */}
-            <Col lg={6} className="pe-lg-5 mb-5 mb-lg-0">
-              <h1 className="display-4 fw-bold mb-4">
-                Envía dinero totalmente Online con <span className="text-accent">Alyto</span>
+              <h1 className="display-4 fw-bold mb-4 text-dark">
+                Envía dinero <span className="text-primary">al instante</span> con tecnología Blockchain
               </h1>
-              <p className="lead mb-5 opacity-75">
-                Desde nuestra web, envía dinero 100% online con la seguridad y respaldo de Vita Wallet.
+              <p className="lead mb-5 text-muted">
+                La forma más segura y rápida de enviar remesas. Conectamos fronteras usando la red Stellar.
               </p>
-              <div className="mb-5">
-                <h5 className="text-white">Descarga nuestra App</h5>
-                <div className="d-flex align-items-center mt-3">
-                  <a href="#" className="me-3"><Image src={googlePlayUrl} alt="Google Play" style={{ height: '45px' }} /></a>
-                  <a href="#"><Image src={appStoreUrl} alt="App Store" style={{ height: '45px' }} /></a>
+
+              <div className="d-flex flex-column flex-sm-row gap-3 justify-content-center justify-content-lg-start">
+                <Button as={Link} to="/register" variant="primary" size="lg" className="fw-bold px-4 rounded-pill">
+                  Empezar ahora
+                </Button>
+                <Button as={Link} to="/login" variant="outline-primary" size="lg" className="fw-bold px-4 rounded-pill">
+                  Iniciar Sesión
+                </Button>
+              </div>
+
+              <div className="mt-5">
+                <p className="small text-muted mb-2">Descarga nuestra App</p>
+                <div className="d-flex align-items-center justify-content-center justify-content-lg-start gap-3">
+                  <a href="#"><Image src={googlePlayUrl} alt="Google Play" style={{ height: '40px' }} /></a>
+                  <a href="#"><Image src={appStoreUrl} alt="App Store" style={{ height: '40px' }} /></a>
                 </div>
               </div>
             </Col>
 
-            {/* Columna Derecha: FORMULARIO (Flotando sobre la imagen) */}
-            <Col lg={6}>
-              <RemittanceSteps />
+            {/* Columna Derecha: COTIZADOR EXPANDIDO */}
+            <Col lg={6} className="offset-lg-1">
+              <div className="shadow-lg p-3 rounded-4 bg-white border">
+                <RemittanceSteps />
+              </div>
             </Col>
 
           </Row>
         </Container>
       </div>
 
-      {/* --- SECCIÓN FEATURES (Optimizada para Alyto) --- */}
-      <Container className="my-5">
-        <Row className="g-4">
-          <Col md={4}>
-            <div className="card h-100 p-4 border-0 shadow-sm text-center">
-              <i className="bi bi-shield-lock-fill fs-1 text-primary mb-3"></i>
-              <h4>Seguro</h4>
-              <p className="text-muted">Tu dinero protegido con tecnología blockchain y Vita Wallet.</p>
-            </div>
-          </Col>
-          <Col md={4}>
-            <div className="card h-100 p-4 border-0 shadow-sm text-center">
-              <i className="bi bi-lightning-fill fs-1 text-accent mb-3"></i>
-              <h4>Rápido</h4>
-              <p className="text-muted">Envíos instantáneos a múltiples destinos en Latinoamérica.</p>
-            </div>
-          </Col>
-          <Col md={4}>
-            <div className="card h-100 p-4 border-0 shadow-sm text-center">
-              <i className="bi bi-phone-fill fs-1 text-primary mb-3"></i>
-              <h4>Fácil</h4>
-              <p className="text-muted">Interfaz intuitiva diseñada para tu comodidad desde cualquier dispositivo.</p>
-            </div>
-          </Col>
-        </Row>
-      </Container>
+      {/* --- SECCIÓN FEATURES (Stellar & Blockchain) --- */}
+      <div className="bg-light py-5">
+        <Container>
+          <div className="text-center mb-5">
+            <h2 className="fw-bold">¿Por qué elegir Alyto?</h2>
+            <p className="text-muted">Innovación financiera a tu alcance</p>
+          </div>
+          <Row className="g-4">
+            <Col md={4}>
+              <div className="card h-100 p-4 border-0 shadow-sm text-center">
+                <div className="mb-3 text-primary">
+                  <i className="bi bi-shield-check fs-1"></i>
+                </div>
+                <h4>Seguridad Stellar</h4>
+                <p className="text-muted small">
+                  Cada transacción es validada en la red Stellar, garantizando inmutabilidad y transparencia total.
+                </p>
+              </div>
+            </Col>
+            <Col md={4}>
+              <div className="card h-100 p-4 border-0 shadow-sm text-center">
+                <div className="mb-3 text-accent">
+                  <i className="bi bi-clock-history fs-1"></i>
+                </div>
+                <h4>Velocidad Real</h4>
+                <p className="text-muted small">
+                  Olvídate de esperar días. La tecnología blockchain permite liquidación en segundos, 24/7.
+                </p>
+              </div>
+            </Col>
+            <Col md={4}>
+              <div className="card h-100 p-4 border-0 shadow-sm text-center">
+                <div className="mb-3 text-primary">
+                  <i className="bi bi-globe fs-1"></i>
+                </div>
+                <h4>Sin Fronteras</h4>
+                <p className="text-muted small">
+                  Acceso global con comisiones justas. Tu dinero llega íntegro a su destino.
+                </p>
+              </div>
+            </Col>
+          </Row>
+        </Container>
+      </div>
     </>
   );
 };
