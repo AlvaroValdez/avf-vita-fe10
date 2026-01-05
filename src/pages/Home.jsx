@@ -6,6 +6,7 @@ import RemittanceSteps from '../components/remittance/RemittanceSteps';
 import { useAuth } from '../context/AuthContext';
 import homeBackgroundImage from '../assets/home-background.jpg';
 import logo from '../assets/images/logo-white.png';
+import logoOriginal from '../assets/images/logo.png';
 
 // URLs de los assets
 const googlePlayUrl = 'https://play.google.com/intl/en_us/badges/static/images/badges/es_badge_web_generic.png';
@@ -327,12 +328,12 @@ const Home = () => {
               <div className="mb-4">
                 {/* Logo Vistoso - Solo visible en Desktop (d-none d-lg-inline-block) */}
                 <div className="d-none d-lg-inline-block">
-                  <Image src={logo} alt="Alyto" fluid style={{ height: '80px', marginBottom: '1.5rem' }} />
+                  <Image src={logoOriginal} alt="Alyto" style={{ height: '80px' }} className="mb-4" />
                 </div>
               </div>
 
-              <h1 className="display-4 fw-bold mb-4 text-dark">
-                Envía dinero <span className="text-primary">al instante</span> con tecnología Blockchain
+              <h1 className="display-4 fw-bold mb-3" style={{ color: '#233E58', lineHeight: '1.2' }}>
+                Remesas <span style={{ color: '#F7C843' }}>instante</span> con<br className="d-md-none" /> tecnología Blockchain
               </h1>
               <p className="lead mb-5 text-muted">
                 La forma más segura y rápida de enviar remesas. Conectamos fronteras usando la red Stellar.
