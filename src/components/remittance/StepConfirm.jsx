@@ -7,7 +7,8 @@ import {
   createPaymentOrder,
   getQuote,
   saveBeneficiary,
-  getPaymentMethods
+  getPaymentMethods,
+  getTransactionRules
 } from '../../services/api';
 import { formatNumberForDisplay, formatRate } from '../../utils/formatting';
 import ManualDeposit from './ManualDeposit';
