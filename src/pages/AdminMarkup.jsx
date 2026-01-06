@@ -136,7 +136,8 @@ const AdminMarkup = () => {
   };
 
   const getCountryNameByCode = (code) => {
-    const country = countries.find(c => c.code.toUpperCase() === code.toUpperCase());
+    if (!code) return 'N/A';
+    const country = countries.find(c => c?.code?.toUpperCase() === code.toUpperCase());
     return country ? country.name : code;
   };
 
@@ -219,9 +220,10 @@ const AdminMarkup = () => {
                     value={newOriginCountry}
                     onChange={(e) => setNewOriginCountry(e.target.value)}
                     required
+                    disabled={loadingCountries}
                   >
                     <option value="">Seleccionar...</option>
-                    {countries.map(c => (
+                    {(countries || []).map(c => (
                       <option key={c.code} value={c.code}>{c.name}</option>
                     ))}
                   </Form.Select>
@@ -233,9 +235,10 @@ const AdminMarkup = () => {
                   <Form.Select
                     value={newDestCountry}
                     onChange={(e) => setNewDestCountry(e.target.value)}
+                    disabled={loadingCountries}
                   >
                     <option value="">Todos</option>
-                    {countries.filter(c => c.code !== newOriginCountry).map(c => (
+                    {(countries || []).filter(c => c?.code !== newOriginCountry).map(c => (
                       <option key={c.code} value={c.code}>{c.name}</option>
                     ))}
                   </Form.Select>
