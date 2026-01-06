@@ -254,6 +254,59 @@ export const getPricesSummary = async () => {
   }
 };
 
+// 💰 MARKUP / SPREAD MANAGEMENT
+
+// Get all markups
+export const getAllMarkups = async () => {
+  try {
+    const response = await apiClient.get('/admin/markup');
+    return response.data;
+  } catch (error) {
+    throw normalizeAxiosError(error, 'Error obteniendo markups.');
+  }
+};
+
+// Get default markup
+export const getDefaultMarkup = async () => {
+  try {
+    const response = await apiClient.get('/admin/markup/default');
+    return response.data;
+  } catch (error) {
+    throw normalizeAxiosError(error, 'Error obteniendo markup por defecto.');
+  }
+};
+
+// Update default markup
+export const updateDefaultMarkup = async (percent) => {
+  try {
+    const response = await apiClient.put('/admin/markup/default', { percent });
+    return response.data;
+  } catch (error) {
+    throw normalizeAxiosError(error, 'Error actualizando markup por defecto.');
+  }
+};
+
+// Create or update specific markup
+export const saveMarkup = async (markupData) => {
+  try {
+    const response = await apiClient.post('/admin/markup', markupData);
+    return response.data;
+  } catch (error) {
+    throw normalizeAxiosError(error, 'Error guardando markup.');
+  }
+};
+
+
+// Delete markup
+export const deleteMarkup = async (id) => {
+  try {
+    const response = await apiClient.delete(`/admin/markup/${id}`);
+    return response.data;
+  } catch (error) {
+    throw normalizeAxiosError(error, 'Error eliminando markup.');
+  }
+};
+
 export const getTransactionRules = async (country = 'CL') => {
   try {
     const response = await apiClient.get('/transaction-rules', { params: { country } });

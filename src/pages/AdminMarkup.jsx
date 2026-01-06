@@ -1,205 +1,339 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Card, Form, Button, Spinner, Alert, Row, Col, Table } from 'react-bootstrap';
-import { getMarkup, updateMarkup, getMarkupPairs, updateMarkupPair } from '../services/api';
+import { Container, Card, Form, Button, Spinner, Alert, Row, Col, Table, Badge } from 'react-bootstrap';
+import { getAllMarkups, getDefaultMarkup, updateDefaultMarkup, saveMarkup, deleteMarkup } from '../services/api';
 import { useAppContext } from '../context/AppContext';
 import VitaRatesMarquee from '../components/admin/VitaRatesMarquee';
 
 const AdminMarkup = () => {
-  const { countries, loading: loadingCountries } = useAppContext(); // Obtenemos la lista de países
-  const [defaultMarkup, setDefaultMarkup] = useState('');
-  const [pairs, setPairs] = useState([]);
-  const [loadingDefault, setLoadingDefault] = useState(true);
-  const [loadingPairs, setLoadingPairs] = useState(true);
-  const [savingDefault, setSavingDefault] = useState(false);
-  const [savingPair, setSavingPair] = useState(false);
+  const { countries, loading: loadingCountries } = useAppContext();
+
+  // State
+  const [markups, setMarkups] = useState([]);
+  const [defaultMarkup, setDefaultMarkup] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
-  const [successDefault, setSuccessDefault] = useState('');
-  const [successPair, setSuccessPair] = useState('');
+  const [success, setSuccess] = useState('');
 
-  const [newOrigin, setNewOrigin] = useState('CLP');
-  const [newDest, setNewDest] = useState('');
+  // Form state
+  const [defaultPercent, setDefaultPercent] = useState('');
+  const [newOriginCountry, setNewOriginCountry] = useState('CL');
+  const [newDestCountry, setNewDestCountry] = useState('');
   const [newPercent, setNewPercent] = useState('');
+  const [newDescription, setNewDescription] = useState('');
 
-  // --- NUEVA FUNCIÓN HELPER ---
-  // Busca el nombre del país en la lista del contexto usando su código ISO
-  const getCountryNameByCode = (code) => {
-    const country = countries.find(c => c.code.toUpperCase() === code.toUpperCase());
-    return country ? country.name : code; // Devuelve el nombre o el código si no se encuentra
-  };
-
-  // Carga inicial de datos (separada para mejor manejo de errores)
+  // Load data
   useEffect(() => {
-    const loadDefaultMarkup = async () => {
-      try {
-        setLoadingDefault(true);
-        const res = await getMarkup();
-        if (res.ok) setDefaultMarkup(res.markup);
-        else throw new Error(res.error || 'No se pudo cargar el markup por defecto.');
-      } catch (err) {
-        setError(err.message || 'Error cargando markup por defecto.');
-      } finally {
-        setLoadingDefault(false);
-      }
-    };
-    const loadMarkupPairs = async () => {
-      try {
-        setLoadingPairs(true);
-        const res = await getMarkupPairs();
-        if (res.ok) setPairs(res.pairs);
-        else throw new Error(res.error || 'No se pudieron cargar los pares de markup.');
-      } catch (err) {
-        setError(err.message || 'Error cargando pares de markup.');
-      } finally {
-        setLoadingPairs(false);
-      }
-    };
-
-    loadDefaultMarkup();
-    loadMarkupPairs();
+    loadData();
   }, []);
 
-  const handleDefaultSubmit = async (e) => {
-    e.preventDefault();
-    setSavingDefault(true); setError(''); setSuccessDefault('');
+  const loadData = async () => {
     try {
-      const numericMarkup = parseFloat(defaultMarkup);
-      if (isNaN(numericMarkup)) throw new Error('El valor debe ser numérico.');
-      const res = await updateMarkup(numericMarkup);
-      if (res.ok) setSuccessDefault(`Markup por defecto actualizado a ${res.markup}%`);
-      else throw new Error(res.error || 'No se pudo actualizar.');
+      setLoading(true);
+      setError('');
+
+      const [markupsRes, defaultRes] = await Promise.all([
+        getAllMarkups(),
+        getDefaultMarkup()
+      ]);
+
+      if (markupsRes.ok) {
+        setMarkups(markupsRes.markups || []);
+      }
+
+      if (defaultRes.ok) {
+        setDefaultMarkup(defaultRes.markup);
+        setDefaultPercent(defaultRes.percent || '');
+      }
     } catch (err) {
-      setError(err.message || 'Error al guardar.');
+      setError(err.message || 'Error cargando datos');
     } finally {
-      setSavingDefault(false);
+      setLoading(false);
     }
   };
 
-  const handlePairSubmit = async (e) => {
+  const handleSaveDefault = async (e) => {
     e.preventDefault();
-    setSavingPair(true); setError(''); setSuccessPair('');
     try {
-      const numericPercent = parseFloat(newPercent);
-      if (!newDest || isNaN(numericPercent)) {
-        throw new Error('Completa todos los campos del par con valores válidos.');
+      setSaving(true);
+      setError('');
+      setSuccess('');
+
+      const percent = parseFloat(defaultPercent);
+      if (isNaN(percent) || percent < 0 || percent > 100) {
+        throw new Error('El porcentaje debe estar entre 0 y 100');
       }
-      const res = await updateMarkupPair({
-        originCurrency: newOrigin,
-        destCountry: newDest,
-        percent: numericPercent
-      });
-      if (res.ok) {
-        setPairs(res.pairs);
-        setSuccessPair('Par de markup guardado correctamente.');
-        setNewDest('');
+
+      const response = await updateDefaultMarkup(percent);
+      if (response.ok) {
+        setSuccess('Spread por defecto actualizado correctamente');
+        loadData();
+      }
+    } catch (err) {
+      setError(err.message || 'Error actualizando spread por defecto');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleAddMarkup = async (e) => {
+    e.preventDefault();
+    try {
+      setSaving(true);
+      setError('');
+      setSuccess('');
+
+      const percent = parseFloat(newPercent);
+      if (isNaN(percent) || percent < 0 || percent > 100) {
+        throw new Error('El porcentaje debe estar entre 0 y 100');
+      }
+
+      if (!newOriginCountry) {
+        throw new Error('Debe seleccionar un país de origen');
+      }
+
+      const markupData = {
+        originCountry: newOriginCountry,
+        destCountry: newDestCountry || undefined,
+        percent,
+        description: newDescription || undefined
+      };
+
+      const response = await saveMarkup(markupData);
+      if (response.ok) {
+        setSuccess('Spread guardado correctamente');
+        setNewOriginCountry('CL');
+        setNewDestCountry('');
         setNewPercent('');
-      } else {
-        throw new Error(res.error || 'No se pudo guardar el par.');
+        setNewDescription('');
+        loadData();
       }
     } catch (err) {
-      setError(err.message || 'Error al guardar el par.');
+      setError(err.message || 'Error guardando spread');
     } finally {
-      setSavingPair(false);
+      setSaving(false);
     }
   };
 
-  // Muestra spinner principal si aún no se han cargado los datos iniciales
-  if (loadingDefault || loadingPairs) {
-    return <Container className="text-center p-5"><Spinner animation="border" /></Container>;
+  const handleDelete = async (id) => {
+    if (!window.confirm('¿Estás seguro de eliminar este spread?')) return;
+
+    try {
+      setSaving(true);
+      setError('');
+      setSuccess('');
+
+      const response = await deleteMarkup(id);
+      if (response.ok) {
+        setSuccess('Spread eliminado correctamente');
+        loadData();
+      }
+    } catch (err) {
+      setError(err.message || 'Error eliminando spread');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const getCountryNameByCode = (code) => {
+    const country = countries.find(c => c.code.toUpperCase() === code.toUpperCase());
+    return country ? country.name : code;
+  };
+
+  if (loading) {
+    return (
+      <Container className="my-5 text-center">
+        <Spinner animation="border" />
+      </Container>
+    );
   }
 
   return (
     <Container className="my-5" style={{ maxWidth: '900px' }}>
-      {/* Vita Rates Marquee - Temporalmente desactivado para debugging */}
+      {/* Vita Rates Marquee */}
       <VitaRatesMarquee />
 
-      {/* Sección Markup por Defecto */}
-      <Card className="mb-4">
-        <Card.Header as="h4">Gestión de Comisión por Defecto</Card.Header>
-        <Card.Body>
-          <Form onSubmit={handleDefaultSubmit}>
-            <Form.Group as={Row} className="mb-3 align-items-center">
-              <Form.Label column sm={4}>Porcentaje por Defecto (%):</Form.Label>
-              <Col sm={5}>
-                <Form.Control
-                  type="number" step="0.01" value={defaultMarkup}
-                  onChange={(e) => setDefaultMarkup(e.target.value)}
-                  disabled={loadingDefault} // Deshabilita mientras carga
-                />
-              </Col>
-              <Col sm={3}>
-                <Button type="submit" disabled={savingDefault || loadingDefault} style={{ backgroundColor: 'var(--avf-primary)' }}>
-                  {savingDefault ? <Spinner size="sm" /> : 'Guardar'}
-                </Button>
-              </Col>
-            </Form.Group>
-            {successDefault && <Alert variant="success" className="py-2 mt-2">{successDefault}</Alert>}
-            <Form.Text>Esta comisión se aplica si no existe una regla específica.</Form.Text>
-          </Form>
-        </Card.Body>
-      </Card>
+      {error && <Alert variant="danger" onClose={() => setError('')} dismissible>{error}</Alert>}
+      {success && <Alert variant="success" onClose={() => setSuccess('')} dismissible>{success}</Alert>}
 
-      {/* Sección Comisiones por Par */}
-      <Card>
-        <Card.Header as="h4">Gestión de Comisiones por Par de Divisas</Card.Header>
+      {/* Sección Spread por Defecto Global */}
+      <Card className="mb-4 shadow-sm">
+        <Card.Header className="bg-primary text-white">
+          <h5 className="mb-0">
+            <i className="bi bi-percent me-2"></i>
+            Spread Global por Defecto
+          </h5>
+        </Card.Header>
         <Card.Body>
-          {/* Formulario para añadir/editar par */}
-          <Form onSubmit={handlePairSubmit} className="mb-4 p-3 border rounded">
-            <h5>Añadir / Editar Par</h5>
-            <Row>
-              <Col md={3}><Form.Group><Form.Label>Origen</Form.Label><Form.Control type="text" value={newOrigin} readOnly /></Form.Group></Col>
-              <Col md={4}>
+          <p className="text-muted small">
+            Este porcentaje se aplica a todos los corredores que no tengan un spread específico configurado.
+          </p>
+          <Form onSubmit={handleSaveDefault}>
+            <Row className="align-items-end">
+              <Col md={8}>
                 <Form.Group>
-                  <Form.Label>Destino</Form.Label>
-                  <Form.Select value={newDest} onChange={(e) => setNewDest(e.target.value)} disabled={loadingCountries}>
-                    <option value="">Selecciona país...</option>
-                    {countries.map(c => <option key={c.code} value={c.code}>{c.name}</option>)}
-                  </Form.Select>
+                  <Form.Label>Porcentaje de Spread (%)</Form.Label>
+                  <Form.Control
+                    type="number"
+                    step="0.1"
+                    value={defaultPercent}
+                    onChange={(e) => setDefaultPercent(e.target.value)}
+                    placeholder="Ej: 2.0"
+                    required
+                  />
+                  <Form.Text className="text-muted">
+                    Ejemplo: 2.0% significa que la tasa mostrada será 2% menor que la tasa Vita real
+                  </Form.Text>
                 </Form.Group>
               </Col>
-              <Col md={3}><Form.Group><Form.Label>Comisión (%)</Form.Label><Form.Control type="number" step="0.01" value={newPercent} onChange={(e) => setNewPercent(e.target.value)} /></Form.Group></Col>
-              <Col md={2} className="d-flex align-items-end">
-                <Button type="submit" disabled={savingPair} style={{ backgroundColor: 'var(--avf-secondary)', borderColor: 'var(--avf-secondary)' }}>
-                  {savingPair ? <Spinner size="sm" /> : 'Guardar Par'}
+              <Col md={4}>
+                <Button type="submit" disabled={saving} className="w-100">
+                  {saving ? <Spinner size="sm" /> : 'Guardar'}
                 </Button>
               </Col>
             </Row>
           </Form>
-
-          {successPair && <Alert variant="success" className="py-2">{successPair}</Alert>}
-
-          {/* Muestra error general si ocurrió durante la carga o guardado */}
-          {error && <Alert variant="danger" className="py-2">{error}</Alert>}
-
-          {/* Tabla de pares existentes */}
-          <h5>Pares Existentes</h5>
-          <Table striped bordered hover responsive size="sm">
-            <thead>
-              <tr>
-                <th>Origen</th>
-                <th>Destino</th>
-                <th>Comisión (%)</th>
-              </tr>
-            </thead>
-            <tbody>
-              {loadingPairs ? (
-                <tr><td colSpan="3" className="text-center"><Spinner size="sm" /> Cargando...</td></tr>
-              ) : pairs.length === 0 ? (
-                <tr><td colSpan="3" className="text-center text-muted">No hay pares específicos.</td></tr>
-              ) : (
-                // --- MODIFICACIÓN AQUÍ ---
-                // Se usa la función helper para mostrar el nombre del país
-                pairs.map((pair, index) => (
-                  <tr key={index}>
-                    <td>{pair.originCurrency}</td>
-                    <td>{getCountryNameByCode(pair.destCountry)} ({pair.destCountry})</td> {/* Muestra Nombre (Código) */}
-                    <td>{pair.percent}%</td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </Table>
         </Card.Body>
       </Card>
+
+      {/* Sección Spreads Específicos */}
+      <Card className="shadow-sm">
+        <Card.Header className="bg-info text-white">
+          <h5 className="mb-0">
+            <i className="bi bi-geo-alt me-2"></i>
+            Spreads por Corredor
+          </h5>
+        </Card.Header>
+        <Card.Body>
+          <p className="text-muted small">
+            Configura spreads específicos por país de origen o por corredor (origen → destino).
+          </p>
+
+          {/* Formulario para Agregar */}
+          <Form onSubmit={handleAddMarkup} className="mb-4 p-3 bg-light rounded">
+            <Row>
+              <Col md={3}>
+                <Form.Group className="mb-2">
+                  <Form.Label>País Origen</Form.Label>
+                  <Form.Select
+                    value={newOriginCountry}
+                    onChange={(e) => setNewOriginCountry(e.target.value)}
+                    required
+                  >
+                    <option value="">Seleccionar...</option>
+                    {countries.map(c => (
+                      <option key={c.code} value={c.code}>{c.name}</option>
+                    ))}
+                  </Form.Select>
+                </Form.Group>
+              </Col>
+              <Col md={3}>
+                <Form.Group className="mb-2">
+                  <Form.Label>País Destino (Opcional)</Form.Label>
+                  <Form.Select
+                    value={newDestCountry}
+                    onChange={(e) => setNewDestCountry(e.target.value)}
+                  >
+                    <option value="">Todos</option>
+                    {countries.filter(c => c.code !== newOriginCountry).map(c => (
+                      <option key={c.code} value={c.code}>{c.name}</option>
+                    ))}
+                  </Form.Select>
+                  <Form.Text className="text-muted small">
+                    Vacío = aplica a todos los destinos
+                  </Form.Text>
+                </Form.Group>
+              </Col>
+              <Col md={2}>
+                <Form.Group className="mb-2">
+                  <Form.Label>Spread %</Form.Label>
+                  <Form.Control
+                    type="number"
+                    step="0.1"
+                    value={newPercent}
+                    onChange={(e) => setNewPercent(e.target.value)}
+                    placeholder="2.5"
+                    required
+                  />
+                </Form.Group>
+              </Col>
+              <Col md={4}>
+                <Form.Group className="mb-2">
+                  <Form.Label>Descripción</Form.Label>
+                  <Form.Control
+                    type="text"
+                    value={newDescription}
+                    onChange={(e) => setNewDescription(e.target.value)}
+                    placeholder="Opcional"
+                  />
+                </Form.Group>
+              </Col>
+            </Row>
+            <Button type="submit" variant="success" disabled={saving} className="mt-2">
+              {saving ? <Spinner size="sm" /> : <><i className="bi bi-plus-circle me-2"></i>Agregar Spread</>}
+            </Button>
+          </Form>
+
+          {/* Tabla de Spreads Configurados */}
+          {markups.filter(m => !m.isDefault).length === 0 ? (
+            <Alert variant="info" className="mb-0">
+              No hay spreads específicos configurados. Todos usan el spread por defecto ({defaultPercent}%).
+            </Alert>
+          ) : (
+            <Table striped bordered hover responsive size="sm">
+              <thead>
+                <tr>
+                  <th>Origen</th>
+                  <th>Destino</th>
+                  <th>Spread %</th>
+                  <th>Descripción</th>
+                  <th>Acciones</th>
+                </tr>
+              </thead>
+              <tbody>
+                {markups.filter(m => !m.isDefault).map(markup => (
+                  <tr key={markup._id}>
+                    <td>
+                      <Badge bg="primary">{getCountryNameByCode(markup.originCountry)}</Badge>
+                    </td>
+                    <td>
+                      {markup.destCountry ? (
+                        <Badge bg="success">{getCountryNameByCode(markup.destCountry)}</Badge>
+                      ) : (
+                        <span className="text-muted">Todos</span>
+                      )}
+                    </td>
+                    <td className="text-center">
+                      <strong>{markup.percent}%</strong>
+                    </td>
+                    <td className="small text-muted">{markup.description || '-'}</td>
+                    <td className="text-center">
+                      <Button
+                        size="sm"
+                        variant="outline-danger"
+                        onClick={() => handleDelete(markup._id)}
+                        disabled={saving}
+                      >
+                        <i className="bi bi-trash"></i>
+                      </Button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </Table>
+          )}
+        </Card.Body>
+      </Card>
+
+      {/* Info Box */}
+      <Alert variant="info" className="mt-4">
+        <h6><i className="bi bi-info-circle me-2"></i>Prioridad de Aplicación</h6>
+        <ol className="mb-0 small">
+          <li><strong>Exacto:</strong> Si existe un spread CL → CO, se aplica ese</li>
+          <li><strong>Default Origen:</strong> Si no, usa el spread default de CL (sin destino)</li>
+          <li><strong>Global:</strong> Si no, usa el spread global por defecto</li>
+        </ol>
+      </Alert>
     </Container>
   );
 };
