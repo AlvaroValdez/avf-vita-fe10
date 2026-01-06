@@ -278,7 +278,7 @@ const AdminMarkup = () => {
           </Form>
 
           {/* Tabla de Spreads Configurados */}
-          {markups.filter(m => !m.isDefault).length === 0 ? (
+          {markups.filter(m => !m.isDefault && m.originCountry).length === 0 ? (
             <Alert variant="info" className="mb-0">
               No hay spreads específicos configurados. Todos usan el spread por defecto ({defaultPercent}%).
             </Alert>
@@ -294,7 +294,7 @@ const AdminMarkup = () => {
                 </tr>
               </thead>
               <tbody>
-                {markups.filter(m => !m.isDefault).map(markup => (
+                {markups.filter(m => !m.isDefault && m.originCountry).map(markup => (
                   <tr key={markup._id}>
                     <td>
                       {markup.originCountry ? (

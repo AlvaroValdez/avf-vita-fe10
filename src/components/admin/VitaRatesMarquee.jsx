@@ -117,9 +117,9 @@ const VitaRatesMarquee = () => {
                             <div className="marquee-content">
                                 {/* Duplicar para efecto continuo */}
                                 {[...rates, ...rates].map((r, index) => (
-                                    <Badge
+                                    <span
                                         key={`${r.to}-${index}`}
-                                        className="px-3 py-2 me-2"
+                                        className="px-3 py-2 me-2 badge"
                                         style={{
                                             backgroundColor: getCountryColor(r.to),
                                             color: '#fff',
@@ -130,7 +130,7 @@ const VitaRatesMarquee = () => {
                                         }}
                                     >
                                         CLP→{r.to}: <strong>{parseFloat(r.rate).toFixed(3)}</strong>
-                                    </Badge>
+                                    </span>
                                 ))}
                             </div>
                         </div>
