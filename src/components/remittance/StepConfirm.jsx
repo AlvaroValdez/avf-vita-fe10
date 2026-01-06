@@ -70,7 +70,7 @@ const StepConfirm = ({ formData, fields, onBack, isFromFavorite }) => {
   useEffect(() => {
     const fetchPaymentConfig = async () => {
       try {
-        const response = await fetch(`${import.meta.env.VITE_API_URL}/api/transaction-rules?country=${originCountry}`, {
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/transaction-rules?country=${originCountry}`, {
           headers: {
             'Authorization': `Bearer ${localStorage.getItem('token')}`
           }
