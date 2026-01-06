@@ -297,7 +297,11 @@ const AdminMarkup = () => {
                 {markups.filter(m => !m.isDefault).map(markup => (
                   <tr key={markup._id}>
                     <td>
-                      <Badge bg="primary">{getCountryNameByCode(markup.originCountry)}</Badge>
+                      {markup.originCountry ? (
+                        <Badge bg="primary">{getCountryNameByCode(markup.originCountry)}</Badge>
+                      ) : (
+                        <span className="text-muted">-</span>
+                      )}
                     </td>
                     <td>
                       {markup.destCountry ? (
