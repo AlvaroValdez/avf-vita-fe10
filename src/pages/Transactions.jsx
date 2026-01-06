@@ -123,42 +123,77 @@ const Transactions = () => {
               <th>Remitente</th>
               <th>Beneficiario</th>
               <th>País</th>
-              <th>Monto</th>
-              <th>Comisión</th>
+              <th>Enviado</th>
+              <th>Recibido</th>
+              <th>Tasa Vita</th>
+              <th>Tasa Alyto</th>
+              <th>Spread%</th>
+              <th>Ganancia</th>
               <th>Estado</th>
-              <th>Vita ID</th>
               <th>Acciones</th>
             </tr>
           </thead>
           <tbody>
             {transactions.map(tx => (
               <tr key={tx._id}>
-                <td>{new Date(tx.createdAt).toLocaleString()}</td>
-                <td>{tx.order}</td>
-                <td>{tx.createdBy?.name || tx.createdBy?.email || 'N/A'}</td>
-                <td>{tx.company_name || `${tx.beneficiary_first_name || ''} ${tx.beneficiary_last_name || ''}`.trim()}</td>
+                <td>{new Date(tx.createdAt).toLocaleString('es-CL', { month: 'short', day: '2-digit', hour: '2-digit', minute: '2-digit' })}</td>
+                <td><code className="small">{tx.order}</code></td>
+                <td className="small">{tx.createdBy?.name || tx.createdBy?.email || 'N/A'}</td>
+                <td className="small">{tx.company_name || `${tx.beneficiary_first_name || ''} ${tx.beneficiary_last_name || ''}`.trim()}</td>
                 <td>{tx.country}</td>
-                {/* Asegurarse de formatear el monto y moneda correctamente */}
-                <td>{new Intl.NumberFormat('es-CL', { style: 'currency', currency: tx.currency || 'CLP', minimumFractionDigits: 0 }).format(tx.amount || 0)}</td>
-                {/* 💰 Comisión */}
-                <td>
-                  {tx.feePercent && tx.feePercent > 0 ? (
-                    <>
-                      <strong>{tx.feePercent.toFixed(2)}%</strong>
-                      <br />
-                      <small className="text-muted">
-                        ({new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP', minimumFractionDigits: 0 }).format(tx.fee || 0)})
-                      </small>
-                    </>
+
+                {/* Enviado */}
+                <td className="text-end">
+                  {tx.amountsTracking?.originTotal ? (
+                    <><strong>{new Intl.NumberFormat('es-CL', { minimumFractionDigits: 0 }).format(tx.amountsTracking.originTotal)}</strong> <small className="text-muted">{tx.amountsTracking.originCurrency}</small></>
+                  ) : (
+                    <>{new Intl.NumberFormat('es-CL', { minimumFractionDigits: 0 }).format(tx.amount || 0)} <small className="text-muted">{tx.currency}</small></>
+                  )}
+                </td>
+
+                {/* Recibido */}
+                <td className="text-end">
+                  {tx.amountsTracking?.destReceiveAmount ? (
+                    <><strong>{new Intl.NumberFormat('es-CL', { minimumFractionDigits: 0 }).format(tx.amountsTracking.destReceiveAmount)}</strong> <small className="text-muted">{tx.amountsTracking.destCurrency}</small></>
                   ) : (
                     <span className="text-muted">-</span>
                   )}
                 </td>
+
+                {/* Tasa Vita */}
+                <td className="small text-muted text-center">
+                  {tx.rateTracking?.vitaRate ? tx.rateTracking.vitaRate.toFixed(3) : '-'}
+                </td>
+
+                {/* Tasa Alyto */}
+                <td className="small text-center">
+                  {tx.rateTracking?.alytoRate ? <strong>{tx.rateTracking.alytoRate.toFixed(3)}</strong> : '-'}
+                </td>
+
+                {/* Spread% */}
+                <td className="text-center">
+                  {tx.rateTracking?.spreadPercent ? (
+                    <Badge bg="warning" text="dark">{tx.rateTracking.spreadPercent}%</Badge>
+                  ) : (
+                    <span className="text-muted">-</span>
+                  )}
+                </td>
+
+                {/* Ganancia */}
+                <td className="text-end">
+                  {tx.amountsTracking?.profitDestCurrency ? (
+                    <span className="text-success fw-bold">
+                      {new Intl.NumberFormat('es-CL', { minimumFractionDigits: 0 }).format(tx.amountsTracking.profitDestCurrency)} {tx.amountsTracking.destCurrency}
+                    </span>
+                  ) : (
+                    <span className="text-muted">-</span>
+                  )}
+                </td>
+
                 <td>{getStatusBadge(tx.status)}</td>
-                <td>{tx.vitaResponse?.id || tx.vitaResponse?.transaction?.id || 'N/A'}</td>
                 <td>
                   <Button size="sm" variant="outline-primary" as={Link} to={`/transactions/${tx._id}`}>
-                    Ver Detalle
+                    <i className="bi bi-eye"></i>
                   </Button>
                 </td>
               </tr>

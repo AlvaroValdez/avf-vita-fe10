@@ -244,12 +244,13 @@ export const getPayinFees = async (country, amount) => {
   }
 };
 
-export const getTransactionRules = async (country = 'CL') => {
+// Get Vita rates summary for admin marquee
+export const getPricesSummary = async () => {
   try {
-    const response = await apiClient.get('/transaction-rules', { params: { country } });
+    const response = await apiClient.get('/prices/summary');
     return response.data;
   } catch (error) {
-    throw normalizeAxiosError(error, 'Error obteniendo reglas de transacción.');
+    throw normalizeAxiosError(error, 'Error obteniendo resumen de precios.');
   }
 };
 

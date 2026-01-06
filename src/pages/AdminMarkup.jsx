@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Container, Card, Form, Button, Spinner, Alert, Row, Col, Table } from 'react-bootstrap';
 import { getMarkup, updateMarkup, getMarkupPairs, updateMarkupPair } from '../services/api';
 import { useAppContext } from '../context/AppContext';
+import VitaRatesMarquee from '../components/admin/VitaRatesMarquee';
 
 const AdminMarkup = () => {
   const { countries, loading: loadingCountries } = useAppContext(); // Obtenemos la lista de países
@@ -41,7 +42,7 @@ const AdminMarkup = () => {
       }
     };
     const loadMarkupPairs = async () => {
-       try {
+      try {
         setLoadingPairs(true);
         const res = await getMarkupPairs();
         if (res.ok) setPairs(res.pairs);
@@ -81,10 +82,10 @@ const AdminMarkup = () => {
       if (!newDest || isNaN(numericPercent)) {
         throw new Error('Completa todos los campos del par con valores válidos.');
       }
-      const res = await updateMarkupPair({ 
-        originCurrency: newOrigin, 
-        destCountry: newDest, 
-        percent: numericPercent 
+      const res = await updateMarkupPair({
+        originCurrency: newOrigin,
+        destCountry: newDest,
+        percent: numericPercent
       });
       if (res.ok) {
         setPairs(res.pairs);
@@ -108,6 +109,9 @@ const AdminMarkup = () => {
 
   return (
     <Container className="my-5" style={{ maxWidth: '900px' }}>
+      {/* Vita Rates Marquee */}
+      <VitaRatesMarquee />
+
       {/* Sección Markup por Defecto */}
       <Card className="mb-4">
         <Card.Header as="h4">Gestión de Comisión por Defecto</Card.Header>
@@ -116,14 +120,14 @@ const AdminMarkup = () => {
             <Form.Group as={Row} className="mb-3 align-items-center">
               <Form.Label column sm={4}>Porcentaje por Defecto (%):</Form.Label>
               <Col sm={5}>
-                <Form.Control 
+                <Form.Control
                   type="number" step="0.01" value={defaultMarkup}
                   onChange={(e) => setDefaultMarkup(e.target.value)}
                   disabled={loadingDefault} // Deshabilita mientras carga
                 />
               </Col>
               <Col sm={3}>
-                <Button type="submit" disabled={savingDefault || loadingDefault} style={{ backgroundColor: 'var(--avf-primary)'}}>
+                <Button type="submit" disabled={savingDefault || loadingDefault} style={{ backgroundColor: 'var(--avf-primary)' }}>
                   {savingDefault ? <Spinner size="sm" /> : 'Guardar'}
                 </Button>
               </Col>
@@ -154,15 +158,15 @@ const AdminMarkup = () => {
               </Col>
               <Col md={3}><Form.Group><Form.Label>Comisión (%)</Form.Label><Form.Control type="number" step="0.01" value={newPercent} onChange={(e) => setNewPercent(e.target.value)} /></Form.Group></Col>
               <Col md={2} className="d-flex align-items-end">
-                <Button type="submit" disabled={savingPair} style={{ backgroundColor: 'var(--avf-secondary)', borderColor: 'var(--avf-secondary)'}}>
-                  {savingPair ? <Spinner size="sm"/> : 'Guardar Par'}
+                <Button type="submit" disabled={savingPair} style={{ backgroundColor: 'var(--avf-secondary)', borderColor: 'var(--avf-secondary)' }}>
+                  {savingPair ? <Spinner size="sm" /> : 'Guardar Par'}
                 </Button>
               </Col>
             </Row>
           </Form>
 
           {successPair && <Alert variant="success" className="py-2">{successPair}</Alert>}
-          
+
           {/* Muestra error general si ocurrió durante la carga o guardado */}
           {error && <Alert variant="danger" className="py-2">{error}</Alert>}
 
@@ -178,7 +182,7 @@ const AdminMarkup = () => {
             </thead>
             <tbody>
               {loadingPairs ? (
-                 <tr><td colSpan="3" className="text-center"><Spinner size="sm"/> Cargando...</td></tr>
+                <tr><td colSpan="3" className="text-center"><Spinner size="sm" /> Cargando...</td></tr>
               ) : pairs.length === 0 ? (
                 <tr><td colSpan="3" className="text-center text-muted">No hay pares específicos.</td></tr>
               ) : (
