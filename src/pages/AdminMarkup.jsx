@@ -109,7 +109,7 @@ const AdminMarkup = () => {
 
   return (
     <Container className="my-5" style={{ maxWidth: '900px' }}>
-      {/* Vita Rates Marquee */}
+      {/* Vita Rates Marquee - Temporalmente desactivado para debugging */}
       <VitaRatesMarquee />
 
       {/* Sección Markup por Defecto */}

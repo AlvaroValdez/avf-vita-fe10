@@ -254,6 +254,15 @@ export const getPricesSummary = async () => {
   }
 };
 
+export const getTransactionRules = async (country = 'CL') => {
+  try {
+    const response = await apiClient.get('/transaction-rules', { params: { country } });
+    return response.data;
+  } catch (error) {
+    throw normalizeAxiosError(error, 'Error obteniendo reglas de transacción.');
+  }
+};
+
 export const updateTransactionRules = async (rulesData) => {
   try {
     const response = await apiClient.put('/transaction-rules', rulesData);

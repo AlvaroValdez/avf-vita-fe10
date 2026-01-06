@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Card, Badge, Button, Spinner } from 'react-bootstrap';
-import { getPricesSummary } from '../services/api';
+import { getPricesSummary } from '../../services/api';
 
 const VitaRatesMarquee = () => {
     const [rates, setRates] = useState([]);
