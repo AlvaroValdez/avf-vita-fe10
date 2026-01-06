@@ -196,6 +196,10 @@ const StepConfirm = ({ formData, fields, onBack, isFromFavorite }) => {
       const orderId = `ORD-${Date.now()}`;
 
       console.log('[StepConfirm] Creando transacción en DB...');
+      console.log('[StepConfirm] Current Quote:', currentQuote);
+      console.log('[StepConfirm] rateTracking:', currentQuote.rateTracking);
+      console.log('[StepConfirm] amountsTracking:', currentQuote.amountsTracking);
+      console.log('[StepConfirm] feeAudit:', currentQuote.feeAudit);
 
       const transactionPayload = {
         order: orderId,
@@ -210,7 +214,12 @@ const StepConfirm = ({ formData, fields, onBack, isFromFavorite }) => {
         payinStatus: 'pending',
         payoutStatus: 'pending',
         purpose: formData.purpose || 'EPFAMT', // Código correcto VITA para "Family maintenance"
-        purpose_comentary: formData.purpose_comentary || 'Family maintenance'
+        purpose_comentary: formData.purpose_comentary || 'Family maintenance',
+
+        // 📊 Tracking Data (Spread Model)
+        rateTracking: currentQuote.rateTracking || null,
+        amountsTracking: currentQuote.amountsTracking || null,
+        feeAudit: currentQuote.feeAudit || null
       };
 
       const transactionResponse = await createWithdrawal(transactionPayload);
