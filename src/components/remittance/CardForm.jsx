@@ -6,6 +6,7 @@ import { useAppContext } from '../../context/AppContext';
 import { useAuth } from '../../context/AuthContext';
 import { getQuote, getTransactionRules, getEnabledOrigins } from '../../services/api';
 import { formatNumberForDisplay, parseFormattedNumber, formatRate } from '../../utils/formatting';
+import { BANK_EXAMPLES } from '../../data/bankExamples';
 import logo from '../../assets/images/logo.png'; // Importación correcta del logo
 
 // Import flags directly for better reliability
@@ -308,10 +309,14 @@ const CardForm = ({ onQuoteSuccess }) => {
 
           {/* Exchange Rate - Centered */}
           {quote && !loading && !error && (
-            <div className="text-center my-2">
-              <small className="text-dark fw-bold">
-                1 {quote.destCurrency} = {formatRate(1 / quote.rateWithMarkup)} {quote.origin}
-              </small>
+            <div className="text-center my-3">
+              <div className="d-inline-flex align-items-center justify-content-center px-4 py-2 rounded-pill" style={{ backgroundColor: '#F7C843' }}>
+                <span className="me-2 fw-bold text-dark">Tasa:</span>
+                <span className="fw-bold text-dark">
+                  {formatRate(1 / quote.rateWithMarkup)} {quote.origin} = 1 {quote.destCurrency}
+                </span>
+                <i className="bi bi-arrow-down-up ms-2 text-dark"></i>
+              </div>
             </div>
           )}
 
@@ -349,6 +354,26 @@ const CardForm = ({ onQuoteSuccess }) => {
                 {quote ? formatNumberForDisplay(quote.amountOut) : '0'}
               </span>
             </div>
+
+            {/* Bank Requirements Info */}
+            {destCountry && BANK_EXAMPLES[destCountry] && (
+              <div className="mb-4 p-3 rounded-3 border border-info bg-info bg-opacity-10">
+                <div className="d-flex align-items-center mb-2">
+                  <i className="bi bi-info-circle-fill text-info me-2"></i>
+                  <small className="fw-bold text-info text-uppercase">
+                    Requisitos para {BANK_EXAMPLES[destCountry].countryName}
+                  </small>
+                </div>
+                <ul className="list-unstyled mb-0 small text-muted">
+                  {BANK_EXAMPLES[destCountry].requirements.map((req, idx) => (
+                    <li key={idx} className="mb-1 d-flex align-items-start">
+                      <span className="me-2">•</span>
+                      {req}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
           </div>
 
           {/* Quote Details */}

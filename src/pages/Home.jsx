@@ -81,19 +81,7 @@ const Home = () => {
           {/* Right: Actions */}
           <div className="d-flex align-items-center gap-4">
             {/* Show/Hide Balance */}
-            <button onClick={() => setShowBalance(!showBalance)} className="btn p-0 border-0 text-white" title={showBalance ? "Ocultar saldo" : "Mostrar saldo"}>
-              {showBalance ? (
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                  <circle cx="12" cy="12" r="3"></circle>
-                </svg>
-              ) : (
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07-2.3 2.3"></path>
-                  <line x1="1" y1="1" x2="23" y2="23"></line>
-                </svg>
-              )}
-            </button>
+            {/* Balance Toggle Removed for Remittance Only Mode */}
 
             {/* Notifications (Bell) */}
             <button className="btn p-0 border-0 text-white position-relative">
@@ -117,41 +105,58 @@ const Home = () => {
 
         <Container className="py-2 pb-5 position-relative" style={{ zIndex: 1, maxWidth: '500px' }}>
 
-          {/* 1. USER GREETING (Restored "As Before") */}
-          <div className="d-flex justify-content-between align-items-start mt-3 mb-2 px-2">
-            <div className="d-flex align-items-center gap-3">
-              <div>
-                <h5 className="fw-bold mb-0 text-dark">{user?.name || 'Usuario'}</h5>
-                <small className="text-muted" style={{ fontSize: '0.8rem' }}>{today}</small>
-              </div>
-              {/* Logout button */}
-              <button
-                onClick={logout}
-                className="btn btn-sm btn-outline-danger rounded-pill px-3"
-                style={{ fontSize: '0.75rem' }}
-              >
-                Salir
-              </button>
-            </div>
-            {/* Avatar - Restored */}
-            <div className="position-relative">
-              <Link to="/profile" className="rounded-circle d-flex align-items-center justify-content-center overflow-hidden border border-2 border-white shadow-sm text-decoration-none" style={{ width: 45, height: 45, backgroundColor: '#E0E7FF' }}>
-                <span className="fw-bold fs-5" style={{ color: '#233E58' }}>{user?.name?.charAt(0) || 'U'}</span>
-              </Link>
-              <div className="position-absolute rounded-circle bg-warning" style={{ width: 10, height: 10, top: 0, right: 0, border: '2px solid white' }}></div>
-            </div>
+
+          {/* 1. Header Actions (Logout Right) */}
+          <div className="d-flex justify-content-end align-items-center mt-3 mb-2 px-2">
+            <button
+              onClick={logout}
+              className="btn p-0 border-0 d-flex align-items-center justify-content-center"
+              style={{ width: '45px', height: '45px', color: '#dc3545', backgroundColor: 'transparent' }}
+              title="Cerrar Sesión"
+            >
+              <i className="bi bi-power fs-4"></i>
+            </button>
           </div>
 
-          {/* 2. MAIN BALANCE */}
+          {/* 2. USER PROFILE (Centered & Large) */}
           <div className="text-center mb-4">
-            <p className="text-muted mb-1 small">Balance Total</p>
-            <div className="d-flex align-items-center justify-content-center">
-              <h1 className="display-4 fw-bold mb-0" style={{ color: '#1A1A1A', letterSpacing: showBalance ? 'normal' : '5px' }}>
-                {showBalance ? '$ 0.00' : '•••••••'}
-              </h1>
-              {/* Currency floating */}
-              {showBalance && <span className="fs-6 fw-bold ms-2 align-top text-warning">CLP</span>}
+            {/* Avatar Centered */}
+            <div className="mx-auto mb-3 position-relative" style={{ width: '100px', height: '100px' }}>
+              <label
+                htmlFor="profile-upload"
+                className="rounded-circle d-flex align-items-center justify-content-center overflow-hidden border border-4 border-white shadow bg-light cursor-pointer"
+                style={{ width: '100%', height: '100%', cursor: 'pointer' }}
+              >
+                {user?.photoURL ? (
+                  <img src={user.photoURL} alt="Profile" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                ) : (
+                  <span className="fw-bold display-4 text-secondary">{user?.name?.charAt(0) || 'U'}</span>
+                )}
+
+                {/* Overlay Icon for Edit */}
+                <div className="position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center bg-dark bg-opacity-25 opacity-0 hover-opacity-100 transition-opacity">
+                  <i className="bi bi-camera-fill text-white fs-3"></i>
+                </div>
+              </label>
+              <input
+                id="profile-upload"
+                type="file"
+                className="d-none"
+                accept="image/*"
+                onChange={(e) => {
+                  if (e.target.files && e.target.files[0]) {
+                    // Logic to handle file upload
+                    console.log("File selected:", e.target.files[0]);
+                    toast.info("Funcionalidad de subir foto en construcción");
+                  }
+                }}
+              />
             </div>
+
+            <h2 className="fw-bold mb-1 text-dark" style={{ fontSize: '1.75rem' }}>
+              {user?.name || 'Usuario'}
+            </h2>
+            <p className="text-muted mb-0">{today}</p>
           </div>
 
           {/* 3. ACTION GRID (4 Buttons with Custom SVGs) */}
@@ -319,7 +324,7 @@ const Home = () => {
   return (
     <>
       {/* Hero Section - Clean White Background */}
-      <div style={{ backgroundColor: '#ffffff', minHeight: '80vh', display: 'flex', alignItems: 'center' }}>
+      <div style={{ backgroundColor: '#ffffff', minHeight: '80vh', display: 'flex', alignItems: 'center', paddingTop: '80px' }}>
         <Container className="py-5">
           <Row className="align-items-center justify-content-center">
 
@@ -333,7 +338,7 @@ const Home = () => {
               </div>
 
               <h1 className="display-4 fw-bold mb-3" style={{ color: '#233E58', lineHeight: '1.2' }}>
-                Remesas <span style={{ color: '#F7C843' }}>instante</span> con<br className="d-md-none" /> tecnología Blockchain
+                Remesas <span style={{ color: '#F7C843' }}>al instante</span> con<br className="d-md-none" /> tecnología Blockchain
               </h1>
               <p className="lead mb-5 text-muted">
                 La forma más segura y rápida de enviar remesas. Conectamos fronteras usando la red Stellar.
