@@ -210,12 +210,16 @@ export const getQuote = async (params) => {
       return {
         ok: true,
         data: {
-          amountIn: backendData.amount,
-          amountOut: backendData.receiveAmount,
-          rateWithMarkup: backendData.rate,
+          // Map backend fields to frontend expectations
+          amountIn: backendData.clpAmountWithFee || backendData.amount, // Total con comisión
+          amountOut: backendData.receiveAmount,                          // Lo que reciben
+          amount: backendData.amount,                                    // Principal
+          receiveAmount: backendData.receiveAmount,                      // Lo que reciben
+          rateWithMarkup: backendData.rate,                             // Tasa
+          rate: backendData.rate,
           origin: backendData.originCurrency,
           destCurrency: backendData.destCurrency,
-          ...backendData,
+          ...backendData, // Include all other fields
         }
       };
     }

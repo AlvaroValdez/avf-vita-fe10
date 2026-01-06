@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Card, Form, Row, Col, InputGroup, Button, Spinner, Alert, Modal, ListGroup } from 'react-bootstrap';
+import { Card, Form, Row, Col, InputGroup, Button, Spinner, Alert, Modal, ListGroup, Accordion } from 'react-bootstrap';
 import { toast } from 'sonner';
 import { Link } from 'react-router-dom';
 import { useAppContext } from '../../context/AppContext';
@@ -93,7 +93,10 @@ const CardForm = ({ onQuoteSuccess }) => {
   // Form States
   const [amount, setAmount] = useState(0);
   const [displayAmount, setDisplayAmount] = useState('');
+  const [destAmount, setDestAmount] = useState(0); // Para modo receive
+  const [displayDestAmount, setDisplayDestAmount] = useState('');
   const [destCountry, setDestCountry] = useState('CO');
+  const [mode, setMode] = useState('send'); // 'send' | 'receive'
 
   // Data & UI States
   const [quote, setQuote] = useState(null);
@@ -180,43 +183,54 @@ const CardForm = ({ onQuoteSuccess }) => {
     setLimitError(false);
     setQuote(null);
 
-    if (amount <= 0 || !destCountry) return;
+    // Determine which amount to validate based on mode
+    const activeAmount = mode === 'send' ? amount : destAmount;
 
-    // Min Amount Validation
-    if (amount < minAmount) {
-      setError(`El monto mínimo es $${formatNumberForDisplay(minAmount)} ${originCurrency}.`);
-      setLimitError(true);
-      return;
-    }
+    // Early return if no amount or no destination
+    if (activeAmount <= 0 || !destCountry) return;
 
-    // KYC Limit Validation
-    if (user) {
-      const userLevel = user.kyc?.level || 1;
-      // TODO: Fetch limits from backend based on currency
-      const kycLimitsCLP = { 1: 450000, 2: 4500000, 3: 50000000 };
-      let currentLimit = kycLimitsCLP[userLevel] || 450000;
-
-      // Simple approximation for non-CLP currencies (for UX only, backend validates strictly)
-      if (originCurrency !== 'CLP') {
-        if (originCurrency === 'USD') currentLimit = currentLimit / 900;
-        // Add logic for other currencies as needed
-      }
-
-      if (amount > currentLimit) {
-        setError(`El monto excede tu límite de Nivel ${userLevel} ($${formatNumberForDisplay(currentLimit)} ${originCurrency}).`);
+    // For 'receive' mode, skip min amount and KYC validations
+    // These will be validated after we get the backend response
+    if (mode === 'send') {
+      // Min Amount Validation (only for send mode)
+      if (amount < minAmount) {
+        setError(`El monto mínimo es $${formatNumberForDisplay(minAmount)} ${originCurrency}.`);
         setLimitError(true);
         return;
+      }
+
+      // KYC Limit Validation (only for send mode)
+      if (user) {
+        const userLevel = user.kyc?.level || 1;
+        // TODO: Fetch limits from backend based on currency
+        const kycLimitsCLP = { 1: 450000, 2: 4500000, 3: 50000000 };
+        let currentLimit = kycLimitsCLP[userLevel] || 450000;
+
+        // Simple approximation for non-CLP currencies (for UX only, backend validates strictly)
+        if (originCurrency !== 'CLP') {
+          if (originCurrency === 'USD') currentLimit = currentLimit / 900;
+          // Add logic for other currencies as needed
+        }
+
+        if (amount > currentLimit) {
+          setError(`El monto excede tu límite de Nivel ${userLevel} ($${formatNumberForDisplay(currentLimit)} ${originCurrency}).`);
+          setLimitError(true);
+          return;
+        }
       }
     }
 
     const debounceHandler = setTimeout(async () => {
       setLoading(true);
       try {
+        const amountToSend = mode === 'send' ? amount : destAmount;
+
         const response = await getQuote({
-          amount,
+          amount: amountToSend,
           destCountry,
           origin: originCurrency,
-          originCountry
+          originCountry,
+          mode
         });
 
         if (response.ok) {
@@ -225,6 +239,16 @@ const CardForm = ({ onQuoteSuccess }) => {
             setQuote(null);
           } else {
             setQuote(response.data);
+            // Actualizar el valor contrario para reflejar el cálculo
+            if (mode === 'send') {
+              // Si enviamos X, actualizamos cuánto reciben
+              setDestAmount(response.data.receiveAmount);
+              setDisplayDestAmount(formatNumberForDisplay(response.data.receiveAmount));
+            } else {
+              // Si queremos que reciban Y, actualizamos cuánto hay que enviar
+              setAmount(response.data.amount);
+              setDisplayAmount(formatNumberForDisplay(response.data.amount));
+            }
           }
         } else {
           throw new Error(response.error || 'Error al obtener cotización.');
@@ -238,13 +262,22 @@ const CardForm = ({ onQuoteSuccess }) => {
     }, 800);
 
     return () => clearTimeout(debounceHandler);
-  }, [amount, destCountry, originCountry, originCurrency, user, minAmount]);
+  }, [amount, destAmount, mode, destCountry, originCountry, originCurrency, user, minAmount]);
 
   const handleAmountChange = (e) => {
     const rawValue = e.target.value;
     const parsedValue = parseFormattedNumber(rawValue);
     setAmount(parsedValue);
     setDisplayAmount(rawValue === '' ? '' : formatNumberForDisplay(parsedValue));
+    setMode('send');
+  };
+
+  const handleDestAmountChange = (e) => {
+    const rawValue = e.target.value;
+    const parsedValue = parseFormattedNumber(rawValue);
+    setDestAmount(parsedValue);
+    setDisplayDestAmount(rawValue === '' ? '' : formatNumberForDisplay(parsedValue));
+    setMode('receive');
   };
 
   const handleNextStep = () => {
@@ -350,31 +383,43 @@ const CardForm = ({ onQuoteSuccess }) => {
                   <polyline points="6 9 12 15 18 9"></polyline>
                 </svg>
               </div>
-              <span className="fw-bold text-end" style={{ fontSize: '24px' }}>
-                {quote ? formatNumberForDisplay(quote.amountOut) : '0'}
-              </span>
+              <Form.Control
+                type="text"
+                inputMode="numeric"
+                placeholder="0"
+                value={displayDestAmount}
+                onChange={handleDestAmountChange}
+                className={`border-0 bg-transparent text-end fw-bold p-0 ${error ? 'is-invalid' : ''}`}
+                style={{ fontSize: '24px', maxWidth: '200px' }}
+              />
             </div>
-
-            {/* Bank Requirements Info */}
-            {destCountry && BANK_EXAMPLES[destCountry] && (
-              <div className="mb-4 p-3 rounded-3 border border-info bg-info bg-opacity-10">
-                <div className="d-flex align-items-center mb-2">
-                  <i className="bi bi-info-circle-fill text-info me-2"></i>
-                  <small className="fw-bold text-info text-uppercase">
-                    Requisitos para {BANK_EXAMPLES[destCountry].countryName}
-                  </small>
-                </div>
-                <ul className="list-unstyled mb-0 small text-muted">
-                  {BANK_EXAMPLES[destCountry].requirements.map((req, idx) => (
-                    <li key={idx} className="mb-1 d-flex align-items-start">
-                      <span className="me-2">•</span>
-                      {req}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
           </div>
+
+          {/* Bank Requirements Info - MOVED OUTSIDE */}
+          {destCountry && BANK_EXAMPLES[destCountry] && (
+            <Accordion className="mb-4 shadow-sm" flush>
+              <Accordion.Item eventKey="0" style={{ border: 'none', borderRadius: '10px', overflow: 'hidden' }}>
+                <Accordion.Header>
+                  <div className="d-flex align-items-center">
+                    <i className="bi bi-info-circle-fill text-primary me-2"></i>
+                    <small className="fw-bold text-muted">
+                      ¿Requisitos para {BANK_EXAMPLES[destCountry].countryName}?
+                    </small>
+                  </div>
+                </Accordion.Header>
+                <Accordion.Body className="bg-light small text-muted">
+                  <ul className="list-unstyled mb-0 ps-2">
+                    {BANK_EXAMPLES[destCountry].requirements.map((req, idx) => (
+                      <li key={idx} className="mb-2 d-flex align-items-start">
+                        <i className="bi bi-check-circle-fill text-success me-2 mt-1" style={{ fontSize: '0.8em' }}></i>
+                        {req}
+                      </li>
+                    ))}
+                  </ul>
+                </Accordion.Body>
+              </Accordion.Item>
+            </Accordion>
+          )}
 
           {/* Quote Details */}
           {quote && !loading && !error && (
@@ -508,7 +553,7 @@ const CardForm = ({ onQuoteSuccess }) => {
           </Modal.Body>
         </Modal>
       </Card.Body>
-    </Card>
+    </Card >
   );
 };
 
