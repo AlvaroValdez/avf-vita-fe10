@@ -59,7 +59,40 @@ const StepConfirm = ({ formData, fields, onBack, isFromFavorite }) => {
   const [showDirectPayModal, setShowDirectPayModal] = useState(false);
   const [directPayOrderId, setDirectPayOrderId] = useState(null);
 
-  // 1) Refrescar Quote
+  // --- PAYMENT METHOD CONFIGURATION ---
+  const [paymentConfig, setPaymentConfig] = useState({
+    direct: { enabled: true, allowedProviders: [] },
+    redirect: { enabled: true }
+  });
+
+  // 1) Cargar configuración de métodos de pago
+  useEffect(() => {
+    const fetchPaymentConfig = async () => {
+      try {
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/api/transaction-rules?country=${originCountry}`, {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          }
+        });
+        const data = await response.json();
+        const rules = data?.rules?.[0];
+
+        if (rules?.paymentMethods) {
+          setPaymentConfig(rules.paymentMethods);
+          console.log('[StepConfirm] Payment config loaded:', rules.paymentMethods);
+        }
+      } catch (error) {
+        console.error('[StepConfirm] Error fetching payment config:', error);
+        // Keep defaults
+      }
+    };
+
+    if (originCountry) {
+      fetchPaymentConfig();
+    }
+  }, [originCountry]);
+
+  // 2) Refrescar Quote
   useEffect(() => {
     const refreshQuote = async () => {
       try {
@@ -81,10 +114,10 @@ const StepConfirm = ({ formData, fields, onBack, isFromFavorite }) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // 2) Timer Expiración
+  // 3) Timer Expiración
   useEffect(() => { /* ... lógica de timer igual ... */ }, [loadingQuote]);
 
-  // 3) Cargar Métodos Directos (Ej: Khipu/Webpay para Chile)
+  // 4) Cargar Métodos Directos (Ej: Khipu/Webpay para Chile)
   useEffect(() => {
     if (safeOriginCurrency === 'BOB') return;
     if (paymentMethod === 'direct' && directMethods.length === 0) {
@@ -101,9 +134,27 @@ const StepConfirm = ({ formData, fields, onBack, isFromFavorite }) => {
           console.log('[StepConfirm] Cantidad de métodos:', methods.length);
 
           if (res?.ok && Array.isArray(methods) && methods.length > 0) {
-            setDirectMethods(methods);
-            setSelectedDirectMethod(methods[0]);
-            console.log('[StepConfirm] ✅ Métodos cargados:', methods.map(m => m.name));
+            // Filter methods based on allowedProviders
+            const allowed = paymentConfig?.direct?.allowedProviders || [];
+            const filteredMethods = allowed.length === 0
+              ? methods  // Show all if no filter
+              : methods.filter(method =>
+                allowed.some(provider =>
+                  method.name.toLowerCase().includes(provider.toLowerCase())
+                )
+              );
+
+            console.log('[StepConfirm] Allowed providers:', allowed);
+            console.log('[StepConfirm] Filtered methods:', filteredMethods.map(m => m.name));
+
+            if (filteredMethods.length > 0) {
+              setDirectMethods(filteredMethods);
+              setSelectedDirectMethod(filteredMethods[0]);
+              console.log('[StepConfirm] ✅ Métodos cargados:', filteredMethods.map(m => m.name));
+            } else {
+              console.warn('[StepConfirm] ⚠️ No hay métodos después del filtro');
+              throw new Error('Sin métodos permitidos');
+            }
           } else {
             console.warn('[StepConfirm] ⚠️ No se encontraron métodos válidos');
             throw new Error('Sin métodos directos');
@@ -116,7 +167,7 @@ const StepConfirm = ({ formData, fields, onBack, isFromFavorite }) => {
       };
       loadMethods();
     }
-  }, [paymentMethod, originCountry, safeOriginCurrency, directMethods.length]);
+  }, [paymentMethod, originCountry, safeOriginCurrency, directMethods.length, paymentConfig]);
 
   const handleDirectFormChange = (e) => {
     setDirectFormData({ ...directFormData, [e.target.name]: e.target.value });
@@ -272,12 +323,19 @@ const StepConfirm = ({ formData, fields, onBack, isFromFavorite }) => {
         {/* Formulario de Selección de Método */}
         <Form>
           <div className="mb-3">
-            {directPaymentAvailable && (
+            {paymentConfig?.direct?.enabled && directPaymentAvailable && (
               <Form.Check type="radio" label="Pago Directo (Recomendado)" name="pm"
                 checked={paymentMethod === 'direct'} onChange={() => setPaymentMethod('direct')} />
             )}
-            <Form.Check type="radio" label="Pasarela Web" name="pm"
-              checked={paymentMethod === 'redirect'} onChange={() => setPaymentMethod('redirect')} />
+            {paymentConfig?.redirect?.enabled && (
+              <Form.Check type="radio" label="Pasarela Web" name="pm"
+                checked={paymentMethod === 'redirect'} onChange={() => setPaymentMethod('redirect')} />
+            )}
+            {!paymentConfig?.direct?.enabled && !paymentConfig?.redirect?.enabled && (
+              <Alert variant="warning">
+                No hay métodos de pago disponibles para este país.
+              </Alert>
+            )}
           </div>
 
           {/* Campos Dinámicos de Direct Pay */}

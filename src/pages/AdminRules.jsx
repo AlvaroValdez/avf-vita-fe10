@@ -34,7 +34,12 @@ const AdminRules = () => {
     holderName: '',
     holderId: '',
     depositQrImage: '',
-    destinations: []
+    destinations: [],
+    // 💳 Payment Methods Configuration
+    paymentMethods: {
+      direct: { enabled: true, allowedProviders: [] },
+      redirect: { enabled: true }
+    }
   });
 
   // 1. Cargar países disponibles
@@ -80,7 +85,12 @@ const AdminRules = () => {
             holderName: rule.localBankDetails?.holderName || '',
             holderId: rule.localBankDetails?.holderId || '',
             depositQrImage: rule.depositQrImage || '',
-            destinations: rule.destinations || []
+            destinations: rule.destinations || [],
+            // 💳 Payment Methods
+            paymentMethods: rule.paymentMethods || {
+              direct: { enabled: true, allowedProviders: [] },
+              redirect: { enabled: true }
+            }
           });
         } else {
           // Defaults para nuevo país
@@ -102,7 +112,11 @@ const AdminRules = () => {
             holderName: '',
             holderId: '',
             depositQrImage: '',
-            destinations: []
+            destinations: [],
+            paymentMethods: {
+              direct: { enabled: true, allowedProviders: [] },
+              redirect: { enabled: true }
+            }
           });
         }
       } catch (err) {
@@ -198,7 +212,9 @@ const AdminRules = () => {
           holderName: formData.holderName,
           holderId: formData.holderId
         },
-        destinations: formData.destinations
+        destinations: formData.destinations,
+        // 💳 Payment Methods Configuration
+        paymentMethods: formData.paymentMethods
       };
 
       const response = await updateTransactionRules(payload);
@@ -347,6 +363,90 @@ const AdminRules = () => {
                     )}
                   </Form.Group>
                 </>
+              )}
+            </div>
+
+            {/* --- SECCIÓN MÉTODOS DE PAGO --- */}
+            <div className="p-3 bg-light rounded mb-4 border">
+              <h5 className="text-info mb-3">💳 Métodos de Pago Disponibles</h5>
+              <p className="text-muted small">Controla qué métodos de pago estarán disponibles para los usuarios de este país.</p>
+
+              {/* Pago Directo */}
+              <div className="mb-3 p-3 bg-white border rounded">
+                <Form.Check
+                  type="checkbox"
+                  label={<strong>Pago Directo (DirectPay)</strong>}
+                  checked={formData.paymentMethods?.direct?.enabled || false}
+                  onChange={(e) => setFormData({
+                    ...formData,
+                    paymentMethods: {
+                      ...formData.paymentMethods,
+                      direct: {
+                        ...formData.paymentMethods?.direct,
+                        enabled: e.target.checked
+                      }
+                    }
+                  })}
+                />
+
+                {formData.paymentMethods?.direct?.enabled && (
+                  <Form.Group className="ms-4 mt-3">
+                    <Form.Label>Proveedores Permitidos</Form.Label>
+                    <Form.Control
+                      type="text"
+                      placeholder="Ej: webpay,fintoc,khipu (separados por comas)"
+                      value={formData.paymentMethods?.direct?.allowedProviders?.join(',') || ''}
+                      onChange={(e) => {
+                        const providers = e.target.value
+                          .split(',')
+                          .map(p => p.trim())
+                          .filter(Boolean);
+                        setFormData({
+                          ...formData,
+                          paymentMethods: {
+                            ...formData.paymentMethods,
+                            direct: {
+                              ...formData.paymentMethods?.direct,
+                              allowedProviders: providers
+                            }
+                          }
+                        });
+                      }}
+                    />
+                    <Form.Text className="text-muted">
+                      Deja vacío para mostrar todos los proveedores disponibles. Si especificas proveedores, solo se mostrarán los que coincidan (ej: "webpay" mostrará solo Webpay).
+                      <br />
+                      <strong>Proveedores comunes:</strong> webpay, fintoc, khipu
+                    </Form.Text>
+                  </Form.Group>
+                )}
+              </div>
+
+              {/* Pasarela Web */}
+              <div className="mb-3 p-3 bg-white border rounded">
+                <Form.Check
+                  type="checkbox"
+                  label={<strong>Pasarela Web (Redirect)</strong>}
+                  checked={formData.paymentMethods?.redirect?.enabled || false}
+                  onChange={(e) => setFormData({
+                    ...formData,
+                    paymentMethods: {
+                      ...formData.paymentMethods,
+                      redirect: {
+                        enabled: e.target.checked
+                      }
+                    }
+                  })}
+                />
+                <Form.Text className="text-muted ms-4 d-block">
+                  Método tradicional de redirección a Vita Wallet para completar el pago.
+                </Form.Text>
+              </div>
+
+              {!formData.paymentMethods?.direct?.enabled && !formData.paymentMethods?.redirect?.enabled && (
+                <Alert variant="warning" className="mb-0">
+                  <strong>⚠️ Advertencia:</strong> No hay métodos de pago habilitados. Los usuarios no podrán realizar pagos desde este país.
+                </Alert>
               )}
             </div>
 
