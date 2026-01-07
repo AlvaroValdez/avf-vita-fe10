@@ -23,6 +23,9 @@ const AdminMarkup = () => {
   const [newPercent, setNewPercent] = useState('');
   const [newDescription, setNewDescription] = useState('');
 
+  // Países de origen válidos (donde se puede ENVIAR)
+  const [validOriginCountries, setValidOriginCountries] = useState(['CL', 'BO']);
+
   // Load data
   useEffect(() => {
     loadData();
@@ -227,10 +230,16 @@ const AdminMarkup = () => {
                     disabled={loadingCountries}
                   >
                     <option value="">Seleccionar...</option>
-                    {(countries || []).map(c => (
-                      <option key={c.code} value={c.code}>{c.name}</option>
-                    ))}
+                    {/* Solo países de origen válidos (donde se pueden enviar remesas desde) */}
+                    {(countries || [])
+                      .filter(c => validOriginCountries.includes(c.code))
+                      .map(c => (
+                        <option key={c.code} value={c.code}>{c.name}</option>
+                      ))}
                   </Form.Select>
+                  <Form.Text className="text-muted small">
+                    Solo países de origen disponibles
+                  </Form.Text>
                 </Form.Group>
               </Col>
               <Col md={3}>
