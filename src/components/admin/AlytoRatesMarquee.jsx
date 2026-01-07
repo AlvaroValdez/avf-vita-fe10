@@ -12,10 +12,18 @@ const AlytoRatesMarquee = () => {
         setLoading(true);
         setError('');
         try {
+            console.log('[AlytoRatesMarquee] Fetching rates...');
             const response = await getAlytoRatesSummary();
+            console.log('[AlytoRatesMarquee] Response:', response);
+
             if (response.ok) {
-                setRates(response.data.rates || []);
+                const rates = response.data.rates || [];
+                console.log(`[AlytoRatesMarquee] Setting ${rates.length} rates:`, rates.slice(0, 5));
+                setRates(rates);
                 setLastUpdate(response.data.lastUpdate);
+            } else {
+                console.error('[AlytoRatesMarquee] Response not OK:', response);
+                setError('Error en respuesta del servidor');
             }
         } catch (err) {
             console.error('[AlytoRatesMarquee] Error:', err);
@@ -134,7 +142,7 @@ const AlytoRatesMarquee = () => {
                                             border: '1px solid rgba(0,0,0,0.1)'
                                         }}
                                     >
-                                        CLP→{r.to}: <strong>{parseFloat(r.alytoRate).toFixed(3)}</strong>
+                                        CLP→{r.to}: <strong>{parseFloat(r.alytoRate).toFixed(4)}</strong>
                                         <small className="ms-1" style={{ opacity: 0.7 }}>({r.spreadPercent}%)</small>
                                     </span>
                                 ))}
