@@ -55,7 +55,15 @@ const ManualDeposit = ({ formData, onBack, onFinish }) => {
                 feePercent: quoteData.feePercent || 0,
                 feeOriginAmount: quoteData.feeOriginAmount || 0,
                 ...beneficiary,
-                proofOfPayment: uploadRes.url
+                proofOfPayment: uploadRes.url,
+
+                // 💳 Payment method tracking
+                paymentMethod: 'manual_anchor',
+
+                // 📊 Tracking data
+                rateTracking: quoteData.rateTracking || null,
+                amountsTracking: quoteData.amountsTracking || null,
+                feeAudit: quoteData.feeAudit || null
             };
 
             console.log('🔍 [ManualDeposit] Payload:', payload);
@@ -90,7 +98,7 @@ const ManualDeposit = ({ formData, onBack, onFinish }) => {
     }
 
     return (
-        <Card className="shadow-lg border-0 mt-4">
+        <Card className="shadow-lg border-0 mt-4" style={{ maxWidth: '600px', margin: '0 auto' }}>
             <Card.Header className="bg-white py-3 text-center">
                 <h5 className="mb-0 text-primary">Instrucciones de Depósito ({originCountry})</h5>
             </Card.Header>
@@ -143,7 +151,14 @@ const ManualDeposit = ({ formData, onBack, onFinish }) => {
                 {error && <Alert variant="danger">{error}</Alert>}
 
                 <div className="d-flex justify-content-between mt-4">
-                    <Button variant="outline-secondary" onClick={onBack} disabled={loading}>Atrás</Button>
+                    <Button
+                        variant="outline-secondary"
+                        onClick={onBack}
+                        disabled={loading}
+                        style={{ backgroundColor: '#fff', color: '#6c757d', borderColor: '#6c757d' }}
+                    >
+                        Atrás
+                    </Button>
                     <Button
                         className="w-50 fw-bold"
                         onClick={handleSubmit}

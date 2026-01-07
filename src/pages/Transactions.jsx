@@ -190,7 +190,12 @@ const Transactions = () => {
                   )}
                 </td>
 
-                <td>{getStatusBadge(tx.status)}</td>
+                <td>
+                  {tx.paymentMethod === 'manual_anchor' && (
+                    <Badge bg="warning" text="dark" className="me-1">🏦</Badge>
+                  )}
+                  {getStatusBadge(tx.status)}
+                </td>
                 <td>
                   <Button size="sm" variant="outline-primary" as={Link} to={`/transactions/${tx._id}`}>
                     <i className="bi bi-eye"></i>
