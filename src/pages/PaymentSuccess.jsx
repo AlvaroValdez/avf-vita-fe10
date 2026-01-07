@@ -110,7 +110,7 @@ const PaymentSuccess = () => {
         <Card.Body className="p-4 p-md-5">
           {/* Logo Header */}
           <div className="text-center mb-4">
-            <img src={logo} alt="Alyto" style={{ height: '60px' }} className="mb-3" />
+            <img src={logo} alt="Alyto" style={{ height: '90px' }} className="mb-3" />
           </div>
 
           {/* Success Icon */}
@@ -160,18 +160,18 @@ const PaymentSuccess = () => {
                         <img
                           src={getFlagUrl(transaction.country)}
                           alt={transaction.country}
-                          style={{ width: '32px', height: '32px', borderRadius: '50%', objectFit: 'cover' }}
+                          style={{ width: '40px', height: '40px', borderRadius: '50%', objectFit: 'cover' }}
                         />
                       )}
-                      <span className="fw-bold text-dark">{transaction.currency}</span>
+                      <span className="fw-bold fs-5 text-dark">{transaction.currency}</span>
                     </div>
-                    <span className="fw-bold fs-5" style={{ color: '#dc3545' }}>
+                    <span className="fw-bold" style={{ fontSize: '1.5rem', color: '#233E58' }}>
                       $ {formatNumberForDisplay(transaction.amount)}
                     </span>
                   </div>
                 </div>
 
-                {/* Destination Amount with Flag */}
+                {/* Destination Amount with Flag - PROMINENT */}
                 {transaction.rateTracking?.destAmount && transaction.rateTracking?.destCurrency && (
                   <div className="mb-3 pb-3 border-bottom">
                     <small className="text-muted d-block mb-2">Ellos reciben</small>
@@ -181,12 +181,12 @@ const PaymentSuccess = () => {
                           <img
                             src={getFlagUrl(transaction.destCountry || transaction.country)}
                             alt={transaction.destCountry}
-                            style={{ width: '32px', height: '32px', borderRadius: '50%', objectFit: 'cover' }}
+                            style={{ width: '40px', height: '40px', borderRadius: '50%', objectFit: 'cover' }}
                           />
                         )}
-                        <span className="fw-bold text-dark">{transaction.rateTracking.destCurrency}</span>
+                        <span className="fw-bold fs-5 text-dark">{transaction.rateTracking.destCurrency}</span>
                       </div>
-                      <span className="fw-bold fs-5" style={{ color: '#28a745' }}>
+                      <span className="fw-bold" style={{ fontSize: '2rem', color: '#28a745' }}>
                         {formatNumberForDisplay(transaction.rateTracking.destAmount)}
                       </span>
                     </div>
@@ -228,28 +228,26 @@ const PaymentSuccess = () => {
                   )}
                 </div>
 
-                {/* Bank Details */}
+                {/* Bank Details - Updated */}
                 {transaction.account_bank && (
                   <div className="mb-3 pb-3 border-bottom">
-                    <small className="text-muted d-block mb-1">Cuenta bancaria</small>
-                    <span className="fw-bold">{maskAccountNumber(transaction.account_bank)}</span>
-                    {transaction.bank_code && (
-                      <small className="text-muted d-block mt-1">
-                        Banco: {transaction.bank_code}
-                      </small>
-                    )}
+                    <small className="text-muted d-block mb-2">Datos del Beneficiario</small>
+                    <div className="mb-2">
+                      <span className="fw-bold d-block mb-1">Banco</span>
+                      <span>{transaction.bank_code || 'N/A'}</span>
+                    </div>
+                    <div>
+                      <span className="fw-bold d-block mb-1">Cuenta</span>
+                      <span className="font-monospace">{maskAccountNumber(transaction.account_bank)}</span>
+                    </div>
                   </div>
                 )}
 
-                {/* Status & Timeline */}
-                <div className="d-flex justify-content-between align-items-center">
-                  <div>
-                    <small className="text-muted d-block mb-1">Estado</small>
+                {/* Status Only - Removed Timeline */}
+                <div className="d-flex justify-content-center">
+                  <div className="text-center">
+                    <small className="text-muted d-block mb-2">Estado</small>
                     {getStatusBadge(transaction.status)}
-                  </div>
-                  <div className="text-end">
-                    <small className="text-muted d-block mb-1">Llegada estimada</small>
-                    <span className="fw-bold" style={{ fontSize: '0.9rem' }}>{getEstimatedArrival()}</span>
                   </div>
                 </div>
               </div>

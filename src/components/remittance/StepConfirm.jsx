@@ -137,13 +137,16 @@ const StepConfirm = ({ formData, fields, onBack, isFromFavorite }) => {
           if (res?.ok && Array.isArray(methods) && methods.length > 0) {
             // Filter methods based on allowedProviders
             const allowed = paymentConfig?.direct?.allowedProviders || [];
-            const filteredMethods = allowed.length === 0
-              ? methods  // Show all if no filter
-              : methods.filter(method =>
+            console.log('[StepConfirm] Allowed providers configured:', allowed);
+
+            const filteredMethods = allowed.length > 0
+              ? methods.filter(method =>
                 allowed.some(provider =>
-                  method.name.toLowerCase().includes(provider.toLowerCase())
+                  method.name.toLowerCase().includes(provider.toLowerCase()) ||
+                  method.provider?.toLowerCase().includes(provider.toLowerCase())
                 )
-              );
+              )
+              : methods;  // Show all if no specific filter configured
 
             console.log('[StepConfirm] Allowed providers:', allowed);
             console.log('[StepConfirm] Filtered methods:', filteredMethods.map(m => m.name));
