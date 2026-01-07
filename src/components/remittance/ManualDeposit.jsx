@@ -133,7 +133,7 @@ const ManualDeposit = ({ formData, onBack, onFinish }) => {
     // Enhanced success screen matching PaymentSuccess.jsx
     if (success && transactionData) {
         return (
-            <Card className="border-0 shadow-lg" style={{ maxWidth: '550px', margin: '0 auto', borderRadius: '20px' }}>
+            <Card className="border-0 shadow-lg" style={{ maxWidth: '700px', margin: '0 auto', borderRadius: '20px' }}>
                 <Card.Body className="p-4 p-md-5">
                     {/* Logo Header */}
                     <div className="text-center mb-4">

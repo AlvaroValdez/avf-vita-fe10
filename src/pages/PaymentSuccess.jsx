@@ -106,7 +106,7 @@ const PaymentSuccess = () => {
 
   return (
     <Container className="d-flex justify-content-center align-items-center py-5" style={{ minHeight: '80vh' }}>
-      <Card className="border-0 shadow-lg" style={{ maxWidth: '550px', width: '100%', borderRadius: '20px' }}>
+      <Card className="border-0 shadow-lg" style={{ maxWidth: '700px', width: '100%', borderRadius: '20px' }}>
         <Card.Body className="p-4 p-md-5">
           {/* Logo Header */}
           <div className="text-center mb-4">
