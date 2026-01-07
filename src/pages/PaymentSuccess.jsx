@@ -172,26 +172,31 @@ const PaymentSuccess = () => {
                 </div>
 
                 {/* Destination Amount with Flag - PROMINENT */}
-                {transaction.rateTracking?.destAmount && transaction.rateTracking?.destCurrency && (
-                  <div className="mb-3 pb-3 border-bottom">
-                    <small className="text-muted d-block mb-2">Ellos reciben</small>
-                    <div className="d-flex align-items-center justify-content-between">
-                      <div className="d-flex align-items-center gap-2">
-                        {getFlagUrl(transaction.destCountry || transaction.country) && (
-                          <img
-                            src={getFlagUrl(transaction.destCountry || transaction.country)}
-                            alt={transaction.destCountry}
-                            style={{ width: '40px', height: '40px', borderRadius: '50%', objectFit: 'cover' }}
-                          />
-                        )}
-                        <span className="fw-bold fs-5 text-dark">{transaction.rateTracking.destCurrency}</span>
+                {((transaction.rateTracking?.destAmount && transaction.rateTracking?.destCurrency) ||
+                  (transaction.amountsTracking?.destReceiveAmount && transaction.amountsTracking?.destCurrency)) && (
+                    <div className="mb-3 pb-3 border-bottom">
+                      <small className="text-muted d-block mb-2">Ellos reciben</small>
+                      <div className="d-flex align-items-center justify-content-between">
+                        <div className="d-flex align-items-center gap-2">
+                          {getFlagUrl(transaction.destCountry || transaction.country) && (
+                            <img
+                              src={getFlagUrl(transaction.destCountry || transaction.country)}
+                              alt={transaction.destCountry}
+                              style={{ width: '40px', height: '40px', borderRadius: '50%', objectFit: 'cover' }}
+                            />
+                          )}
+                          <span className="fw-bold fs-5 text-dark">
+                            {transaction.rateTracking?.destCurrency || transaction.amountsTracking?.destCurrency || transaction.country}
+                          </span>
+                        </div>
+                        <span className="fw-bold" style={{ fontSize: '2rem', color: '#28a745' }}>
+                          {formatNumberForDisplay(
+                            transaction.rateTracking?.destAmount || transaction.amountsTracking?.destReceiveAmount || 0
+                          )}
+                        </span>
                       </div>
-                      <span className="fw-bold" style={{ fontSize: '2rem', color: '#28a745' }}>
-                        {formatNumberForDisplay(transaction.rateTracking.destAmount)}
-                      </span>
                     </div>
-                  </div>
-                )}
+                  )}
 
                 {/* Exchange Rate */}
                 {transaction.rateTracking?.rate && (
@@ -217,31 +222,40 @@ const PaymentSuccess = () => {
                   </div>
                 )}
 
-                {/* Beneficiary */}
+                {/* Beneficiary & Bank Details - Combined and Prominent */}
                 <div className="mb-3 pb-3 border-bottom">
-                  <small className="text-muted d-block mb-1">Beneficiario</small>
-                  <span className="fw-bold d-block">
-                    {transaction.beneficiary_first_name} {transaction.beneficiary_last_name}
-                  </span>
-                  {transaction.company_name && (
-                    <small className="text-muted">{transaction.company_name}</small>
-                  )}
-                </div>
+                  <small className="text-muted d-block mb-3">Beneficiario</small>
 
-                {/* Bank Details - Updated */}
-                {transaction.account_bank && (
-                  <div className="mb-3 pb-3 border-bottom">
-                    <small className="text-muted d-block mb-2">Datos del Beneficiario</small>
-                    <div className="mb-2">
-                      <span className="fw-bold d-block mb-1">Banco</span>
-                      <span>{transaction.bank_code || 'N/A'}</span>
-                    </div>
-                    <div>
-                      <span className="fw-bold d-block mb-1">Cuenta</span>
-                      <span className="font-monospace">{maskAccountNumber(transaction.account_bank)}</span>
+                  {/* Name with Account Number */}
+                  <div className="mb-3">
+                    <div className="d-flex align-items-center justify-content-between">
+                      <div>
+                        <span className="fw-bold d-block fs-5" style={{ color: '#233E58' }}>
+                          {transaction.beneficiary_first_name} {transaction.beneficiary_last_name}
+                        </span>
+                        {transaction.company_name && (
+                          <small className="text-muted d-block mt-1">{transaction.company_name}</small>
+                        )}
+                      </div>
+                      {transaction.account_bank && (
+                        <span className="badge bg-light text-dark border px-3 py-2 font-monospace" style={{ fontSize: '0.95rem' }}>
+                          {maskAccountNumber(transaction.account_bank)}
+                        </span>
+                      )}
                     </div>
                   </div>
-                )}
+
+                  {/* Bank Name */}
+                  {transaction.bank_code && (
+                    <div className="d-flex align-items-center gap-2 p-3 rounded-2" style={{ backgroundColor: '#f8f9fa' }}>
+                      <i className="bi bi-bank2 text-primary" style={{ fontSize: '1.5rem' }}></i>
+                      <div>
+                        <small className="text-muted d-block" style={{ fontSize: '0.75rem' }}>Banco</small>
+                        <span className="fw-bold" style={{ fontSize: '1rem' }}>{transaction.bank_code}</span>
+                      </div>
+                    </div>
+                  )}
+                </div>
 
                 {/* Status Only - Removed Timeline */}
                 <div className="d-flex justify-content-center">
