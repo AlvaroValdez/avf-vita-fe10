@@ -3,6 +3,7 @@ import { Container, Card, Form, Button, Spinner, Alert, Row, Col, Table, Badge }
 import { getAllMarkups, getDefaultMarkup, updateDefaultMarkup, saveMarkup, deleteMarkup } from '../services/api';
 import { useAppContext } from '../context/AppContext';
 import VitaRatesMarquee from '../components/admin/VitaRatesMarquee';
+import AlytoRatesMarquee from '../components/admin/AlytoRatesMarquee';
 
 const AdminMarkup = () => {
   const { countries, loading: loadingCountries } = useAppContext();
@@ -153,6 +154,9 @@ const AdminMarkup = () => {
     <Container className="my-5" style={{ maxWidth: '900px' }}>
       {/* Vita Rates Marquee */}
       <VitaRatesMarquee />
+
+      {/* Alyto Rates Marquee */}
+      <AlytoRatesMarquee />
 
       {error && <Alert variant="danger" onClose={() => setError('')} dismissible>{error}</Alert>}
       {success && <Alert variant="success" onClose={() => setSuccess('')} dismissible>{success}</Alert>}

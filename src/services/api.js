@@ -254,6 +254,16 @@ export const getPricesSummary = async () => {
   }
 };
 
+// Get Alyto rates summary (with spread applied)
+export const getAlytoRatesSummary = async () => {
+  try {
+    const response = await apiClient.get('/prices/alyto-summary');
+    return response.data;
+  } catch (error) {
+    throw normalizeAxiosError(error, 'Error obteniendo tasas Alyto.');
+  }
+};
+
 // 💰 MARKUP / SPREAD MANAGEMENT
 
 // Get all markups

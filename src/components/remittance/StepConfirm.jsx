@@ -317,6 +317,18 @@ const StepConfirm = ({ formData, fields, onBack, isFromFavorite }) => {
     }
   };
 
+  // 🆕 FLUJO MANUAL: Si la cotización es manual, mostrar ManualDeposit directamente
+  if (currentQuote?.isManual || currentQuote?.provider === 'internal_manual' || currentQuote?.feeIncludedInRate) {
+    console.log('[StepConfirm] ✅ Renderizando flujo manual (anchor) para:', safeOriginCurrency);
+    return (
+      <ManualDeposit
+        formData={formData}
+        onBack={onBack}
+        onFinish={() => navigate('/transactions')}
+      />
+    );
+  }
+
   // ... Renderizado igual que antes ...
   // (Mantén el return tal cual estaba, solo asegúrate de importar las dependencias arriba)
   // ...

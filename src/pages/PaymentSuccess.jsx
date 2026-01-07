@@ -1,16 +1,50 @@
 import React, { useEffect, useState } from 'react';
-import { Container, Card, Button, Spinner, Row, Col, Badge } from 'react-bootstrap';
-import { Link, useSearchParams, useParams } from 'react-router-dom';
+import { Container, Card, Button, Spinner, Badge } from 'react-bootstrap';
+import { Link, useSearchParams, useParams, useNavigate } from 'react-router-dom';
 import { getTransactions } from '../services/api';
-import { formatNumberForDisplay } from '../utils/formatting';
+import { formatNumberForDisplay, formatRate } from '../utils/formatting';
+import logo from '../assets/images/logo.png';
+
+// Import flags
+import flagCL from '../assets/flags/cl.svg';
+import flagCO from '../assets/flags/co.svg';
+import flagBO from '../assets/flags/bo.svg';
+import flagPE from '../assets/flags/pe.svg';
+import flagMX from '../assets/flags/mx.svg';
+import flagVE from '../assets/flags/ve.svg';
+import flagBR from '../assets/flags/br.svg';
+import flagAR from '../assets/flags/ar.svg';
+import flagUS from '../assets/flags/us.svg';
+import flagCR from '../assets/flags/cr.svg';
+import flagDO from '../assets/flags/do.svg';
+import flagEC from '../assets/flags/ec.svg';
+import flagES from '../assets/flags/es.svg';
+import flagEU from '../assets/flags/eu.svg';
+import flagGB from '../assets/flags/gb.svg';
+import flagGT from '../assets/flags/gt.svg';
+import flagHT from '../assets/flags/ht.svg';
+import flagPA from '../assets/flags/pa.svg';
+import flagPL from '../assets/flags/pl.svg';
+import flagPY from '../assets/flags/py.svg';
+import flagSV from '../assets/flags/sv.svg';
+import flagUY from '../assets/flags/uy.svg';
+import flagAU from '../assets/flags/au.svg';
+import flagCN from '../assets/flags/cn.svg';
+
+const FLAGS = {
+  CL: flagCL, CO: flagCO, BO: flagBO, PE: flagPE, MX: flagMX, VE: flagVE,
+  BR: flagBR, AR: flagAR, US: flagUS, CR: flagCR, DO: flagDO, EC: flagEC,
+  ES: flagES, EU: flagEU, GB: flagGB, GT: flagGT, HT: flagHT, PA: flagPA,
+  PL: flagPL, PY: flagPY, SV: flagSV, UY: flagUY, AU: flagAU, CN: flagCN
+};
+
+const getFlagUrl = (code) => FLAGS[code?.toUpperCase()] || '';
 
 const PaymentSuccess = () => {
+  const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { orderId: paramOrderId } = useParams();
 
-  // Support both path param and query param
-  // If orderId has a ? inside (due to old malformed URL), we try to clean it just in case, 
-  // though the new path-based approach prevents this.
   let rawOrderId = paramOrderId || searchParams.get('orderId');
   if (rawOrderId && rawOrderId.includes('?')) {
     rawOrderId = rawOrderId.split('?')[0];
@@ -26,7 +60,6 @@ const PaymentSuccess = () => {
     const fetchTx = async () => {
       try {
         setLoading(true);
-        // Search by order ID string
         const res = await getTransactions({ order: orderId });
         if (res?.transactions?.length > 0) {
           setTransaction(res.transactions[0]);
@@ -42,78 +75,216 @@ const PaymentSuccess = () => {
   }, [orderId]);
 
   const getStatusBadge = (status) => {
-    const map = {
-      pending: 'warning',
-      processing: 'info',
-      completed: 'success',
-      rejected: 'danger'
+    const statusMap = {
+      pending: { variant: 'warning', text: 'Pendiente', icon: '⏳' },
+      processing: { variant: 'info', text: 'Procesando', icon: '🔄' },
+      completed: { variant: 'success', text: 'Completado', icon: '✓' },
+      succeeded: { variant: 'success', text: 'Exitoso', icon: '✓' },
+      rejected: { variant: 'danger', text: 'Rechazado', icon: '✗' }
     };
-    const variant = map[status] || 'secondary';
-    return <Badge bg={variant}>{status}</Badge>;
+    const config = statusMap[status] || { variant: 'secondary', text: status, icon: '•' };
+    return (
+      <Badge bg={config.variant} className="px-3 py-2">
+        <span className="me-1">{config.icon}</span>
+        {config.text}
+      </Badge>
+    );
+  };
+
+  const maskAccountNumber = (accountNumber) => {
+    if (!accountNumber) return 'N/A';
+    const str = String(accountNumber);
+    return `•••• ${str.slice(-4)}`;
+  };
+
+  const getEstimatedArrival = () => {
+    // Estimate 1-3 business days
+    const date = new Date();
+    date.setDate(date.getDate() + 2);
+    return date.toLocaleDateString('es-CL', { day: 'numeric', month: 'long' });
   };
 
   return (
-    <Container className="d-flex justify-content-center align-items-center" style={{ minHeight: '80vh' }}>
-      <Card className="p-4 border-0 shadow-sm" style={{ maxWidth: '500px', width: '100%' }}>
-        <Card.Body className="text-center">
-          <div
-            style={{
-              width: '80px', height: '80px', borderRadius: '50%',
-              backgroundColor: '#28a745', color: 'white',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              margin: '0 auto 20px auto', fontSize: '40px'
-            }}
-          >
-            ✓
+    <Container className="d-flex justify-content-center align-items-center py-5" style={{ minHeight: '80vh' }}>
+      <Card className="border-0 shadow-lg" style={{ maxWidth: '550px', width: '100%', borderRadius: '20px' }}>
+        <Card.Body className="p-4 p-md-5">
+          {/* Logo Header */}
+          <div className="text-center mb-4">
+            <img src={logo} alt="Alyto" style={{ height: '60px' }} className="mb-3" />
           </div>
-          <h3 style={{ color: 'var(--avf-primary)' }} className="mb-3">¡Pago Recibido!</h3>
-          <p className="text-muted mb-4">
+
+          {/* Success Icon */}
+          <div className="text-center mb-4">
+            <div
+              className="mx-auto"
+              style={{
+                width: '80px', height: '80px', borderRadius: '50%',
+                backgroundColor: '#28a745', color: 'white',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontSize: '40px', boxShadow: '0 4px 12px rgba(40, 167, 69, 0.3)'
+              }}
+            >
+              ✓
+            </div>
+          </div>
+
+          <h3 className="text-center fw-bold mb-2" style={{ color: '#233E58' }}>
+            ¡Pago Recibido!
+          </h3>
+          <p className="text-center text-muted mb-4">
             Hemos recibido tu solicitud. Tu envío está en proceso.
           </p>
 
           {loading ? (
-            <Spinner animation="border" variant="primary" />
-          ) : transaction ? (
-            <div className="bg-light p-3 rounded text-start">
-              <div className="mb-2 d-flex justify-content-between">
-                <span className="text-muted">ID:</span>
-                <span className="fw-bold">{orderId}</span>
-              </div>
-              <div className="mb-2 d-flex justify-content-between">
-                <span className="text-muted">Monto Enviado:</span>
-                <span className="fw-bold">
-                  $ {formatNumberForDisplay(transaction.amount)} {transaction.currency}
-                </span>
-              </div>
-              <div className="mb-2 d-flex justify-content-between">
-                <span className="text-muted">Beneficiario:</span>
-                <span className="fw-bold">
-                  {transaction.beneficiary_first_name} {transaction.beneficiary_last_name}
-                </span>
-              </div>
-              <div className="d-flex justify-content-between align-items-center">
-                <span className="text-muted">Estado:</span>
-                {getStatusBadge(transaction.status)}
-              </div>
+            <div className="text-center py-4">
+              <Spinner animation="border" variant="primary" />
             </div>
+          ) : transaction ? (
+            <>
+              {/* Transaction Details Card */}
+              <div className="bg-light p-4 rounded-3 mb-4">
+                {/* Transaction ID */}
+                <div className="mb-3 pb-3 border-bottom">
+                  <small className="text-muted d-block mb-1">ID de Transacción</small>
+                  <span className="fw-bold" style={{ fontSize: '0.95rem', wordBreak: 'break-all' }}>
+                    {orderId}
+                  </span>
+                </div>
+
+                {/* Origin Amount with Flag */}
+                <div className="mb-3 pb-3 border-bottom">
+                  <small className="text-muted d-block mb-2">Tú enviaste</small>
+                  <div className="d-flex align-items-center justify-content-between">
+                    <div className="d-flex align-items-center gap-2">
+                      {getFlagUrl(transaction.country) && (
+                        <img
+                          src={getFlagUrl(transaction.country)}
+                          alt={transaction.country}
+                          style={{ width: '32px', height: '32px', borderRadius: '50%', objectFit: 'cover' }}
+                        />
+                      )}
+                      <span className="fw-bold text-dark">{transaction.currency}</span>
+                    </div>
+                    <span className="fw-bold fs-5" style={{ color: '#dc3545' }}>
+                      $ {formatNumberForDisplay(transaction.amount)}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Destination Amount with Flag */}
+                {transaction.rateTracking?.destAmount && transaction.rateTracking?.destCurrency && (
+                  <div className="mb-3 pb-3 border-bottom">
+                    <small className="text-muted d-block mb-2">Ellos reciben</small>
+                    <div className="d-flex align-items-center justify-content-between">
+                      <div className="d-flex align-items-center gap-2">
+                        {getFlagUrl(transaction.destCountry || transaction.country) && (
+                          <img
+                            src={getFlagUrl(transaction.destCountry || transaction.country)}
+                            alt={transaction.destCountry}
+                            style={{ width: '32px', height: '32px', borderRadius: '50%', objectFit: 'cover' }}
+                          />
+                        )}
+                        <span className="fw-bold text-dark">{transaction.rateTracking.destCurrency}</span>
+                      </div>
+                      <span className="fw-bold fs-5" style={{ color: '#28a745' }}>
+                        {formatNumberForDisplay(transaction.rateTracking.destAmount)}
+                      </span>
+                    </div>
+                  </div>
+                )}
+
+                {/* Exchange Rate */}
+                {transaction.rateTracking?.rate && (
+                  <div className="mb-3 pb-3 border-bottom">
+                    <small className="text-muted d-block mb-2">Tasa de cambio</small>
+                    <div className="d-inline-flex align-items-center px-3 py-2 rounded-pill" style={{ backgroundColor: '#F7C843' }}>
+                      <span className="fw-bold text-dark">
+                        1 {transaction.rateTracking.destCurrency} = {formatRate(1 / transaction.rateTracking.rate)} {transaction.currency}
+                      </span>
+                      <i className="bi bi-arrow-down-up ms-2 text-dark"></i>
+                    </div>
+                  </div>
+                )}
+
+                {/* Fee Information */}
+                {transaction.fee > 0 && (
+                  <div className="mb-3 pb-3 border-bottom">
+                    <small className="text-muted d-block mb-2">Comisión</small>
+                    <span className="fw-bold">
+                      $ {formatNumberForDisplay(transaction.fee)} {transaction.currency}
+                      {transaction.feePercent && ` (${transaction.feePercent}%)`}
+                    </span>
+                  </div>
+                )}
+
+                {/* Beneficiary */}
+                <div className="mb-3 pb-3 border-bottom">
+                  <small className="text-muted d-block mb-1">Beneficiario</small>
+                  <span className="fw-bold d-block">
+                    {transaction.beneficiary_first_name} {transaction.beneficiary_last_name}
+                  </span>
+                  {transaction.company_name && (
+                    <small className="text-muted">{transaction.company_name}</small>
+                  )}
+                </div>
+
+                {/* Bank Details */}
+                {transaction.account_bank && (
+                  <div className="mb-3 pb-3 border-bottom">
+                    <small className="text-muted d-block mb-1">Cuenta bancaria</small>
+                    <span className="fw-bold">{maskAccountNumber(transaction.account_bank)}</span>
+                    {transaction.bank_code && (
+                      <small className="text-muted d-block mt-1">
+                        Banco: {transaction.bank_code}
+                      </small>
+                    )}
+                  </div>
+                )}
+
+                {/* Status & Timeline */}
+                <div className="d-flex justify-content-between align-items-center">
+                  <div>
+                    <small className="text-muted d-block mb-1">Estado</small>
+                    {getStatusBadge(transaction.status)}
+                  </div>
+                  <div className="text-end">
+                    <small className="text-muted d-block mb-1">Llegada estimada</small>
+                    <span className="fw-bold" style={{ fontSize: '0.9rem' }}>{getEstimatedArrival()}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="d-grid gap-2">
+                <Button
+                  variant="primary"
+                  className="fw-bold text-white py-3"
+                  onClick={() => navigate('/send')}
+                >
+                  <i className="bi bi-arrow-repeat me-2"></i>
+                  Nueva Transacción
+                </Button>
+                <Button
+                  variant="outline-primary"
+                  className="fw-bold py-3"
+                  as={Link}
+                  to="/transactions"
+                >
+                  <i className="bi bi-list-ul me-2"></i>
+                  Ver Mis Transacciones
+                </Button>
+              </div>
+            </>
           ) : (
             orderId && (
-              <div className="bg-light p-3 rounded mt-4">
-                <span className="d-block text-muted">ID de Orden</span>
-                <strong style={{ color: 'var(--avf-primary)', fontSize: '1.1rem' }}>{orderId}</strong>
+              <div className="bg-light p-4 rounded-3 text-center">
+                <small className="text-muted d-block mb-2">ID de Orden</small>
+                <strong className="d-block" style={{ color: '#233E58', fontSize: '1.1rem', wordBreak: 'break-all' }}>
+                  {orderId}
+                </strong>
               </div>
             )
           )}
-
-          <div className="d-grid mt-4">
-            <Button
-              as={Link}
-              to="/transactions"
-              style={{ backgroundColor: 'var(--avf-primary)', borderColor: 'var(--avf-primary)' }}
-            >
-              Ver Mis Transacciones
-            </Button>
-          </div>
         </Card.Body>
       </Card>
     </Container>
