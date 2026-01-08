@@ -128,8 +128,8 @@ const Home = () => {
                 className="rounded-circle d-flex align-items-center justify-content-center overflow-hidden border border-4 border-white shadow bg-light cursor-pointer"
                 style={{ width: '100%', height: '100%', cursor: 'pointer' }}
               >
-                {user?.photoURL ? (
-                  <img src={user.photoURL} alt="Profile" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                {user?.avatar ? (
+                  <img src={user.avatar} alt="Profile" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                 ) : (
                   <span className="fw-bold display-4 text-secondary">{user?.name?.charAt(0) || 'U'}</span>
                 )}
