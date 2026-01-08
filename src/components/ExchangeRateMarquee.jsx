@@ -53,7 +53,20 @@ const ExchangeRateMarquee = () => {
         return null;
     }
 
-    const displayRates = [...rates, ...rates];
+    // Deduplicate by 'to' country code in case backend returns duplicates
+    const uniqueRates = rates.reduce((acc, rate) => {
+        const existing = acc.find(r => r.to === rate.to);
+        if (!existing) {
+            acc.push(rate);
+        } else {
+            console.warn(`[ExchangeRateMarquee] Duplicate rate for ${rate.to}: `, { existing, new: rate });
+        }
+        return acc;
+    }, []);
+
+    console.log('[ExchangeRateMarquee] Displaying rates:', uniqueRates.map(r => `${r.to}:${r.alytoRate}`));
+
+    const displayRates = [...uniqueRates, ...uniqueRates];
 
     return (
         <div className="exchange-rate-card mb-4">

@@ -28,7 +28,7 @@
 
 .marquee-content {
   display: flex;
-  animation: scroll 40s linear infinite;
+  animation: scroll 60s linear infinite;
   will-change: transform;
   width: max-content;
 }
