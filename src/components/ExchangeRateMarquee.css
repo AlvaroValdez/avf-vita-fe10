@@ -1,20 +1,21 @@
-/* Exchange Rate Marquee Wrapper */
-.exchange-rate-marquee-wrapper {
-  background: linear-gradient(135deg, #233E58 0%, #4A6F9E 100%);
+.exchange-rate-card {
+  background: white;
   border-radius: 12px;
-  padding: 12px 0;
-  position: relative;
+  padding: 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   overflow: hidden;
 }
 
+.exchange-rate-header {
+  margin-bottom: 12px;
+}
+
 .exchange-rate-title {
-  text-align: center;
-  color: #F7C843;
-  font-weight: bold;
-  font-size: 0.8rem;
-  margin-bottom: 8px;
+  color: #233E58;
+  font-weight: 600;
+  font-size: 0.9rem;
   text-transform: uppercase;
-  letter-spacing: 1px;
+  letter-spacing: 0.5px;
 }
 
 .marquee-container {
@@ -32,24 +33,22 @@
   animation-play-state: paused;
 }
 
-.rate-item {
+.rate-badge {
   display: inline-flex;
   align-items: center;
-  padding: 0 20px;
+  padding: 8px 16px;
+  margin-right: 12px;
   white-space: nowrap;
+  background: linear-gradient(135deg, #233E58 0%, #4A6F9E 100%);
   color: white;
-  font-size: 0.9rem;
-  font-weight: 500;
+  font-size: 0.85rem;
+  border-radius: 20px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-.rate-from,
-.rate-to {
+.rate-badge strong {
   color: #F7C843;
-}
-
-.rate-separator {
-  color: #F7C843;
-  opacity: 0.5;
+  margin-left: 4px;
 }
 
 @keyframes scroll {
