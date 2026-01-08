@@ -4,6 +4,7 @@
   padding: 16px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   overflow: hidden;
+  max-width: 100%;
 }
 
 .exchange-rate-header {
@@ -21,12 +22,15 @@
 .marquee-container {
   overflow: hidden;
   position: relative;
+  width: 100%;
+  max-width: 100%;
 }
 
 .marquee-content {
   display: flex;
   animation: scroll 40s linear infinite;
   will-change: transform;
+  width: max-content;
 }
 
 .marquee-content:hover {
@@ -44,11 +48,19 @@
   font-size: 0.85rem;
   border-radius: 20px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  flex-shrink: 0;
 }
 
 .rate-badge strong {
   color: #F7C843;
-  margin-left: 4px;
+}
+
+.rate-flag {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid rgba(255, 255, 255, 0.3);
 }
 
 @keyframes scroll {
