@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { getRates } from '../services/api';
+import './ExchangeRateMarquee.css';
 
 const ExchangeRateMarquee = () => {
     const [rates, setRates] = useState([]);
@@ -84,21 +85,6 @@ const ExchangeRateMarquee = () => {
                     </div>
                 ))}
             </div>
-
-            <style jsx>{`
-        @keyframes scroll {
-          0% {
-            transform: translateX(0);
-          }
-          100% {
-            transform: translateX(-33.33%);
-          }
-        }
-
-        .exchange-rate-marquee-container:hover .marquee-wrapper {
-          animation-play-state: paused;
-        }
-      `}</style>
         </div>
     );
 };
