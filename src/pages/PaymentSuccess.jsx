@@ -156,17 +156,17 @@ const PaymentSuccess = () => {
                   <small className="text-muted d-block mb-2">Tú enviaste</small>
                   <div className="d-flex align-items-center justify-content-between">
                     <div className="d-flex align-items-center gap-2">
-                      {getFlagUrl(transaction.country) && (
+                      {getFlagUrl(transaction.currency?.substring(0, 2)) && (
                         <img
-                          src={getFlagUrl(transaction.country)}
-                          alt={transaction.country}
+                          src={getFlagUrl(transaction.currency?.substring(0, 2))}
+                          alt={transaction.currency}
                           style={{ width: '40px', height: '40px', borderRadius: '50%', objectFit: 'cover' }}
                         />
                       )}
                       <span className="fw-bold fs-5 text-dark">{transaction.currency}</span>
                     </div>
                     <span className="fw-bold" style={{ fontSize: '1.5rem', color: '#233E58' }}>
-                      $ {formatNumberForDisplay(transaction.amount)}
+                      ${formatNumberForDisplay(transaction.amount)}
                     </span>
                   </div>
                 </div>
@@ -247,7 +247,7 @@ const PaymentSuccess = () => {
 
                   {/* Bank Name */}
                   {transaction.bank_code && (
-                    <div className="d-flex align-items-center gap-2 p-3 rounded-2" style={{ backgroundColor: '#f8f9fa' }}>
+                    <div className="d-flex align-items-center gap-2 p-3 rounded-2 mb-3" style={{ backgroundColor: '#f8f9fa' }}>
                       <i className="bi bi-bank2 text-primary" style={{ fontSize: '1.5rem' }}></i>
                       <div>
                         <small className="text-muted d-block" style={{ fontSize: '0.75rem' }}>Banco</small>
@@ -255,6 +255,68 @@ const PaymentSuccess = () => {
                       </div>
                     </div>
                   )}
+
+                  {/* Additional Beneficiary Details */}
+                  <div className="row g-3">
+                    {/* CC Number */}
+                    {transaction.beneficiary_cc && (
+                      <div className="col-md-6">
+                        <small className="text-muted d-block mb-1">CC</small>
+                        <span className="font-monospace">{transaction.beneficiary_cc}</span>
+                      </div>
+                    )}
+
+                    {/* Transfer ID */}
+                    {transaction.order && (
+                      <div className="col-md-6">
+                        <small className="text-muted d-block mb-1">Transfer ID</small>
+                        <span className="font-monospace" style={{ fontSize: '0.85rem' }}>
+                          {transaction.order}
+                        </span>
+                      </div>
+                    )}
+
+                    {/* Account Number (Full) */}
+                    {transaction.account_bank && (
+                      <div className="col-md-6">
+                        <small className="text-muted d-block mb-1">Nro de cuenta</small>
+                        <span className="font-monospace">{transaction.account_bank}</span>
+                      </div>
+                    )}
+
+                    {/* Account Type */}
+                    {transaction.account_type && (
+                      <div className="col-md-6">
+                        <small className="text-muted d-block mb-1">Tipo de cuenta</small>
+                        <span>{transaction.account_type}</span>
+                      </div>
+                    )}
+
+                    {/* Concept */}
+                    {transaction.concept && (
+                      <div className="col-12">
+                        <small className="text-muted d-block mb-1">Concepto</small>
+                        <span>{transaction.concept}</span>
+                      </div>
+                    )}
+
+                    {/* Created Date */}
+                    {transaction.createdAt && (
+                      <div className="col-md-6">
+                        <small className="text-muted d-block mb-1">Fecha de envío</small>
+                        <span>{new Date(transaction.createdAt).toLocaleString('es-ES', {
+                          year: 'numeric', month: '2-digit', day: '2-digit',
+                          hour: '2-digit', minute: '2-digit', timeZoneName: 'short'
+                        })}</span>
+                      </div>
+                    )}
+
+                    {/* Estimated Time */}
+                    <div className="col-md-6">
+                      <small className="text-muted d-block mb-1">Tiempo estimado</small>
+                      <span>En unas horas hábiles</span>
+                    </div>
+                  </div>
                 </div>
 
                 {/* Status Only - Removed Timeline */}
