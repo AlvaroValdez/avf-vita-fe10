@@ -110,7 +110,7 @@ const PaymentSuccess = () => {
         <Card.Body className="p-4 p-md-5">
           {/* Logo Header */}
           <div className="text-center mb-4">
-            <img src={logo} alt="Alyto" style={{ height: '90px' }} className="mb-3" />
+            <img src={logo} alt="Alyto" style={{ height: '110px' }} className="mb-3" />
           </div>
 
           {/* Success Icon */}
@@ -118,10 +118,10 @@ const PaymentSuccess = () => {
             <div
               className="mx-auto"
               style={{
-                width: '80px', height: '80px', borderRadius: '50%',
+                width: '60px', height: '60px', borderRadius: '50%',
                 backgroundColor: '#28a745', color: 'white',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontSize: '40px', boxShadow: '0 4px 12px rgba(40, 167, 69, 0.3)'
+                fontSize: '32px', boxShadow: '0 4px 12px rgba(40, 167, 69, 0.3)'
               }}
             >
               ✓
@@ -263,16 +263,6 @@ const PaymentSuccess = () => {
                       <div className="col-md-6">
                         <small className="text-muted d-block mb-1">CC</small>
                         <span className="font-monospace">{transaction.beneficiary_cc}</span>
-                      </div>
-                    )}
-
-                    {/* Transfer ID */}
-                    {transaction.order && (
-                      <div className="col-md-6">
-                        <small className="text-muted d-block mb-1">Transfer ID</small>
-                        <span className="font-monospace" style={{ fontSize: '0.85rem' }}>
-                          {transaction.order}
-                        </span>
                       </div>
                     )}
 
