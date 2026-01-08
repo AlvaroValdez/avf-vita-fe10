@@ -1,41 +1,28 @@
 import React, { useState, useEffect } from 'react';
-import { getRates } from '../services/api';
+import { getAlytoRatesSummary } from '../services/api';
 import './ExchangeRateMarquee.css';
 
 const ExchangeRateMarquee = () => {
     const [rates, setRates] = useState([]);
     const [loading, setLoading] = useState(true);
 
-    useEffect(() => {
-        const fetchRates = async () => {
-            try {
-                const corridors = ['CO', 'BO', 'PE'];
-                const ratePromises = corridors.map(async (country) => {
-                    try {
-                        const response = await getRates('CL', country);
-                        return {
-                            from: 'CLP',
-                            to: response?.destCurrency || country,
-                            rate: response?.rate || 0,
-                            pair: `CLP-${country}`
-                        };
-                    } catch (error) {
-                        console.error(`Error fetching rate for CLP-${country}:`, error);
-                        return null;
-                    }
-                });
-
-                const results = await Promise.all(ratePromises);
-                const validRates = results.filter(r => r !== null && r.rate > 0);
-                setRates(validRates);
-            } catch (error) {
-                console.error('Error fetching exchange rates:', error);
-            } finally {
-                setLoading(false);
+    const fetchRates = async () => {
+        try {
+            const response = await getAlytoRatesSummary();
+            if (response.ok) {
+                const ratesData = response.data.rates || [];
+                setRates(ratesData);
             }
-        };
+        } catch (error) {
+            console.error('[ExchangeRateMarquee] Error fetching rates:', error);
+        } finally {
+            setLoading(false);
+        }
+    };
 
+    useEffect(() => {
         fetchRates();
+        // Refresh every 30 seconds
         const interval = setInterval(fetchRates, 30000);
         return () => clearInterval(interval);
     }, []);
@@ -44,6 +31,7 @@ const ExchangeRateMarquee = () => {
         return null;
     }
 
+    // Duplicate for seamless loop
     const displayRates = [...rates, ...rates];
 
     return (
@@ -55,12 +43,12 @@ const ExchangeRateMarquee = () => {
             <div className="marquee-container">
                 <div className="marquee-content">
                     {displayRates.map((rate, index) => (
-                        <span key={`${rate.pair}-${index}`} className="rate-item">
-                            <span className="rate-from">{rate.from}</span>
+                        <span key={`${rate.to}-${index}`} className="rate-item">
+                            <span className="rate-from">CLP</span>
                             <i className="bi bi-arrow-right mx-2" style={{ fontSize: '0.7rem' }}></i>
                             <span className="rate-to">{rate.to}</span>
                             <span className="mx-2">:</span>
-                            <span className="fw-bold">{rate.rate.toFixed(4)}</span>
+                            <span className="fw-bold">{parseFloat(rate.alytoRate).toFixed(4)}</span>
                             <span className="mx-3 rate-separator">|</span>
                         </span>
                     ))}
