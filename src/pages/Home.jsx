@@ -4,6 +4,7 @@ import { Container, Row, Col, Image, Button } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
 import RemittanceSteps from '../components/remittance/RemittanceSteps';
 import { useAuth } from '../context/AuthContext';
+import ExchangeRateMarquee from '../components/ExchangeRateMarquee';
 import homeBackgroundImage from '../assets/home-background.jpg';
 import logo from '../assets/images/logo-white.png';
 import logoOriginal from '../assets/images/logo.png';
@@ -161,17 +162,35 @@ const Home = () => {
 
           {/* 3. ACTION GRID (4 Buttons with Custom SVGs) */}
           <div className="d-flex justify-content-between mb-4 px-2">
-            {/* Withdraw */}
-            <div className="text-center" style={{ cursor: 'pointer' }}>
+            {/* Share App */}
+            <div className="text-center" style={{ cursor: 'pointer' }} onClick={() => {
+              const shareData = {
+                title: 'Alyto - Remesas al instante',
+                text: '¡Prueba Alyto para enviar remesas de forma rápida y segura!',
+                url: window.location.origin
+              };
+
+              // Try native share API first
+              if (navigator.share) {
+                navigator.share(shareData).catch(() => {
+                  // Fallback to WhatsApp
+                  window.open(`https://wa.me/?text=${encodeURIComponent(shareData.text + ' ' + shareData.url)}`, '_blank');
+                });
+              } else {
+                // Direct to WhatsApp
+                window.open(`https://wa.me/?text=${encodeURIComponent(shareData.text + ' ' + shareData.url)}`, '_blank');
+              }
+            }}>
               <div className="rounded-circle d-flex align-items-center justify-content-center mb-2 mx-auto shadow-sm transition-hover"
-                style={{ width: 60, height: 60, backgroundColor: '#233E58', color: 'white' }}>
-                {/* Icon: Arrow Up / Withdraw */}
+                style={{ width: 60, height: 60, backgroundColor: '#F7C843', color: 'white' }}>
+                {/* Icon: Share */}
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <line x1="12" y1="19" x2="12" y2="5"></line>
-                  <polyline points="5 12 12 5 19 12"></polyline>
+                  <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"></path>
+                  <polyline points="16 6 12 2 8 6"></polyline>
+                  <line x1="12" y1="2" x2="12" y2="15"></line>
                 </svg>
               </div>
-              <small className="fw-bold text-dark" style={{ fontSize: '0.75rem' }}>Retirar</small>
+              <small className="fw-bold text-dark" style={{ fontSize: '0.75rem' }}>Compartir</small>
             </div>
 
             {/* Transfer (Send) */}
@@ -187,23 +206,24 @@ const Home = () => {
               <small className="fw-bold text-dark" style={{ fontSize: '0.75rem' }}>Enviar</small>
             </Link>
 
-            {/* Top Up (Load) */}
-            <div className="text-center" style={{ cursor: 'pointer' }}>
+            {/* Balance */}
+            <Link to="/transactions" className="text-decoration-none text-center">
               <div className="rounded-circle d-flex align-items-center justify-content-center mb-2 mx-auto shadow-sm transition-hover"
-                style={{ width: 60, height: 60, backgroundColor: '#233E58', color: 'white' }}>
-                {/* Icon: Plus */}
-                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <line x1="12" y1="5" x2="12" y2="19"></line>
-                  <line x1="5" y1="12" x2="19" y2="12"></line>
+                style={{ width: 60, height: 60, backgroundColor: '#20c997', color: 'white' }}>
+                {/* Icon: Chart */}
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="12" y1="20" x2="12" y2="10"></line>
+                  <line x1="18" y1="20" x2="18" y2="4"></line>
+                  <line x1="6" y1="20" x2="6" y2="16"></line>
                 </svg>
               </div>
-              <small className="fw-bold text-dark" style={{ fontSize: '0.75rem' }}>Cargar</small>
-            </div>
+              <small className="fw-bold text-dark" style={{ fontSize: '0.75rem' }}>Balance</small>
+            </Link>
 
             {/* Historial */}
             <Link to="/transactions" className="text-decoration-none text-center">
               <div className="rounded-circle d-flex align-items-center justify-content-center mb-2 mx-auto shadow-sm transition-hover"
-                style={{ width: 60, height: 60, backgroundColor: '#233E58', color: 'white' }}>
+                style={{ width: 60, height: 60, backgroundColor: '#fd7e14', color: 'white' }}>
                 {/* Icon: Receipt/History */}
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
@@ -216,6 +236,9 @@ const Home = () => {
               <small className="fw-bold text-dark" style={{ fontSize: '0.75rem' }}>Historial</small>
             </Link>
           </div>
+
+          {/* Exchange Rate Marquee */}
+          <ExchangeRateMarquee />
 
           {/* 4. PROMO BANNER (Purple Gradient -> Blue/Yellow Gradient) */}
           <div className="card border-0 mb-4 overflow-hidden shadow-sm"
