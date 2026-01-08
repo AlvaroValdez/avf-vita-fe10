@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { getRates } from '../services/api';
+import './ExchangeRateMarquee.css';
 
 const ExchangeRateMarquee = () => {
     const [rates, setRates] = useState([]);
@@ -43,80 +44,28 @@ const ExchangeRateMarquee = () => {
         return null;
     }
 
-    // Duplicate for seamless loop
     const displayRates = [...rates, ...rates];
 
     return (
-        <div className="mb-4" style={{
-            background: 'linear-gradient(135deg, #233E58 0%, #4A6F9E 100%)',
-            borderRadius: '12px',
-            padding: '12px 0',
-            position: 'relative',
-            overflow: 'hidden'
-        }}>
-            <div style={{
-                textAlign: 'center',
-                color: '#F7C843',
-                fontWeight: 'bold',
-                fontSize: '0.8rem',
-                marginBottom: '8px',
-                textTransform: 'uppercase',
-                letterSpacing: '1px'
-            }}>
+        <div className="exchange-rate-marquee-wrapper mb-4">
+            <div className="exchange-rate-title">
                 Nuestras Tasas
             </div>
 
             <div className="marquee-container">
                 <div className="marquee-content">
                     {displayRates.map((rate, index) => (
-                        <span
-                            key={`${rate.pair}-${index}`}
-                            style={{
-                                display: 'inline-flex',
-                                alignItems: 'center',
-                                padding: '0 20px',
-                                whiteSpace: 'nowrap',
-                                color: 'white',
-                                fontSize: '0.9rem',
-                                fontWeight: '500'
-                            }}
-                        >
-                            <span style={{ color: '#F7C843' }}>{rate.from}</span>
+                        <span key={`${rate.pair}-${index}`} className="rate-item">
+                            <span className="rate-from">{rate.from}</span>
                             <i className="bi bi-arrow-right mx-2" style={{ fontSize: '0.7rem' }}></i>
-                            <span style={{ color: '#F7C843' }}>{rate.to}</span>
+                            <span className="rate-to">{rate.to}</span>
                             <span className="mx-2">:</span>
                             <span className="fw-bold">{rate.rate.toFixed(4)}</span>
-                            <span className="mx-3" style={{ color: '#F7C843', opacity: 0.5 }}>|</span>
+                            <span className="mx-3 rate-separator">|</span>
                         </span>
                     ))}
                 </div>
             </div>
-
-            <style>{`
-        .marquee-container {
-          overflow: hidden;
-          position: relative;
-        }
-
-        .marquee-content {
-          display: flex;
-          animation: scroll 40s linear infinite;
-          will-change: transform;
-        }
-
-        .marquee-content:hover {
-          animation-play-state: paused;
-        }
-
-        @keyframes scroll {
-          0% {
-            transform: translateX(0);
-          }
-          100% {
-            transform: translateX(-50%);
-          }
-        }
-      `}</style>
         </div>
     );
 };

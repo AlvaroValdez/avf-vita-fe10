@@ -1,13 +1,63 @@
-/* Exchange Rate Marquee Animation */
+/* Exchange Rate Marquee Wrapper */
+.exchange-rate-marquee-wrapper {
+  background: linear-gradient(135deg, #233E58 0%, #4A6F9E 100%);
+  border-radius: 12px;
+  padding: 12px 0;
+  position: relative;
+  overflow: hidden;
+}
+
+.exchange-rate-title {
+  text-align: center;
+  color: #F7C843;
+  font-weight: bold;
+  font-size: 0.8rem;
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.marquee-container {
+  overflow: hidden;
+  position: relative;
+}
+
+.marquee-content {
+  display: flex;
+  animation: scroll 40s linear infinite;
+  will-change: transform;
+}
+
+.marquee-content:hover {
+  animation-play-state: paused;
+}
+
+.rate-item {
+  display: inline-flex;
+  align-items: center;
+  padding: 0 20px;
+  white-space: nowrap;
+  color: white;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.rate-from,
+.rate-to {
+  color: #F7C843;
+}
+
+.rate-separator {
+  color: #F7C843;
+  opacity: 0.5;
+}
+
 @keyframes scroll {
   0% {
     transform: translateX(0);
   }
-  100% {
-    transform: translateX(-33.33%);
-  }
-}
 
-.exchange-rate-marquee-container:hover .marquee-wrapper {
-  animation-play-state: paused;
+  100% {
+    transform: translateX(-50%);
+  }
 }
