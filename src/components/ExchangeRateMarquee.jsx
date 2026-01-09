@@ -2,27 +2,57 @@ import React, { useState, useEffect } from 'react';
 import { getAlytoRatesSummary } from '../services/api';
 import './ExchangeRateMarquee.css';
 
-// Import flags
-import flagCL from '../assets/flags/cl.svg';
-import flagCO from '../assets/flags/co.svg';
-import flagBO from '../assets/flags/bo.svg';
-import flagPE from '../assets/flags/pe.svg';
+// Import ALL available flags
 import flagAR from '../assets/flags/ar.svg';
+import flagAU from '../assets/flags/au.svg';
+import flagBO from '../assets/flags/bo.svg';
 import flagBR from '../assets/flags/br.svg';
-import flagMX from '../assets/flags/mx.svg';
-import flagVE from '../assets/flags/ve.svg';
+import flagCL from '../assets/flags/cl.svg';
+import flagCN from '../assets/flags/cn.svg';
+import flagCO from '../assets/flags/co.svg';
+import flagCR from '../assets/flags/cr.svg';
+import flagDO from '../assets/flags/do.svg';
 import flagEC from '../assets/flags/ec.svg';
+import flagES from '../assets/flags/es.svg';
+import flagEU from '../assets/flags/eu.svg';
+import flagGB from '../assets/flags/gb.svg';
+import flagGT from '../assets/flags/gt.svg';
+import flagHT from '../assets/flags/ht.svg';
+import flagMX from '../assets/flags/mx.svg';
+import flagPA from '../assets/flags/pa.svg';
+import flagPE from '../assets/flags/pe.svg';
+import flagPL from '../assets/flags/pl.svg';
+import flagPY from '../assets/flags/py.svg';
+import flagSV from '../assets/flags/sv.svg';
+import flagUS from '../assets/flags/us.svg';
+import flagUY from '../assets/flags/uy.svg';
+import flagVE from '../assets/flags/ve.svg';
 
 const FLAGS = {
-    CL: flagCL,
-    CO: flagCO,
-    BO: flagBO,
-    PE: flagPE,
     AR: flagAR,
+    AU: flagAU,
+    BO: flagBO,
     BR: flagBR,
+    CL: flagCL,
+    CN: flagCN,
+    CO: flagCO,
+    CR: flagCR,
+    DO: flagDO,
+    EC: flagEC,
+    ES: flagES,
+    EU: flagEU,
+    GB: flagGB,
+    GT: flagGT,
+    HT: flagHT,
     MX: flagMX,
-    VE: flagVE,
-    EC: flagEC
+    PA: flagPA,
+    PE: flagPE,
+    PL: flagPL,
+    PY: flagPY,
+    SV: flagSV,
+    US: flagUS,
+    UY: flagUY,
+    VE: flagVE
 };
 
 const ExchangeRateMarquee = () => {
@@ -64,7 +94,13 @@ const ExchangeRateMarquee = () => {
         return acc;
     }, []);
 
-    console.log('[ExchangeRateMarquee] Displaying rates:', uniqueRates.map(r => `${r.to}:${r.alytoRate}`));
+    // Log all rates with flag availability
+    console.log('[ExchangeRateMarquee] Total rates received:', rates.length);
+    console.log('[ExchangeRateMarquee] Unique rates:', uniqueRates.length);
+    uniqueRates.forEach(r => {
+        const hasFlag = FLAGS[r.to] !== undefined;
+        console.log(`  ${r.to}: ${r.alytoRate} | Flag: ${hasFlag ? '✓' : '✗ MISSING'}`);
+    });
 
     const displayRates = [...uniqueRates, ...uniqueRates];
 
