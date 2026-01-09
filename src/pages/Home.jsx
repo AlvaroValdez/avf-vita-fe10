@@ -206,18 +206,19 @@ const Home = () => {
               <small className="fw-bold text-dark" style={{ fontSize: '0.75rem' }}>Enviar</small>
             </Link>
 
-            {/* Balance */}
-            <Link to="/transactions" className="text-decoration-none text-center">
+            {/* Add Contact */}
+            <Link to="/favorites" className="text-decoration-none text-center">
               <div className="rounded-circle d-flex align-items-center justify-content-center mb-2 mx-auto shadow-sm transition-hover"
                 style={{ width: 60, height: 60, backgroundColor: '#20c997', color: 'white' }}>
-                {/* Icon: Chart */}
+                {/* Icon: User Plus */}
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <line x1="12" y1="20" x2="12" y2="10"></line>
-                  <line x1="18" y1="20" x2="18" y2="4"></line>
-                  <line x1="6" y1="20" x2="6" y2="16"></line>
+                  <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                  <circle cx="8.5" cy="7" r="4"></circle>
+                  <line x1="20" y1="8" x2="20" y2="14"></line>
+                  <line x1="23" y1="11" x2="17" y2="11"></line>
                 </svg>
               </div>
-              <small className="fw-bold text-dark" style={{ fontSize: '0.75rem' }}>Balance</small>
+              <small className="fw-bold text-dark" style={{ fontSize: '0.75rem' }}>Contacto</small>
             </Link>
 
             {/* Historial */}

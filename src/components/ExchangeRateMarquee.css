@@ -1,16 +1,19 @@
 .exchange-rate-card {
   background: white;
   border-radius: 12px;
-  padding: 16px;
+  padding: 12px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   overflow: hidden;
   max-width: 100%;
-  width: 100%;
+  width: calc(100% - 32px);
+  margin-left: 16px;
+  margin-right: 16px;
   box-sizing: border-box;
 }
 
 .exchange-rate-header {
   margin-bottom: 12px;
+  padding: 0 4px;
 }
 
 .exchange-rate-title {
@@ -26,6 +29,8 @@
   position: relative;
   width: 100%;
   max-width: 100%;
+  margin: 0;
+  padding: 0;
 }
 
 .marquee-content {
