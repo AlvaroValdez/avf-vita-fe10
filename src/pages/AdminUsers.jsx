@@ -89,11 +89,12 @@ const AdminUsers = () => {
     setShowDeleteModal(true);
   };
 
-  const handleDeleteUser = async () => {
+  const handleConfirmDelete = async () => {
     setDeleting(true);
     try {
       await deleteUser(userToDelete._id);
       setShowDeleteModal(false);
+      setUserToDelete(null);
       fetchUsers(); // Recargar lista
     } catch (err) {
       alert(err.error || 'Error al eliminar usuario.');
