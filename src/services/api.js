@@ -553,6 +553,15 @@ export const adminUpdateUser = async (userId, userData) => {
   }
 };
 
+export const deleteUser = async (userId) => {
+  try {
+    const response = await apiClient.delete(`/admin/users/${userId}`);
+    return response.data;
+  } catch (error) {
+    throw normalizeAxiosError(error, 'Error eliminando usuario.');
+  }
+};
+
 // --- ADMIN TREASURY ---
 export const approveDeposit = async (transactionId) => {
   try {

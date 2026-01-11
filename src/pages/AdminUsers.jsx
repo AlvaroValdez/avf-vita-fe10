@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Container, Card, Table, Spinner, Alert, Button, Form, Badge, Modal, Row, Col } from 'react-bootstrap';
-import { getUsers, updateUserRole, adminUpdateUser } from '../services/api';
+import { getUsers, updateUserRole, adminUpdateUser, deleteUser } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 
 const AdminUsers = () => {
@@ -14,6 +14,11 @@ const AdminUsers = () => {
   const [editingUser, setEditingUser] = useState(null);
   const [editForm, setEditForm] = useState({});
   const [saving, setSaving] = useState(false);
+
+  // Estados para Modal de Eliminación
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [userToDelete, setUserToDelete] = useState(null);
+  const [deleting, setDeleting] = useState(false);
 
   const fetchUsers = async () => {
     setLoading(true);
@@ -79,6 +84,24 @@ const AdminUsers = () => {
     setEditForm(prev => ({ ...prev, [name]: type === 'checkbox' ? checked : value }));
   };
 
+  const handleDeleteClick = (user) => {
+    setUserToDelete(user);
+    setShowDeleteModal(true);
+  };
+
+  const handleDeleteUser = async () => {
+    setDeleting(true);
+    try {
+      await deleteUser(userToDelete._id);
+      setShowDeleteModal(false);
+      fetchUsers(); // Recargar lista
+    } catch (err) {
+      alert(err.error || 'Error al eliminar usuario.');
+    } finally {
+      setDeleting(false);
+    }
+  };
+
   return (
     <Container className="my-5">
       <Card className="shadow-sm border-0">
@@ -125,8 +148,23 @@ const AdminUsers = () => {
                       <div className="mt-1">{u.isProfileComplete ? <Badge bg="info">KYC Completo</Badge> : <Badge bg="secondary">Sin KYC</Badge>}</div>
                     </td>
                     <td>
-                      <Button size="sm" variant="outline-primary" onClick={() => handleEditClick(u)}>
-                        Editar Detalles
+                      <Button
+                        size="sm"
+                        variant="outline-primary"
+                        onClick={() => handleEditClick(u)}
+                        className="me-2"
+                      >
+                        <i className="bi bi-pencil me-1"></i>
+                        Editar
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline-danger"
+                        onClick={() => handleDeleteClick(u)}
+                        disabled={currentUser?.id === u._id}
+                      >
+                        <i className="bi bi-trash me-1"></i>
+                        Eliminar
                       </Button>
                     </td>
                   </tr>
@@ -207,6 +245,33 @@ const AdminUsers = () => {
           <Button variant="secondary" onClick={() => setShowModal(false)}>Cancelar</Button>
           <Button variant="primary" onClick={handleSaveUser} disabled={saving}>
             {saving ? <Spinner size="sm" /> : 'Guardar Cambios'}
+          </Button>
+        </Modal.Footer>
+      </Modal>
+      {/* --- MODAL DE CONFIRM ACIÓN DE ELIMINACIÓN --- */}
+      <Modal show={showDeleteModal} onHide={() => setShowDeleteModal(false)}>
+        <Modal.Header closeButton>
+          <Modal.Title>Confirmar Eliminación</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <Alert variant="warning">
+            <i className="bi bi-exclamation-triangle me-2"></i>
+            ¿Estás seguro que deseas eliminar al usuario <strong>{userToDelete?.name}</strong>?
+          </Alert>
+          <p className="text-muted small mb-0">
+            Esta acción es permanente y no se puede deshacer. Se eliminarán todos los datos asociados.
+          </p>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setShowDeleteModal(false)}>
+            Cancelar
+          </Button>
+          <Button
+            variant="danger"
+            onClick={handleConfirmDelete}
+            disabled={deleting}
+          >
+            {deleting ? <Spinner size="sm" /> : 'Eliminar Usuario'}
           </Button>
         </Modal.Footer>
       </Modal>
