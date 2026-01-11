@@ -6,7 +6,7 @@ import { verifyEmailToken } from '../services/api';
 const VerifyEmail = () => {
   const [searchParams] = useSearchParams();
   const token = searchParams.get('token');
-  
+
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -27,7 +27,10 @@ const VerifyEmail = () => {
           throw new Error(response.error || 'Error al verificar el token.');
         }
       } catch (err) {
-        setError(err.error || 'El token es inválido o ha expirado.');
+        // Extract error message with fallback
+        const errorMessage = err.error || err.message || 'El token es inválido o ha expirado.';
+        setError(errorMessage);
+        console.error('[VerifyEmail] Error verifying token:', err);
       } finally {
         setLoading(false);
       }

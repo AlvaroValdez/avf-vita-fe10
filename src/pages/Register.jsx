@@ -31,10 +31,13 @@ const Register = () => {
     try {
       const response = await registerUser({ name, email, password });
       if (response.ok) {
-        // --- CORRECCIÓN AQUÍ ---
-        // Muestra el mensaje de éxito enviado por el backend
-        setSuccess(response.message || '¡Registro exitoso! Por favor, revisa tu correo para verificar tu cuenta.');
-        // Opcionalmente, deshabilita el formulario o limpia los campos
+        // Check if email was sent successfully  
+        if (response.emailSent === false) {
+          setSuccess(response.message || 'Usuario registrado, pero el email de verificación no pudo ser enviado. Por favor, contacta a soporte.');
+        } else {
+          setSuccess(response.message || '¡Registro exitoso! Por favor, revisa tu correo para verificar tu cuenta.');
+        }
+        // Clear form fields
         setName('');
         setEmail('');
         setPassword('');
