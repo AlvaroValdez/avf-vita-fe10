@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Container, Card, Form, Button, Alert, Spinner } from 'react-bootstrap';
+import { Container, Card, Form, Button, Alert, Spinner, InputGroup } from 'react-bootstrap';
 import { registerUser } from '../services/api';
 import { useNavigate, Link } from 'react-router-dom';
 
@@ -81,11 +81,43 @@ const Register = () => {
               </Form.Group>
               <Form.Group className="mb-3">
                 <Form.Label className="small fw-bold text-muted">Contraseña</Form.Label>
-                <Form.Control type="password" value={password} onChange={(e) => setPassword(e.target.value)} required placeholder="Mínimo 6 caracteres" className="py-2" />
+                <InputGroup>
+                  <Form.Control
+                    type={showPassword ? "text" : "password"}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                    placeholder="Mínimo 6 caracteres"
+                    className="py-2"
+                  />
+                  <Button
+                    variant="outline-secondary"
+                    onClick={() => setShowPassword(!showPassword)}
+                    style={{ borderLeft: 'none' }}
+                  >
+                    <i className={`bi bi-eye${showPassword ? '-slash' : ''}`}></i>
+                  </Button>
+                </InputGroup>
               </Form.Group>
               <Form.Group className="mb-4">
                 <Form.Label className="small fw-bold text-muted">Confirmar Contraseña</Form.Label>
-                <Form.Control type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} required placeholder="Repite tu contraseña" className="py-2" />
+                <InputGroup>
+                  <Form.Control
+                    type={showConfirmPassword ? "text" : "password"}
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    required
+                    placeholder="Repite tu contraseña"
+                    className="py-2"
+                  />
+                  <Button
+                    variant="outline-secondary"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    style={{ borderLeft: 'none' }}
+                  >
+                    <i className={`bi bi-eye${showConfirmPassword ? '-slash' : ''}`}></i>
+                  </Button>
+                </InputGroup>
               </Form.Group>
 
               {error && <Alert variant="danger" className="py-2 text-center small">{error}</Alert>}
