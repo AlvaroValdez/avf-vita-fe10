@@ -68,9 +68,6 @@ function AppContent() {
           <Route path="/admin/treasury" element={<AdminTreasury />} /> {/* ✅ NUEVO */}
         </Route>
 
-        {/* (Opcional) fallback */}
-        {/* <Route path="*" element={<Navigate to="/" replace />} /> */}
-
       </Routes>
       <Toaster />
     </MainLayout>
