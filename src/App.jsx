@@ -13,12 +13,12 @@ import AdminMarkup from './pages/AdminMarkup.jsx';
 import AdminUsers from './pages/AdminUsers.jsx';
 import AdminKyc from './pages/AdminKyc.jsx';
 import AdminRules from './pages/AdminRules.jsx';
-import AdminTreasury from './pages/AdminTreasury.jsx'; // ✅ NUEVO
+import AdminTreasury from './pages/AdminTreasury.jsx';
 import VerifyEmail from './pages/VerifyEmail.jsx';
 import Profile from './pages/Profile.jsx';
 import Favorites from './pages/Favorites.jsx';
 import DirectPaymentPage from './pages/DirectPaymentPage.jsx';
-import SendMoney from './pages/SendMoney.jsx'; // ✅ NUEVO
+import SendMoney from './pages/SendMoney.jsx';
 
 // Componentes UI
 // Componentes UI
@@ -69,7 +69,8 @@ function AppContent() {
         </Route>
 
         {/* (Opcional) fallback */}
-        <Route path="*" element={<Navigate to="/" replace />} />
+        {/* <Route path="*" element={<Navigate to="/" replace />} /> */}
+
       </Routes>
       <Toaster />
     </MainLayout>

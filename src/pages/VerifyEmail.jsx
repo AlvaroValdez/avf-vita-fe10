@@ -1,42 +1,23 @@
 import React, { useState, useEffect } from 'react';
 import { Container, Card, Spinner, Alert, Button } from 'react-bootstrap';
 import { useSearchParams, Link } from 'react-router-dom';
-import { verifyEmailToken } from '../services/api';
 
 const VerifyEmail = () => {
   const [searchParams] = useSearchParams();
   const token = searchParams.get('token');
 
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
   useEffect(() => {
     if (!token) {
       setError('Token de verificación no encontrado.');
-      setLoading(false);
       return;
     }
 
-    const verifyToken = async () => {
-      try {
-        const response = await verifyEmailToken(token);
-        if (response.ok) {
-          setSuccess(response.message || '¡Tu correo ha sido verificado exitosamente!');
-        } else {
-          throw new Error(response.error || 'Error al verificar el token.');
-        }
-      } catch (err) {
-        // Extract error message with fallback
-        const errorMessage = err.error || err.message || 'El token es inválido o ha expirado.';
-        setError(errorMessage);
-        console.error('[VerifyEmail] Error verifying token:', err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    verifyToken();
+    // Temporary: just show success for testing
+    setSuccess('¡Componente VerifyEmail cargado correctamente! Token: ' + token.substring(0, 10) + '...');
   }, [token]);
 
   return (
