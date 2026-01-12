@@ -25,6 +25,8 @@ export default defineConfig({
     },
     sourcemap: false, // Desactiva la generación de mapas de fuente
     chunkSizeWarningLimit: 1600, // Aumenta el límite de aviso (opcional, reduce ruido)
+    // Asegurar que archivos de public se copien
+    copyPublicDir: true
   },
   define: {
     global: 'globalThis',
