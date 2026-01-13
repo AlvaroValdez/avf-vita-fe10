@@ -4,13 +4,17 @@
   padding: 12px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   overflow: hidden;
-  width: 100%;
-  /* Use full width of parent */
+  /* Vital to clip children */
+  display: flex;
+  /* Helps vertically stack and contain width */
+  flex-direction: column;
+  width: auto;
+  /* Let it fill naturally */
+  max-width: 100%;
+  /* Strict cap */
   margin-bottom: 24px;
-  /* Space below */
   box-sizing: border-box;
   position: relative;
-  /* Ensure containment */
 }
 
 .exchange-rate-header {
