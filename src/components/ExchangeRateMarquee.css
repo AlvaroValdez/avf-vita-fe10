@@ -4,11 +4,13 @@
   padding: 12px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   overflow: hidden;
-  max-width: 100%;
-  width: calc(100% - 32px);
-  margin-left: 16px;
-  margin-right: 16px;
+  width: 100%;
+  /* Use full width of parent */
+  margin-bottom: 24px;
+  /* Space below */
   box-sizing: border-box;
+  position: relative;
+  /* Ensure containment */
 }
 
 .exchange-rate-header {
@@ -31,6 +33,9 @@
   max-width: 100%;
   margin: 0;
   padding: 0;
+  /* Professional fade effect on edges */
+  mask-image: linear-gradient(to right, transparent, black 5%, black 95%, transparent);
+  -webkit-mask-image: linear-gradient(to right, transparent, black 5%, black 95%, transparent);
 }
 
 .marquee-content {
