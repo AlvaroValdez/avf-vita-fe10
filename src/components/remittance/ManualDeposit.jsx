@@ -342,19 +342,20 @@ const ManualDeposit = ({ formData, onBack, onFinish }) => {
 
                 {error && <Alert variant="danger">{error}</Alert>}
 
-                <div className="d-flex justify-content-between mt-4">
+                <div className="d-flex justify-content-between mt-4 gap-3">
                     <Button
-                        variant="secondary"
+                        variant="outline-secondary"
                         onClick={onBack}
                         disabled={loading}
+                        className="px-4"
                     >
                         Atrás
                     </Button>
                     <Button
-                        className="w-50 fw-bold"
+                        variant="primary"
+                        className="flex-grow-1 fw-bold text-white shadow-sm"
                         onClick={handleSubmit}
                         disabled={loading || !file}
-                        style={{ backgroundColor: 'var(--avf-secondary)', borderColor: 'var(--avf-secondary)' }}
                     >
                         {loading ? (uploading ? 'Subiendo imagen...' : 'Procesando...') : 'Confirmar Depósito'}
                     </Button>

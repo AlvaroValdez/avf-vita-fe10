@@ -313,7 +313,7 @@ const CardForm = ({ onQuoteSuccess }) => {
             <div className="d-flex align-items-center justify-content-between">
               <div
                 className="d-flex align-items-center gap-2 cursor-pointer"
-                style={{ minWidth: '140px', cursor: 'pointer' }}
+                style={{ minWidth: '110px', cursor: 'pointer' }}
                 onClick={() => setShowOriginModal(true)}
               >
                 {getFlagUrl(originCountry) && (
@@ -323,7 +323,7 @@ const CardForm = ({ onQuoteSuccess }) => {
                     style={{ width: '32px', height: '32px', borderRadius: '50%', objectFit: 'cover' }}
                   />
                 )}
-                <span className="fw-bold" style={{ fontSize: '16px' }}>{originCurrency}</span>
+                <span className="fw-bold fs-5">{originCurrency}</span>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <polyline points="6 9 12 15 18 9"></polyline>
                 </svg>
@@ -335,7 +335,7 @@ const CardForm = ({ onQuoteSuccess }) => {
                 value={displayAmount}
                 onChange={handleAmountChange}
                 className={`border-0 bg-transparent text-end fw-bold p-0 ${error ? 'is-invalid' : ''}`}
-                style={{ fontSize: '24px', maxWidth: '200px' }}
+                style={{ fontSize: '24px', flex: 1, minWidth: 0, paddingRight: error ? '2rem' : '0' }}
               />
             </div>
           </div>
@@ -343,9 +343,10 @@ const CardForm = ({ onQuoteSuccess }) => {
           {/* Exchange Rate - Centered */}
           {quote && !loading && !error && (
             <div className="text-center my-3">
-              <div className="d-inline-flex align-items-center justify-content-center px-4 py-2 rounded-pill" style={{ backgroundColor: '#F7C843' }}>
-                <span className="me-2 fw-bold text-dark">Tasa:</span>
-                <span className="fw-bold text-dark">
+              <div className="d-flex align-items-center justify-content-center px-3 py-2 rounded-pill mx-auto text-truncate"
+                style={{ backgroundColor: '#F7C843', maxWidth: '100%', width: 'fit-content' }}>
+                <span className="me-2 fw-bold text-dark text-nowrap">Tasa:</span>
+                <span className="fw-bold text-dark text-nowrap">
                   {formatRate(1 / quote.rateWithMarkup)} {quote.origin} = 1 {quote.destCurrency}
                 </span>
                 <i className="bi bi-arrow-down-up ms-2 text-dark"></i>
@@ -366,7 +367,7 @@ const CardForm = ({ onQuoteSuccess }) => {
             <div className="d-flex align-items-center justify-content-between">
               <div
                 className="d-flex align-items-center gap-2"
-                style={{ minWidth: '140px', cursor: 'pointer' }}
+                style={{ minWidth: '110px', cursor: 'pointer' }}
                 onClick={() => setShowDestModal(true)}
               >
                 {getFlagUrl(destCountry) && (
@@ -376,7 +377,7 @@ const CardForm = ({ onQuoteSuccess }) => {
                     style={{ width: '32px', height: '32px', borderRadius: '50%', objectFit: 'cover' }}
                   />
                 )}
-                <span className="fw-bold" style={{ fontSize: '16px' }}>
+                <span className="fw-bold fs-5">
                   {COUNTRY_TO_CURRENCY[destCountry] || destCountry}
                 </span>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -390,26 +391,33 @@ const CardForm = ({ onQuoteSuccess }) => {
                 value={displayDestAmount}
                 onChange={handleDestAmountChange}
                 className={`border-0 bg-transparent text-end fw-bold p-0 ${error ? 'is-invalid' : ''}`}
-                style={{ fontSize: '24px', maxWidth: '200px' }}
+                style={{ fontSize: '24px', flex: 1, minWidth: 0, paddingRight: error ? '2rem' : '0' }}
               />
             </div>
           </div>
 
-          {/* Bank Requirements Info - MOVED OUTSIDE */}
-          {destCountry && BANK_EXAMPLES[destCountry] && (
-            <Accordion className="mb-4 shadow-sm" flush>
+          {/* Bank Requirements Info - Always Show with Fallback */}
+          {destCountry && (
+            <Accordion className="mb-4 shadow-sm" flush defaultActiveKey="0">
               <Accordion.Item eventKey="0" style={{ border: 'none', borderRadius: '10px', overflow: 'hidden' }}>
                 <Accordion.Header>
                   <div className="d-flex align-items-center">
                     <i className="bi bi-info-circle-fill text-primary me-2"></i>
                     <small className="fw-bold text-muted">
-                      ¿Requisitos para {BANK_EXAMPLES[destCountry].countryName}?
+                      {BANK_EXAMPLES[destCountry]
+                        ? `¿Requisitos para ${BANK_EXAMPLES[destCountry].countryName}?`
+                        : `Requisitos para el envío a ${destCountry}`}
                     </small>
                   </div>
                 </Accordion.Header>
                 <Accordion.Body className="bg-light small text-muted">
                   <ul className="list-unstyled mb-0 ps-2">
-                    {BANK_EXAMPLES[destCountry].requirements.map((req, idx) => (
+                    {(BANK_EXAMPLES[destCountry]?.requirements || [
+                      'Número de Cuenta / IBAN',
+                      'Nombre Completo del Beneficiario',
+                      'Nombre del Banco',
+                      'Documento de Identidad (Opcional)'
+                    ]).map((req, idx) => (
                       <li key={idx} className="mb-2 d-flex align-items-start">
                         <i className="bi bi-check-circle-fill text-success me-2 mt-1" style={{ fontSize: '0.8em' }}></i>
                         {req}

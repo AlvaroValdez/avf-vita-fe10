@@ -9,12 +9,14 @@ import homeBackgroundImage from '../assets/home-background.jpg';
 import logo from '../assets/images/logo-white.png';
 import logoOriginal from '../assets/images/logo.png';
 
+import { toast } from 'sonner';
+
 // URLs de los assets
 const googlePlayUrl = 'https://play.google.com/intl/en_us/badges/static/images/badges/es_badge_web_generic.png';
 const appStoreUrl = 'https://developer.apple.com/assets/elements/badges/download-on-the-app-store.svg';
 
 const Home = () => {
-  const { token, user, logout } = useAuth();
+  const { token, user, logout, updateUserSession } = useAuth();
 
   // --- STATES FOR REAL DATA ---
   const [transactions, setTransactions] = React.useState([]);
@@ -68,12 +70,23 @@ const Home = () => {
         minHeight: '100vh',
         position: 'relative',
         fontFamily: "'Inter', sans-serif",
-        overflow: 'hidden'
+        overflow: 'hidden',
+        overflowX: 'hidden',
+        maxWidth: '100vw'
       }}>
 
         {/* 1. APP BAR (Blue Background, Logo, Actions) */}
-        <div className="d-flex justify-content-between align-items-center px-4 py-3 shadow-sm w-100 position-relative"
-          style={{ backgroundColor: '#233E58', color: 'white', zIndex: 10 }}>
+        <div className="d-flex justify-content-between align-items-center px-4 py-3 shadow-sm position-sticky top-0"
+          style={{
+            backgroundColor: '#233E58',
+            color: 'white',
+            zIndex: 10,
+            width: '100%',
+            maxWidth: '100vw',
+            boxSizing: 'border-box',
+            left: 0,
+            right: 0
+          }}>
           {/* Left: Logo (Image) */}
           <div className="d-flex align-items-center">
             <Image src={logo} alt="Alyto" height="30" />
@@ -97,14 +110,15 @@ const Home = () => {
           </div>
         </div>
 
+
         {/* BACKGROUND BLOBS */}
         <div style={{
-          position: 'absolute', top: 0, left: -50, width: 300, height: 300,
+          position: 'absolute', top: 0, left: 0, width: 300, height: 300,
           background: 'radial-gradient(circle, rgba(35,62,88,0.1) 0%, rgba(255,255,255,0) 70%)',
-          filter: 'blur(40px)', zIndex: 0
+          filter: 'blur(40px)', zIndex: 0, pointerEvents: 'none'
         }}></div>
 
-        <Container className="py-2 pb-5 position-relative" style={{ zIndex: 1, maxWidth: '500px' }}>
+        <Container className="py-2 pb-5 position-relative" style={{ zIndex: 1, maxWidth: '600px' }}>
 
 
           {/* 1. Header Actions (Logout Right) */}
@@ -144,11 +158,39 @@ const Home = () => {
                 type="file"
                 className="d-none"
                 accept="image/*"
-                onChange={(e) => {
+                onChange={async (e) => {
                   if (e.target.files && e.target.files[0]) {
-                    // Logic to handle file upload
-                    console.log("File selected:", e.target.files[0]);
-                    toast.info("Funcionalidad de subir foto en construcción");
+                    const file = e.target.files[0];
+                    // Validate file size (max 5MB)
+                    if (file.size > 5 * 1024 * 1024) {
+                      toast.error("La imagen no debe superar los 5MB");
+                      return;
+                    }
+
+                    const formData = new FormData();
+                    formData.append('avatar', file);
+
+                    // Show loading toast (optional, or just logic)
+                    const toastId = toast.loading("Subiendo foto de perfil...");
+
+                    try {
+                      // Import uploadAvatar dynamically if not at top, or assume it's imported
+                      const { uploadAvatar } = await import('../services/api');
+
+                      const response = await uploadAvatar(formData);
+
+                      if (response.ok && response.avatar) {
+                        // Update user session context
+                        const updatedUser = { ...user, avatar: response.avatar };
+                        updateUserSession(updatedUser);
+                        toast.success("Foto de perfil actualizada", { id: toastId });
+                      } else {
+                        throw new Error('No se recibió la URL del avatar');
+                      }
+                    } catch (error) {
+                      console.error("Error updating avatar:", error);
+                      toast.error("Error al subir la imagen", { id: toastId });
+                    }
                   }
                 }}
               />
@@ -162,7 +204,20 @@ const Home = () => {
 
           {/* 3. ACTION GRID (4 Buttons with Custom SVGs) */}
           <div className="d-flex justify-content-between mb-4 px-2">
-            {/* Share App */}
+            {/* Transfer (Send) - MOVED TO FIRST POSITION */}
+            <Link to="/send" className="text-decoration-none text-center">
+              <div className="rounded-circle d-flex align-items-center justify-content-center mb-2 mx-auto shadow-sm transition-hover"
+                style={{ width: 60, height: 60, backgroundColor: '#233E58', color: 'white' }}>
+                {/* Icon: Paper Plane */}
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginLeft: '-2px', marginTop: '2px' }}>
+                  <line x1="22" y1="2" x2="11" y2="13"></line>
+                  <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                </svg>
+              </div>
+              <small className="fw-bold text-dark" style={{ fontSize: '0.75rem' }}>Enviar</small>
+            </Link>
+
+            {/* Share App - MOVED TO SECOND POSITION */}
             <div className="text-center" style={{ cursor: 'pointer' }} onClick={() => {
               const shareData = {
                 title: 'Alyto - Remesas al instante',
@@ -192,19 +247,6 @@ const Home = () => {
               </div>
               <small className="fw-bold text-dark" style={{ fontSize: '0.75rem' }}>Compartir</small>
             </div>
-
-            {/* Transfer (Send) */}
-            <Link to="/send" className="text-decoration-none text-center">
-              <div className="rounded-circle d-flex align-items-center justify-content-center mb-2 mx-auto shadow-sm transition-hover"
-                style={{ width: 60, height: 60, backgroundColor: '#233E58', color: 'white' }}>
-                {/* Icon: Paper Plane */}
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginLeft: '-2px', marginTop: '2px' }}>
-                  <line x1="22" y1="2" x2="11" y2="13"></line>
-                  <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
-                </svg>
-              </div>
-              <small className="fw-bold text-dark" style={{ fontSize: '0.75rem' }}>Enviar</small>
-            </Link>
 
             {/* Add Contact */}
             <Link to="/favorites" className="text-decoration-none text-center">
@@ -238,7 +280,9 @@ const Home = () => {
             </Link>
           </div>
 
-          {/* Exchange Rate Marquee */}
+
+
+          {/* Exchange Rate Marquee (Full Width Breakout) */}
           <ExchangeRateMarquee />
 
           {/* 4. PROMO BANNER (Purple Gradient -> Blue/Yellow Gradient) */}

@@ -1,8 +1,24 @@
 /* Define las variables de color globales para la aplicación */
 :root {
-  --avf-primary: #122533;   /* Color primario institucional (azul oscuro) */
-  --avf-secondary: #ef8c20;  /* Color secundario institucional (naranja) */
-  --bs-primary-rgb: 18, 37, 51; 
+  --avf-primary: #122533;
+  /* Color primario institucional (azul oscuro) */
+  --avf-secondary: #ef8c20;
+  /* Color secundario institucional (naranja) */
+  --bs-primary-rgb: 18, 37, 51;
+}
+
+/* Reset body to prevent overflow */
+body {
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+}
+
+/* Prevent horizontal scroll at document level */
+html,
+body {
+  overflow-x: hidden;
+  max-width: 100%;
 }
 
 /* Estilos base para todo el cuerpo de la página */
@@ -17,7 +33,8 @@ body {
   max-width: 100%;
   margin: 0;
   padding: 0;
-  display: flex; /* Asegura que #root pueda usar flexbox para App.jsx */
+  display: flex;
+  /* Asegura que #root pueda usar flexbox para App.jsx */
   flex-direction: column;
   min-height: 100vh;
 }
