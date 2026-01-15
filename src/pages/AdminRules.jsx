@@ -264,6 +264,27 @@ const AdminRules = () => {
               />
             </div>
 
+            {/* --- SECCIÓN TESORERÍA / PROFIT --- */}
+            <div className="d-flex justify-content-between align-items-center mb-4 p-3 bg-success bg-opacity-10 rounded border border-success">
+              <div>
+                <h5 className="mb-0 text-success">💰 Retención de Ganancia (Profit Retention)</h5>
+                <small className="text-muted">
+                  Si activas esto, enviaremos a Vita el <strong>monto justo</strong> para que el beneficiario reciba lo prometido.
+                  <br />
+                  Tu ganancia por spread <strong>SE QUEDA EN TU WALLET</strong> en lugar de regalarse al cliente final.
+                </small>
+              </div>
+              <Form.Check
+                type="switch"
+                id="profit-retention-switch"
+                label={formData.profitRetention ? "ACTIVADO" : "DESACTIVADO"}
+                name="profitRetention"
+                checked={formData.profitRetention}
+                onChange={handleChange}
+                className="fs-5 fw-bold text-success"
+              />
+            </div>
+
             {/* --- SECCIÓN ANCHOR MANUAL --- */}
             <div className="p-3 bg-light rounded mb-4 border">
               <h5 className="text-primary mb-3">Configuración de Proveedor</h5>
