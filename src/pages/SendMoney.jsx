@@ -5,9 +5,9 @@ import logo from '../assets/images/logo.png';
 
 const SendMoney = () => {
     return (
-        <Container className="py-4">
+        <Container fluid className="py-2 px-0 px-md-3">
             <Row className="justify-content-center">
-                <Col lg={8}>
+                <Col xs={12} md={12} lg={10} xl={8}>
                     <div className="text-center mb-4">
                         <Image src={logo} alt="Alyto" fluid style={{ maxHeight: '80px' }} />
                     </div>

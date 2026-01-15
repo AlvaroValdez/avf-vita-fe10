@@ -298,7 +298,7 @@ const CardForm = ({ onQuoteSuccess }) => {
     <Card className="p-4 shadow-lg border-0" style={{ borderRadius: '15px' }}>
       <Card.Body>
 
-        <h4 className="mb-4 text-center fw-bold">Cotizar envío</h4>
+        <h4 className="mb-3 text-center fw-bold">Cotizar envío</h4>
 
         {alertMessage && (
           <Alert variant="info" className="small py-2 mb-3 text-center">
@@ -308,7 +308,7 @@ const CardForm = ({ onQuoteSuccess }) => {
 
         <Form>
           {/* Compact "Estás enviando" Section with clickable country selector */}
-          <div className="mb-3 p-3 bg-light rounded-3">
+          <div className="mb-2 p-3 bg-light rounded-3">
             <small className="text-muted d-block mb-2">Tú envías</small>
             <div className="d-flex align-items-center justify-content-between">
               <div
@@ -334,15 +334,15 @@ const CardForm = ({ onQuoteSuccess }) => {
                 placeholder="0"
                 value={displayAmount}
                 onChange={handleAmountChange}
-                className={`border-0 bg-transparent text-end fw-bold p-0 ${error ? 'is-invalid' : ''}`}
-                style={{ fontSize: '24px', flex: 1, minWidth: 0, paddingRight: error ? '2rem' : '0' }}
+                className={`border-0 bg-transparent text-end fw-bold p-0 w-100 ${error ? 'text-danger' : ''}`}
+                style={{ fontSize: '24px', flex: 1, minWidth: 0 }}
               />
             </div>
           </div>
 
           {/* Exchange Rate - Centered */}
           {quote && !loading && !error && (
-            <div className="text-center my-3">
+            <div className="text-center my-2">
               <div className="d-flex align-items-center justify-content-center px-3 py-2 rounded-pill mx-auto text-truncate"
                 style={{ backgroundColor: '#F7C843', maxWidth: '100%', width: 'fit-content' }}>
                 <span className="me-2 fw-bold text-dark text-nowrap">Tasa:</span>
@@ -390,8 +390,8 @@ const CardForm = ({ onQuoteSuccess }) => {
                 placeholder="0"
                 value={displayDestAmount}
                 onChange={handleDestAmountChange}
-                className={`border-0 bg-transparent text-end fw-bold p-0 ${error ? 'is-invalid' : ''}`}
-                style={{ fontSize: '24px', flex: 1, minWidth: 0, paddingRight: error ? '2rem' : '0' }}
+                className={`border-0 bg-transparent text-end fw-bold p-0 w-100 ${error ? 'text-danger' : ''}`}
+                style={{ fontSize: '24px', flex: 1, minWidth: 0 }}
               />
             </div>
           </div>

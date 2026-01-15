@@ -8,7 +8,8 @@ import {
   getQuote,
   saveBeneficiary,
   getPaymentMethods,
-  getTransactionRules
+  getTransactionRules,
+  uploadImage
 } from '../../services/api';
 import { formatNumberForDisplay, formatRate } from '../../utils/formatting';
 import ManualDeposit from './ManualDeposit';
@@ -194,6 +195,24 @@ const StepConfirm = ({ formData, fields, onBack, isFromFavorite }) => {
         }
       }
 
+      // 0. Subir QR del beneficiario si existe (Flow Bolivia)
+      let qrUrl = null;
+      if (beneficiary.beneficiaryQrFile) {
+        console.log('[StepConfirm] Subiendo QR del beneficiario...');
+        const formDataImg = new FormData();
+        formDataImg.append('image', beneficiary.beneficiaryQrFile);
+
+        try {
+          const uploadRes = await uploadImage(formDataImg);
+          qrUrl = uploadRes.url;
+          console.log('[StepConfirm] QR subido:', qrUrl);
+        } catch (uploadErr) {
+          console.error('Error subiendo QR:', uploadErr);
+          // Opcional: ¿Fallar o continuar sin QR?
+          // throw new Error('Error al subir el código QR. Inténtalo de nuevo.');
+        }
+      }
+
       // A. Crear Transaction en DB con estado pending_payment
       // Generamos un orderId único para esta transacción
       const orderId = `ORD-${Date.now()}`;
@@ -213,11 +232,20 @@ const StepConfirm = ({ formData, fields, onBack, isFromFavorite }) => {
         feePercent: currentQuote.feePercent || 0,
         feeOriginAmount: currentQuote.feeOriginAmount || 0,
         ...beneficiary,
+        // Eliminamos el archivo del payload para no enviarlo al backend en el campo beneficiary
+        beneficiaryQrFile: undefined,
+        beneficiaryQrContent: undefined,
         status: 'pending_payment',
         payinStatus: 'pending',
         payoutStatus: 'pending',
         purpose: formData.purpose || 'EPFAMT', // Código correcto VITA para "Family maintenance"
         purpose_comentary: formData.purpose_comentary || 'Family maintenance',
+
+        // Metadata extendida con QR
+        metadata: {
+          beneficiary_qr_url: qrUrl,
+          qr_raw_data: beneficiary.beneficiaryQrContent || null
+        },
 
         // 📊 Tracking Data (Spread Model)
         rateTracking: currentQuote.rateTracking || null,
@@ -321,7 +349,10 @@ const StepConfirm = ({ formData, fields, onBack, isFromFavorite }) => {
   };
 
   // 🆕 FLUJO MANUAL: Si la cotización es manual, mostrar ManualDeposit directamente
-  if (currentQuote?.isManual || currentQuote?.provider === 'internal_manual' || currentQuote?.feeIncludedInRate) {
+  // EXCEPCIÓN: Chile -> Bolivia usa flujo Vita (Alyto) aunque la tasa sea manual
+  const isChileToBolivia = originCountry === 'CL' && destCountry === 'BO';
+
+  if (!isChileToBolivia && (currentQuote?.isManual || currentQuote?.provider === 'internal_manual' || currentQuote?.feeIncludedInRate)) {
     console.log('[StepConfirm] ✅ Renderizando flujo manual (anchor) para:', safeOriginCurrency);
     return (
       <ManualDeposit
