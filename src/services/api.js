@@ -396,6 +396,16 @@ export const createPaymentOrder = async (orderData) => {
   }
 };
 
+// Nueva función para verificar estado del pago (fallback de IPN)
+export const checkPaymentStatus = async (orderId) => {
+  try {
+    const response = await apiClient.post(`/payment-orders/${orderId}/check-status`);
+    return response.data;
+  } catch (error) {
+    throw normalizeAxiosError(error, 'Error verificando estado del pago.');
+  }
+};
+
 // ✅ Direct Payment alineado con Vita Wallet Business API
 // POST /api/direct-payment/:paymentOrderId
 // 

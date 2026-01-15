@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Container, Card, Button, Spinner, Badge } from 'react-bootstrap';
 import { Link, useSearchParams, useParams, useNavigate } from 'react-router-dom';
-import { getTransactions } from '../services/api';
+import { getTransactions, checkPaymentStatus } from '../services/api';
 import { formatNumberForDisplay, formatRate } from '../utils/formatting';
 import logo from '../assets/images/logo.png';
 
@@ -60,6 +60,15 @@ const PaymentSuccess = () => {
     const fetchTx = async () => {
       try {
         setLoading(true);
+
+        // 🚀 VERIFICACIÓN PROACTIVA (Fallback IPN)
+        try {
+          console.log('[PaymentSuccess] Checkeando estado de pago...');
+          await checkPaymentStatus(orderId);
+        } catch (checkErr) {
+          console.warn('[PaymentSuccess] No se pudo verificar el pago automáticamente:', checkErr);
+        }
+
         const res = await getTransactions({ order: orderId });
         if (res?.transactions?.length > 0) {
           setTransaction(res.transactions[0]);
