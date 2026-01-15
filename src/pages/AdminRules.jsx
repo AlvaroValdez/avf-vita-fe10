@@ -19,6 +19,7 @@ const AdminRules = () => {
     minAmount: 5000,
     fixedFee: 0,
     isEnabled: false,
+    profitRetention: false, // ✅ Estado inicial
     alertMessage: '',
     kycLevel1: 450000,
     kycLevel2: 4500000,
@@ -70,6 +71,7 @@ const AdminRules = () => {
             minAmount: rule.minAmount,
             fixedFee: rule.fixedFee,
             isEnabled: rule.isEnabled,
+            profitRetention: rule.profitRetention || false, // ✅ Mapeo
             alertMessage: rule.alertMessage || '',
             kycLevel1: rule.kycLimits?.level1 || 0,
             kycLevel2: rule.kycLimits?.level2 || 0,
@@ -99,6 +101,7 @@ const AdminRules = () => {
             minAmount: 5000,
             fixedFee: 0,
             isEnabled: false,
+            profitRetention: false,
             alertMessage: '',
             kycLevel1: 450000,
             kycLevel2: 4500000,
@@ -194,6 +197,7 @@ const AdminRules = () => {
         minAmount: Number(formData.minAmount),
         fixedFee: Number(formData.fixedFee),
         isEnabled: formData.isEnabled,
+        profitRetention: formData.profitRetention, // ✅ Enviar al backend
         alertMessage: formData.alertMessage,
         kycLimits: {
           level1: Number(formData.kycLevel1),
