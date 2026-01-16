@@ -61,12 +61,29 @@ const PaymentSuccess = () => {
       try {
         setLoading(true);
 
-        // 🚀 VERIFICACIÓN PROACTIVA (Fallback IPN)
-        try {
-          console.log('[PaymentSuccess] Checkeando estado de pago...');
-          await checkPaymentStatus(orderId);
-        } catch (checkErr) {
-          console.warn('[PaymentSuccess] No se pudo verificar el pago automáticamente:', checkErr);
+        // 🚀 VERIFICACIÓN PROACTIVA (Fallback IPN) - Retry Logic
+        const maxRetries = 3;
+        for (let i = 0; i < maxRetries; i++) {
+          try {
+            console.log(`[PaymentSuccess] Checkeando estado de pago (Intento ${i + 1}/${maxRetries})...`);
+            const statusRes = await checkPaymentStatus(orderId);
+
+            // Si retorna status 'completed' o 'processing', detenemos reintentos
+            if (statusRes?.status === 'completed' || statusRes?.status === 'processing') {
+              console.log('[PaymentSuccess] Pago confirmado y withdrawal iniciado.');
+              break;
+            }
+
+            // Si es el último intento y no funcionó:
+            if (i === maxRetries - 1) console.warn('[PaymentSuccess] No se pudo confirmar pago tras reintentos.');
+
+            // Si falla o sigue pending, esperamos 2 segs antes de reintentar
+            if (i < maxRetries - 1) await new Promise(r => setTimeout(r, 2000));
+
+          } catch (checkErr) {
+            console.warn(`[PaymentSuccess] Error verificando pago (Intento ${i + 1}):`, checkErr);
+            if (i < maxRetries - 1) await new Promise(r => setTimeout(r, 2000));
+          }
         }
 
         const res = await getTransactions({ order: orderId });

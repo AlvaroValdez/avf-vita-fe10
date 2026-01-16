@@ -127,7 +127,6 @@ const Transactions = () => {
               <th>Recibido</th>
               <th>Tasa Vita</th>
               <th>Tasa Alyto</th>
-              <th>Spread%</th>
               <th>Ganancia</th>
               <th>Estado</th>
               <th>Acciones</th>
@@ -170,20 +169,11 @@ const Transactions = () => {
                   {tx.rateTracking?.alytoRate ? <strong>{tx.rateTracking.alytoRate.toFixed(3)}</strong> : '-'}
                 </td>
 
-                {/* Spread% */}
-                <td className="text-center">
-                  {tx.rateTracking?.spreadPercent ? (
-                    <Badge bg="warning" text="dark">{tx.rateTracking.spreadPercent}%</Badge>
-                  ) : (
-                    <span className="text-muted">-</span>
-                  )}
-                </td>
-
                 {/* Ganancia */}
                 <td className="text-end">
-                  {tx.amountsTracking?.profitDestCurrency ? (
+                  {tx.amountsTracking?.profitOriginCurrency ? (
                     <span className="text-success fw-bold">
-                      {new Intl.NumberFormat('es-CL', { minimumFractionDigits: 0 }).format(tx.amountsTracking.profitDestCurrency)} {tx.amountsTracking.destCurrency}
+                      {new Intl.NumberFormat('es-CL', { minimumFractionDigits: 0 }).format(tx.amountsTracking.profitOriginCurrency)} {tx.amountsTracking.originCurrency || 'CLP'}
                     </span>
                   ) : (
                     <span className="text-muted">-</span>
