@@ -10,12 +10,30 @@ import { checkPaymentStatus } from '../services/api';
 const PaymentVerifying = () => {
     const [params] = useSearchParams();
     const navigate = useNavigate();
-    const orderId = params.get('orderId') || params.get('order');
+
+    // Extraer orderId de múltiples fuentes posibles
+    const orderIdFromQuery = params.get('orderId') || params.get('order');
+
+    // También intentar desde window.location si useSearchParams no funciona con el hash
+    const hash = window.location.hash; // Ej: #/payment-verifying?orderId=XXX
+    const queryMatch = hash.match(/[?&]orderId=([^&]+)/);
+    const orderIdFromHash = queryMatch ? queryMatch[1] : null;
+
+    const orderId = orderIdFromQuery || orderIdFromHash;
+
+    console.log('🔍 [PaymentVerifying] Hash completo:', hash);
+    console.log('🔍 [PaymentVerifying] orderId extraído:', orderId);
 
     useEffect(() => {
         if (!orderId) {
-            console.error('❌ No orderId provided');
-            navigate('/');
+            console.error('❌ No orderId provided. Params:', Object.fromEntries(params.entries()));
+            console.error('❌ Hash:', window.location.hash);
+            console.error('⏸️ Esperando 3 segundos antes de redirigir...');
+
+            // Dar tiempo para ver los logs
+            setTimeout(() => {
+                navigate('/');
+            }, 3000);
             return;
         }
 
