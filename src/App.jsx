@@ -9,6 +9,7 @@ import TransactionDetail from './pages/TransactionDetail.jsx';
 import Login from './pages/Login.jsx';
 import Register from './pages/Register.jsx';
 import PaymentSuccess from './pages/PaymentSuccess.jsx';
+import PaymentVerifying from './pages/PaymentVerifying.jsx';
 import AdminMarkup from './pages/AdminMarkup.jsx';
 import AdminUsers from './pages/AdminUsers.jsx';
 import AdminKyc from './pages/AdminKyc.jsx';
@@ -45,6 +46,7 @@ function AppContent() {
         <Route path="/" element={<Home />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
+        <Route path="/payment-verifying" element={<PaymentVerifying />} />
         <Route path="/payment-success" element={<PaymentSuccess />} />
         <Route path="/payment-success/:orderId" element={<PaymentSuccess />} />
         <Route path="/verify-email" element={<VerifyEmail />} />
