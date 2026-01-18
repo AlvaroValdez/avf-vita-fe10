@@ -361,40 +361,6 @@ const CardForm = ({ onQuoteSuccess }) => {
             </div>
           )}
 
-          {/* 💰 Payin Fee Breakdown - Transparent Display */}
-          {quote && !loading && !error && quote.payinFeeBreakdown && quote.payinFeeBreakdown.available && (
-            <div className="mb-3">
-              <div className="p-3 rounded-3" style={{ backgroundColor: '#FFF4E6', border: '1px solid #FFE0B2' }}>
-                <div className="d-flex align-items-center mb-2">
-                  <i className="bi bi-info-circle-fill text-warning me-2"></i>
-                  <small className="fw-bold text-dark">Desglose de Comisiones</small>
-                </div>
-                <div className="small text-muted">
-                  <div className="d-flex justify-content-between mb-1">
-                    <span>Monto a pagar:</span>
-                    <span className="fw-bold text-dark">
-                      {formatNumberForDisplay(quote.payinFeeBreakdown.grossAmount)} {originCurrency}
-                    </span>
-                  </div>
-                  <div className="d-flex justify-content-between mb-1">
-                    <span>Comisión {quote.payinFeeBreakdown.paymentMethod}:</span>
-                    <span className="text-danger">
-                      -{formatNumberForDisplay(quote.payinFeeBreakdown.totalFee)} {originCurrency}
-                      <small className="ms-1">({quote.payinFeeBreakdown.feePercent}%)</small>
-                    </span>
-                  </div>
-                  <hr className="my-2" style={{ borderColor: '#FFE0B2' }} />
-                  <div className="d-flex justify-content-between">
-                    <span className="fw-bold">Monto disponible para envío:</span>
-                    <span className="fw-bold text-success">
-                      {formatNumberForDisplay(quote.payinFeeBreakdown.netAmount)} {originCurrency}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-
           {/* Compact "Ellos reciben" Section with clickable country selector */}
           <div className="mb-4 p-3 bg-light rounded-3">
             <small className="text-muted d-block mb-2">Ellos reciben</small>
