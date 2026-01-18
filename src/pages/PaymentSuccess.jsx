@@ -57,33 +57,52 @@ const PaymentSuccess = () => {
   useEffect(() => {
     if (!orderId) return;
 
+    console.log(`🔍 Verificando estado del pago para orden: ${orderId}`);
+
+    // 🔄 Retry mechanism con delays más largos para dar tiempo a Vita
+    const MAX_RETRIES = 8;  // ⬆️ Aumentado de 3 a 8
+    const RETRY_DELAY = 5000; // ⬆️ Aumentado de 2s a 5s
+
     const fetchTx = async () => {
       try {
         setLoading(true);
 
-        // 🚀 VERIFICACIÓN PROACTIVA (Fallback IPN) - Retry Logic
-        const maxRetries = 3;
-        for (let i = 0; i < maxRetries; i++) {
-          try {
-            console.log(`[PaymentSuccess] Checkeando estado de pago (Intento ${i + 1}/${maxRetries})...`);
-            const statusRes = await checkPaymentStatus(orderId);
+        let attempt = 0;
+        let lastError = null;
 
-            // Si retorna status 'completed' o 'processing', detenemos reintentos
-            if (statusRes?.status === 'completed' || statusRes?.status === 'processing') {
-              console.log('[PaymentSuccess] Pago confirmado y withdrawal iniciado.');
+        while (attempt < MAX_RETRIES) {
+          attempt++;
+          console.log(`🔄 Intento ${attempt}/${MAX_RETRIES}...`);
+
+          try {
+            const result = await checkPaymentStatus(orderId);
+            console.log('✅ Status check resultado:', result);
+
+            // Si está completado, salir del loop
+            if (result?.payinStatus === 'completed' || result?.status === 'completed') {
+              console.log('🎉 Pago confirmado y procesado!');
               break;
             }
 
-            // Si es el último intento y no funcionó:
-            if (i === maxRetries - 1) console.warn('[PaymentSuccess] No se pudo confirmar pago tras reintentos.');
+            // Si es el último intento y aún está pending, mostrar advertencia
+            if (attempt === MAX_RETRIES) {
+              console.warn('⚠️ Pago aún pendiente después de todos los intentos');
+            }
 
-            // Si falla o sigue pending, esperamos 2 segs antes de reintentar
-            if (i < maxRetries - 1) await new Promise(r => setTimeout(r, 2000));
-
-          } catch (checkErr) {
-            console.warn(`[PaymentSuccess] Error verificando pago (Intento ${i + 1}):`, checkErr);
-            if (i < maxRetries - 1) await new Promise(r => setTimeout(r, 2000));
+          } catch (err) {
+            lastError = err;
+            console.error(`❌ Error en intento ${attempt}:`, err.message);
           }
+
+          // Esperar antes del próximo intento (excepto en el último)
+          if (attempt < MAX_RETRIES) {
+            console.log(`⏳ Esperando ${RETRY_DELAY / 1000} segundos...`);
+            await new Promise(resolve => setTimeout(resolve, RETRY_DELAY));
+          }
+        }
+
+        if (lastError && attempt === MAX_RETRIES) {
+          console.error('❌ No se pudo verificar el pago después de todos los intentos');
         }
 
         const res = await getTransactions({ order: orderId });
