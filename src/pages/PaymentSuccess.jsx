@@ -186,6 +186,34 @@ const PaymentSuccess = () => {
             </div>
           ) : transaction ? (
             <>
+              {/* ⚠️ Warning for Pending Transactions */}
+              {(transaction?.status === 'pending' || transaction?.payinStatus === 'pending') && (
+                <Alert variant="warning" className="mb-4">
+                  <div className="d-flex align-items-center mb-2">
+                    <i className="bi bi-exclamation-triangle-fill me-2"></i>
+                    <strong>Tu pago está siendo verificado</strong>
+                  </div>
+                  <p className="small mb-3">
+                    Estamos confirmando tu transacción con el banco.
+                    Si completaste el pago en Fintoc, haz clic en el botón para verificar el estado.
+                  </p>
+                  <Button
+                    variant="primary"
+                    size="sm"
+                    onClick={async () => {
+                      try {
+                        await checkPaymentStatus(orderId);
+                        window.location.reload();
+                      } catch (err) {
+                        console.error('Error verificando estado:', err);
+                      }
+                    }}
+                  >
+                    🔄 Verificar Estado del Pago
+                  </Button>
+                </Alert>
+              )}
+
               {/* Transaction Details Card */}
               <div className="bg-light p-4 rounded-3 mb-4">
                 {/* Transaction ID */}
