@@ -166,7 +166,46 @@ const StepConfirm = ({ formData, fields, onBack, isFromFavorite }) => {
       // 3. Guardar favorito si aplica
       await maybeSaveFavorite();
 
-      // 4. Redirigir al widget de Fintoc
+      // 4. Iniciar polling para detectar pago completado
+      console.log('[StepConfirm] Iniciando polling para orden:', orderId);
+
+      let pollCount = 0;
+      const maxPolls = 120; // 10 minutos máximo (120 * 5 segundos)
+
+      const pollInterval = setInterval(async () => {
+        pollCount++;
+
+        try {
+          const txResponse = await fetch(`${import.meta.env.VITE_API_URL}/transactions?order=${orderId}`, {
+            headers: {
+              'Authorization': `Bearer ${localStorage.getItem('token')}`
+            }
+          });
+
+          if (txResponse.ok) {
+            const txData = await txResponse.json();
+            const transaction = txData?.data?.[0] || txData?.[0];
+
+            console.log(`[StepConfirm] Poll #${pollCount} - payinStatus:`, transaction?.payinStatus);
+
+            if (transaction?.payinStatus === 'completed') {
+              console.log('[StepConfirm] ✅ Pago completado! Redirigiendo...');
+              clearInterval(pollInterval);
+              navigate(`/payment-success/${orderId}`);
+            }
+          }
+        } catch (pollError) {
+          console.error('[StepConfirm] Error polling:', pollError);
+        }
+
+        // Stop polling después de 10 minutos
+        if (pollCount >= maxPolls) {
+          console.warn('[StepConfirm] Polling timeout después de 10 minutos');
+          clearInterval(pollInterval);
+        }
+      }, 5000); // Poll cada 5 segundos
+
+      // 5. Redirigir al widget de Fintoc
       console.log('[StepConfirm] Redirigiendo a Fintoc Widget...');
       window.location.href = checkoutUrl;
 
