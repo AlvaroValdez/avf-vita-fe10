@@ -289,6 +289,41 @@ const AdminRules = () => {
               />
             </div>
 
+            {/* Profit Retention Percentage (Solo si está activo) */}
+            {formData.profitRetention && (
+              <div className="mb-4 p-3 bg-warning bg-opacity-10 rounded border border-warning">
+                <Form.Group>
+                  <Form.Label className="fw-bold">
+                    <i className="bi bi-percent me-2"></i>
+                    Porcentaje de Profit a Retener
+                    <span className="badge bg-warning text-dark ms-2">Modelo Híbrido</span>
+                  </Form.Label>
+                  <InputGroup>
+                    <Form.Control
+                      type="number"
+                      step="0.1"
+                      min="0"
+                      max="5"
+                      name="profitRetentionPercent"
+                      value={formData.profitRetentionPercent || 0}
+                      onChange={handleChange}
+                      placeholder="2.0"
+                    />
+                    <InputGroup.Text>%</InputGroup.Text>
+                  </InputGroup>
+                  <Form.Text className="text-muted">
+                    Porcentaje del principal neto (después fees de Fintoc) a retener como profit.
+                    <br />
+                    <strong>Ejemplo</strong>: Con 9,700 CLP neto y 2.0%, Alyto retiene 194 CLP y envía 9,506 CLP a Vita.
+                    <br />
+                    <strong>Recomendado</strong>: 1.5% - 2.5% para mantener competitividad.
+                    <br />
+                    <strong>⚠️ Máximo permitido</strong>: 5% (safety cap en backend)
+                  </Form.Text>
+                </Form.Group>
+              </div>
+            )}
+
             {/* --- SECCIÓN ANCHOR MANUAL --- */}
             <div className="p-3 bg-light rounded mb-4 border">
               <h5 className="text-primary mb-3">Configuración de Proveedor</h5>
