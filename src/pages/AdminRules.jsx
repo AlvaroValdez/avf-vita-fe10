@@ -20,6 +20,7 @@ const AdminRules = () => {
     fixedFee: 0,
     isEnabled: false,
     profitRetention: false, // ✅ Estado inicial
+    profitRetentionPercent: 0, // % de profit a retener (ej: 2.0 = 2%)
     alertMessage: '',
     kycLevel1: 450000,
     kycLevel2: 4500000,
@@ -72,6 +73,7 @@ const AdminRules = () => {
             fixedFee: rule.fixedFee,
             isEnabled: rule.isEnabled,
             profitRetention: rule.profitRetention || false, // ✅ Mapeo
+            profitRetentionPercent: rule.profitRetentionPercent || 0, // % de profit
             alertMessage: rule.alertMessage || '',
             kycLevel1: rule.kycLimits?.level1 || 0,
             kycLevel2: rule.kycLimits?.level2 || 0,
@@ -102,6 +104,7 @@ const AdminRules = () => {
             fixedFee: 0,
             isEnabled: false,
             profitRetention: false,
+            profitRetentionPercent: 0,
             alertMessage: '',
             kycLevel1: 450000,
             kycLevel2: 4500000,
@@ -198,6 +201,7 @@ const AdminRules = () => {
         fixedFee: Number(formData.fixedFee),
         isEnabled: formData.isEnabled,
         profitRetention: formData.profitRetention, // ✅ Enviar al backend
+        profitRetentionPercent: Number(formData.profitRetentionPercent || 0), // % de profit
         alertMessage: formData.alertMessage,
         kycLimits: {
           level1: Number(formData.kycLevel1),
