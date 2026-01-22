@@ -301,24 +301,23 @@ const PaymentSuccess = () => {
                 <div className="mb-3 pb-3 border-bottom">
                   <small className="text-muted d-block mb-3">Beneficiario</small>
 
-                  {/* Name with Account Number */}
-                  <div className="mb-3">
-                    <div className="d-flex align-items-center justify-content-between">
-                      <div>
-                        <span className="fw-bold d-block fs-5" style={{ color: '#233E58' }}>
-                          {transaction.beneficiary_first_name} {transaction.beneficiary_last_name}
-                        </span>
-                        {transaction.company_name && (
-                          <small className="text-muted d-block mt-1">{transaction.company_name}</small>
-                        )}
-                      </div>
-                      {transaction.account_bank && (
-                        <span className="badge bg-light text-dark border px-3 py-2 font-monospace" style={{ fontSize: '0.95rem' }}>
-                          {maskAccountNumber(transaction.account_bank)}
-                        </span>
-                      )}
-                    </div>
+                  {/* Name */}
+                  <div className="fw-bold fs-5 mb-3" style={{ color: '#233E58' }}>
+                    {transaction.beneficiary_first_name} {transaction.beneficiary_last_name}
+                    {transaction.company_name && (
+                      <small className="text-muted d-block mt-1">{transaction.company_name}</small>
+                    )}
                   </div>
+
+                  {/* Account Number - Masked */}
+                  {transaction.account_bank && (
+                    <div className="mb-3">
+                      <small className="text-muted d-block mb-1">Nro de cuenta</small>
+                      <span className="badge bg-light text-dark border px-3 py-2 font-monospace" style={{ fontSize: '0.95rem' }}>
+                        {maskAccountNumber(transaction.account_bank)}
+                      </span>
+                    </div>
+                  )}
 
                   {/* Bank Name */}
                   {transaction.bank_code && (
