@@ -36,7 +36,10 @@ const AdminRules = () => {
     holderName: '',
     holderId: '',
     depositQrImage: '',
-    destinations: []
+    destinations: [],
+    // Fintoc Config
+    fintocUfValue: 37500,
+    fintocTier: 1
   });
 
   // 1. Cargar países disponibles
@@ -84,7 +87,10 @@ const AdminRules = () => {
             holderName: rule.localBankDetails?.holderName || '',
             holderId: rule.localBankDetails?.holderId || '',
             depositQrImage: rule.depositQrImage || '',
-            destinations: rule.destinations || []
+            destinations: rule.destinations || [],
+            // Fintoc Config
+            fintocUfValue: rule.fintocConfig?.ufValue || 37500,
+            fintocTier: rule.fintocConfig?.tier || 1
           });
         } else {
           // Defaults para nuevo país
@@ -108,7 +114,9 @@ const AdminRules = () => {
             holderName: '',
             holderId: '',
             depositQrImage: '',
-            destinations: []
+            destinations: [],
+            fintocUfValue: 37500,
+            fintocTier: 1
           });
         }
       } catch (err) {
@@ -205,6 +213,12 @@ const AdminRules = () => {
           accountType: formData.accountType,
           holderName: formData.holderName,
           holderId: formData.holderId
+        },
+        // Fintoc Configuration
+        fintocConfig: {
+          ufValue: Number(formData.fintocUfValue || 37500),
+          tier: Number(formData.fintocTier || 1),
+          lastUpdated: new Date().toISOString()
         },
         destinations: formData.destinations
       };
@@ -307,6 +321,94 @@ const AdminRules = () => {
                 </Form.Group>
               </div>
             )}
+
+            {/* --- CONFIGURACIÓN FINTOC (Pay-in Fees) --- */}
+            <div className="mb-4 p-3 bg-info bg-opacity-10 rounded border border-info">
+              <h6 className="text-info fw-bold mb-3">
+                <i className="bi bi-credit-card me-2"></i>
+                Configuración de Fees Fintoc
+                <span className="badge bg-info ms-2">Pay-in</span>
+              </h6>
+
+              <Row>
+                <Col md={6}>
+                  <Form.Group className="mb-3">
+                    <Form.Label className="fw-bold">
+                      Valor UF (CLP)
+                      <span className="text-danger">*</span>
+                    </Form.Label>
+                    <InputGroup>
+                      <InputGroup.Text>$</InputGroup.Text>
+                      <Form.Control
+                        type="number"
+                        step="1"
+                        name="fintocUfValue"
+                        value={formData.fintocUfValue}
+                        onChange={handleChange}
+                        placeholder="37500"
+                      />
+                      <InputGroup.Text>CLP</InputGroup.Text>
+                    </InputGroup>
+                    <Form.Text className="text-muted">
+                      Valor actual de la UF en pesos chilenos.
+                      <br />
+                      <a href="https://www.sii.cl/valores_y_fechas/uf/uf2026.htm" target="_blank" rel="noopener noreferrer">
+                        <i className="bi bi-link-45deg"></i> Consultar valor oficial
+                      </a>
+                    </Form.Text>
+                  </Form.Group>
+                </Col>
+
+                <Col md={6}>
+                  <Form.Group className="mb-3">
+                    <Form.Label className="fw-bold">
+                      Tier de Volumen Mensual
+                      <span className="text-danger">*</span>
+                    </Form.Label>
+                    <Form.Select
+                      name="fintocTier"
+                      value={formData.fintocTier}
+                      onChange={handleChange}
+                    >
+                      <option value="1">Tier 1: 0-5,000 txns (0.0135 UF)</option>
+                      <option value="2">Tier 2: 5,000-25,000 txns (0.0115 UF)</option>
+                      <option value="3">Tier 3: 25,000-50,000 txns (0.0105 UF)</option>
+                      <option value="4">Tier 4: 50,000-100,000 txns (0.0097 UF)</option>
+                      <option value="5">Tier 5: 100,000+ txns (0.0090 UF)</option>
+                    </Form.Select>
+                    <Form.Text className="text-muted">
+                      Selecciona el tier según tu volumen mensual estimado con Fintoc.
+                    </Form.Text>
+                  </Form.Group>
+                </Col>
+              </Row>
+
+              {/* Preview del fee calculado */}
+              <div className="alert alert-light border mb-0">
+                <strong>📊 Fee Calculado:</strong>
+                {(() => {
+                  const tierRates = { 1: 0.0135, 2: 0.0115, 3: 0.0105, 4: 0.0097, 5: 0.0090 };
+                  const ufValue = Number(formData.fintocUfValue || 37500);
+                  const tier = Number(formData.fintocTier || 1);
+                  const tierRate = tierRates[tier];
+                  const fixedFee = Math.round(tierRate * ufValue);
+                  const percentFor10k = ((fixedFee / 10000) * 100).toFixed(2);
+
+                  return (
+                    <>
+                      <div className="mt-2">
+                        <span className="badge bg-primary me-2">{fixedFee} CLP</span> por transacción
+                      </div>
+                      <small className="text-muted d-block mt-1">
+                        = {tierRate} UF × {ufValue.toLocaleString('es-CL')} CLP
+                        <br />
+                        (~{percentFor10k}% para transferencia de 10,000 CLP)
+                      </small>
+                    </>
+                  );
+                })()}
+              </div>
+            </div>
 
             {/* --- SECCIÓN ANCHOR MANUAL --- */}
             <div className="p-3 bg-light rounded mb-4 border">
