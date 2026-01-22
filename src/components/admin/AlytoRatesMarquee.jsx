@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Card, Badge, Button, Spinner } from 'react-bootstrap';
-import { getAlytoRatesSummary } from '../../services/api';
+import { getAlytoAdminSummary } from '../../services/api';
 
 const AlytoRatesMarquee = () => {
     const [rates, setRates] = useState([]);
@@ -12,8 +12,8 @@ const AlytoRatesMarquee = () => {
         setLoading(true);
         setError('');
         try {
-            console.log('[AlytoRatesMarquee] Fetching rates...');
-            const response = await getAlytoRatesSummary();
+            console.log('[AlytoRatesMarquee] Fetching ADMIN rates (sin fees Fintoc)...');
+            const response = await getAlytoAdminSummary();
             console.log('[AlytoRatesMarquee] Response:', response);
 
             if (response.ok) {
@@ -149,7 +149,7 @@ const AlytoRatesMarquee = () => {
                             </div>
                         </div>
                         <small className="text-muted d-block mt-2">
-                            <i className="bi bi-info-circle"></i> Tasas mostradas al cliente (Vita - Spread) |
+                            <i className="bi bi-info-circle"></i> Tasas con spread aplicado (SIN fees Fintoc) |
                             <i className="bi bi-clock ms-2"></i> {formatDateTime(lastUpdate)}
                         </small>
                     </>

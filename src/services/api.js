@@ -254,7 +254,7 @@ export const getPricesSummary = async () => {
   }
 };
 
-// Get Alyto rates summary (with spread applied)
+// Get Alyto rates summary (with spread applied + Fintoc fees) - For user-facing marquee
 export const getAlytoRatesSummary = async () => {
   try {
     const response = await apiClient.get('/prices/alyto-summary');
@@ -263,6 +263,17 @@ export const getAlytoRatesSummary = async () => {
     throw normalizeAxiosError(error, 'Error obteniendo tasas Alyto.');
   }
 };
+
+// Get Alyto rates for ADMIN (spread only, NO Fintoc fees) - For admin analysis
+export const getAlytoAdminSummary = async () => {
+  try {
+    const response = await apiClient.get('/prices/alyto-admin-summary');
+    return response.data;
+  } catch (error) {
+    throw normalizeAxiosError(error, 'Error obteniendo tasas admin.');
+  }
+};
+
 
 // 💰 MARKUP / SPREAD MANAGEMENT
 
