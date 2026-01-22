@@ -271,15 +271,17 @@ const PaymentSuccess = () => {
                     </div>
                   )}
 
-                {/* Exchange Rate */}
-                {transaction.rateTracking?.rate && (
+                {/* Exchange Rate - More Prominent */}
+                {transaction.rateTracking?.alytoRate && (
                   <div className="mb-3 pb-3 border-bottom">
                     <small className="text-muted d-block mb-2">Tasa de cambio</small>
-                    <div className="d-inline-flex align-items-center px-3 py-2 rounded-pill" style={{ backgroundColor: '#F7C843' }}>
-                      <span className="fw-bold text-dark">
-                        1 {transaction.rateTracking.destCurrency} = {formatRate(1 / transaction.rateTracking.rate)} {transaction.currency}
+                    <div className="d-flex align-items-center gap-2">
+                      <span className="badge bg-light text-dark border px-3 py-2">
+                        <i className="bi bi-arrow-left-right me-2"></i>
+                        <span className="fw-bold">
+                          1 {transaction.currency} = {formatRate(transaction.rateTracking.alytoRate)} {transaction.rateTracking.destCurrency}
+                        </span>
                       </span>
-                      <i className="bi bi-arrow-down-up ms-2 text-dark"></i>
                     </div>
                   </div>
                 )}
@@ -355,6 +357,38 @@ const PaymentSuccess = () => {
                       </div>
                     )}
 
+                    {/* Document/CI - NEW */}
+                    {(transaction.beneficiarySnapshot?.documentNumber || transaction.beneficiary_cc) && (
+                      <div className="col-md-6">
+                        <small className="text-muted d-block mb-1">
+                          {transaction.beneficiarySnapshot?.documentType || 'CI'}
+                        </small>
+                        <span className="font-monospace fw-bold">
+                          {transaction.beneficiarySnapshot?.documentNumber || transaction.beneficiary_cc}
+                        </span>
+                      </div>
+                    )}
+
+                    {/* Account Number (Full) */}
+                    {(transaction.beneficiarySnapshot?.bankAccount || transaction.account_bank) && (
+                      <div className="col-md-6">
+                        <small className="text-muted d-block mb-1">Nro de cuenta</small>
+                        <span className="font-monospace fw-bold">
+                          {transaction.beneficiarySnapshot?.bankAccount || transaction.account_bank}
+                        </span>
+                      </div>
+                    )}
+
+                    {/* Account Type - NEW */}
+                    {(transaction.beneficiarySnapshot?.accountType || transaction.account_type) && (
+                      <div className="col-md-6">
+                        <small className="text-muted d-block mb-1">Tipo de cuenta</small>
+                        <span className="fw-bold">
+                          {transaction.beneficiarySnapshot?.accountType || transaction.account_type}
+                        </span>
+                      </div>
+                    )}
+
                     {/* Concept */}
                     {transaction.concept && (
                       <div className="col-12">
@@ -379,6 +413,25 @@ const PaymentSuccess = () => {
                       <small className="text-muted d-block mb-1">Tiempo estimado</small>
                       <span>En unas horas hábiles</span>
                     </div>
+
+                    {/* Vita Transfer ID - NEW */}
+                    {transaction.vitaTransferId && (
+                      <div className="col-12">
+                        <small className="text-muted d-block mb-1">Transfer ID</small>
+                        <div className="d-flex align-items-center gap-2">
+                          <span className="font-monospace small text-break" style={{ fontSize: '0.85rem' }}>
+                            {transaction.vitaTransferId}
+                          </span>
+                          <button
+                            className="btn btn-sm btn-outline-secondary"
+                            onClick={() => navigator.clipboard.writeText(transaction.vitaTransferId)}
+                            title="Copiar Transfer ID"
+                          >
+                            <i className="bi bi-clipboard"></i>
+                          </button>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
 
