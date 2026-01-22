@@ -330,21 +330,14 @@ const PaymentSuccess = () => {
                     </div>
                   )}
 
-                  {/* Additional Beneficiary Details */}
+
+                  {/* Additional Details Grid */}
                   <div className="row g-3">
-                    {/* CC Number */}
+                    {/* Document/CI */}
                     {transaction.beneficiary_cc && (
                       <div className="col-md-6">
-                        <small className="text-muted d-block mb-1">CC</small>
-                        <span className="font-monospace">{transaction.beneficiary_cc}</span>
-                      </div>
-                    )}
-
-                    {/* Account Number (Full) */}
-                    {transaction.account_bank && (
-                      <div className="col-md-6">
-                        <small className="text-muted d-block mb-1">Nro de cuenta</small>
-                        <span className="font-monospace">{transaction.account_bank}</span>
+                        <small className="text-muted d-block mb-1">CI</small>
+                        <span className="font-monospace fw-bold">{transaction.beneficiary_cc}</span>
                       </div>
                     )}
 
@@ -352,39 +345,7 @@ const PaymentSuccess = () => {
                     {transaction.account_type && (
                       <div className="col-md-6">
                         <small className="text-muted d-block mb-1">Tipo de cuenta</small>
-                        <span>{transaction.account_type}</span>
-                      </div>
-                    )}
-
-                    {/* Document/CI - NEW */}
-                    {(transaction.beneficiarySnapshot?.documentNumber || transaction.beneficiary_cc) && (
-                      <div className="col-md-6">
-                        <small className="text-muted d-block mb-1">
-                          {transaction.beneficiarySnapshot?.documentType || 'CI'}
-                        </small>
-                        <span className="font-monospace fw-bold">
-                          {transaction.beneficiarySnapshot?.documentNumber || transaction.beneficiary_cc}
-                        </span>
-                      </div>
-                    )}
-
-                    {/* Account Number (Full) */}
-                    {(transaction.beneficiarySnapshot?.bankAccount || transaction.account_bank) && (
-                      <div className="col-md-6">
-                        <small className="text-muted d-block mb-1">Nro de cuenta</small>
-                        <span className="font-monospace fw-bold">
-                          {transaction.beneficiarySnapshot?.bankAccount || transaction.account_bank}
-                        </span>
-                      </div>
-                    )}
-
-                    {/* Account Type - NEW */}
-                    {(transaction.beneficiarySnapshot?.accountType || transaction.account_type) && (
-                      <div className="col-md-6">
-                        <small className="text-muted d-block mb-1">Tipo de cuenta</small>
-                        <span className="fw-bold">
-                          {transaction.beneficiarySnapshot?.accountType || transaction.account_type}
-                        </span>
+                        <span className="fw-bold">{transaction.account_type}</span>
                       </div>
                     )}
 
@@ -413,7 +374,7 @@ const PaymentSuccess = () => {
                       <span>En unas horas hábiles</span>
                     </div>
 
-                    {/* Vita Transfer ID - NEW */}
+                    {/* Vita Transfer ID */}
                     {transaction.vitaTransferId && (
                       <div className="col-12">
                         <small className="text-muted d-block mb-1">Transfer ID</small>
@@ -433,6 +394,7 @@ const PaymentSuccess = () => {
                     )}
                   </div>
                 </div>
+
 
                 {/* Status Only - Removed Timeline */}
                 <div className="d-flex justify-content-center">
