@@ -412,6 +412,7 @@ const AdminRules = () => {
                   })()}
                 </div>
               </div>
+            )}
 
             {/* --- SECCIÓN ANCHOR MANUAL --- */}
             <div className="p-3 bg-light rounded mb-4 border">
