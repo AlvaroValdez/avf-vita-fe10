@@ -266,29 +266,31 @@ const AdminRules = () => {
               />
             </div>
 
-            {/* --- SECCIÓN TESORERÍA / PROFIT --- */}
-            <div className="d-flex justify-content-between align-items-center mb-4 p-3 bg-success bg-opacity-10 rounded border border-success">
-              <div>
-                <h5 className="mb-0 text-success">💰 Retención de Ganancia (Profit Retention)</h5>
-                <small className="text-muted">
-                  Si activas esto, enviaremos a Vita el <strong>monto justo</strong> para que el beneficiario reciba lo prometido.
-                  <br />
-                  Tu ganancia por spread <strong>SE QUEDA EN TU WALLET</strong> en lugar de regalarse al cliente final.
-                </small>
+            {/* --- PROFIT RETENTION: SOLO PARA VITA WALLET (CL) --- */}
+            {formData.provider === 'vita_wallet' && (
+              <div className="d-flex justify-content-between align-items-center mb-4 p-3 bg-success bg-opacity-10 rounded border border-success">
+                <div>
+                  <h5 className="mb-0 text-success">💰 Retención de Ganancia (Profit Retention)</h5>
+                  <small className="text-muted">
+                    Si activas esto, enviaremos a Vita el <strong>monto justo</strong> para que el beneficiario reciba lo prometido.
+                    <br />
+                    Tu ganancia por spread <strong>SE QUEDA EN TU WALLET</strong> en lugar de regalarse al cliente final.
+                  </small>
+                </div>
+                <Form.Check
+                  type="switch"
+                  id="profit-retention-switch"
+                  label={formData.profitRetention ? "ACTIVADO" : "DESACTIVADO"}
+                  name="profitRetention"
+                  checked={formData.profitRetention}
+                  onChange={handleChange}
+                  className="fs-5 fw-bold text-success"
+                />
               </div>
-              <Form.Check
-                type="switch"
-                id="profit-retention-switch"
-                label={formData.profitRetention ? "ACTIVADO" : "DESACTIVADO"}
-                name="profitRetention"
-                checked={formData.profitRetention}
-                onChange={handleChange}
-                className="fs-5 fw-bold text-success"
-              />
-            </div>
+            )}
 
-            {/* Profit Retention Percentage (Solo si está activo) */}
-            {formData.profitRetention && (
+            {/* Profit Retention Percentage (Solo para Vita Wallet y si está activo) */}
+            {formData.provider === 'vita_wallet' && formData.profitRetention && (
               <div className="mb-4 p-3 bg-warning bg-opacity-10 rounded border border-warning">
                 <Form.Group>
                   <Form.Label className="fw-bold">
@@ -322,93 +324,94 @@ const AdminRules = () => {
               </div>
             )}
 
-            {/* --- CONFIGURACIÓN FINTOC (Pay-in Fees) --- */}
-            <div className="mb-4 p-3 bg-info bg-opacity-10 rounded border border-info">
-              <h6 className="text-info fw-bold mb-3">
-                <i className="bi bi-credit-card me-2"></i>
-                Configuración de Fees Fintoc
-                <span className="badge bg-info ms-2">Pay-in</span>
-              </h6>
+            {/* --- CONFIGURACIÓN FINTOC: SOLO PARA VITA WALLET (CL) --- */}
+            {formData.provider === 'vita_wallet' && (
+              <div className="mb-4 p-3 bg-info bg-opacity-10 rounded border border-info">
+                <h6 className="text-info fw-bold mb-3">
+                  <i className="bi bi-credit-card me-2"></i>
+                  Configuración de Fees Fintoc
+                  <span className="badge bg-info ms-2">Pay-in</span>
+                </h6>
 
-              <Row>
-                <Col md={6}>
-                  <Form.Group className="mb-3">
-                    <Form.Label className="fw-bold">
-                      Valor UF (CLP)
-                      <span className="text-danger">*</span>
-                    </Form.Label>
-                    <InputGroup>
-                      <InputGroup.Text>$</InputGroup.Text>
-                      <Form.Control
-                        type="number"
-                        step="1"
-                        name="fintocUfValue"
-                        value={formData.fintocUfValue}
-                        onChange={handleChange}
-                        placeholder="37500"
-                      />
-                      <InputGroup.Text>CLP</InputGroup.Text>
-                    </InputGroup>
-                    <Form.Text className="text-muted">
-                      Valor actual de la UF en pesos chilenos.
-                      <br />
-                      <a href="https://www.sii.cl/valores_y_fechas/uf/uf2026.htm" target="_blank" rel="noopener noreferrer">
-                        <i className="bi bi-link-45deg"></i> Consultar valor oficial
-                      </a>
-                    </Form.Text>
-                  </Form.Group>
-                </Col>
-
-                <Col md={6}>
-                  <Form.Group className="mb-3">
-                    <Form.Label className="fw-bold">
-                      Tier de Volumen Mensual
-                      <span className="text-danger">*</span>
-                    </Form.Label>
-                    <Form.Select
-                      name="fintocTier"
-                      value={formData.fintocTier}
-                      onChange={handleChange}
-                    >
-                      <option value="1">Tier 1: 0-5,000 txns (0.0135 UF)</option>
-                      <option value="2">Tier 2: 5,000-25,000 txns (0.0115 UF)</option>
-                      <option value="3">Tier 3: 25,000-50,000 txns (0.0105 UF)</option>
-                      <option value="4">Tier 4: 50,000-100,000 txns (0.0097 UF)</option>
-                      <option value="5">Tier 5: 100,000+ txns (0.0090 UF)</option>
-                    </Form.Select>
-                    <Form.Text className="text-muted">
-                      Selecciona el tier según tu volumen mensual estimado con Fintoc.
-                    </Form.Text>
-                  </Form.Group>
-                </Col>
-              </Row>
-
-              {/* Preview del fee calculado */}
-              <div className="alert alert-light border mb-0">
-                <strong>📊 Fee Calculado:</strong>
-                {(() => {
-                  const tierRates = { 1: 0.0135, 2: 0.0115, 3: 0.0105, 4: 0.0097, 5: 0.0090 };
-                  const ufValue = Number(formData.fintocUfValue || 37500);
-                  const tier = Number(formData.fintocTier || 1);
-                  const tierRate = tierRates[tier];
-                  const fixedFee = Math.round(tierRate * ufValue);
-                  const percentFor10k = ((fixedFee / 10000) * 100).toFixed(2);
-
-                  return (
-                    <>
-                      <div className="mt-2">
-                        <span className="badge bg-primary me-2">{fixedFee} CLP</span> por transacción
-                      </div>
-                      <small className="text-muted d-block mt-1">
-                        = {tierRate} UF × {ufValue.toLocaleString('es-CL')} CLP
+                <Row>
+                  <Col md={6}>
+                    <Form.Group className="mb-3">
+                      <Form.Label className="fw-bold">
+                        Valor UF (CLP)
+                        <span className="text-danger">*</span>
+                      </Form.Label>
+                      <InputGroup>
+                        <InputGroup.Text>$</InputGroup.Text>
+                        <Form.Control
+                          type="number"
+                          step="1"
+                          name="fintocUfValue"
+                          value={formData.fintocUfValue}
+                          onChange={handleChange}
+                          placeholder="37500"
+                        />
+                        <InputGroup.Text>CLP</InputGroup.Text>
+                      </InputGroup>
+                      <Form.Text className="text-muted">
+                        Valor actual de la UF en pesos chilenos.
                         <br />
-                        (~{percentFor10k}% para transferencia de 10,000 CLP)
-                      </small>
-                    </>
-                  );
-                })()}
+                        <a href="https://www.sii.cl/valores_y_fechas/uf/uf2026.htm" target="_blank" rel="noopener noreferrer">
+                          <i className="bi bi-link-45deg"></i> Consultar valor oficial
+                        </a>
+                      </Form.Text>
+                    </Form.Group>
+                  </Col>
+
+                  <Col md={6}>
+                    <Form.Group className="mb-3">
+                      <Form.Label className="fw-bold">
+                        Tier de Volumen Mensual
+                        <span className="text-danger">*</span>
+                      </Form.Label>
+                      <Form.Select
+                        name="fintocTier"
+                        value={formData.fintocTier}
+                        onChange={handleChange}
+                      >
+                        <option value="1">Tier 1: 0-5,000 txns (0.0135 UF)</option>
+                        <option value="2">Tier 2: 5,000-25,000 txns (0.0115 UF)</option>
+                        <option value="3">Tier 3: 25,000-50,000 txns (0.0105 UF)</option>
+                        <option value="4">Tier 4: 50,000-100,000 txns (0.0097 UF)</option>
+                        <option value="5">Tier 5: 100,000+ txns (0.0090 UF)</option>
+                      </Form.Select>
+                      <Form.Text className="text-muted">
+                        Selecciona el tier según tu volumen mensual estimado con Fintoc.
+                      </Form.Text>
+                    </Form.Group>
+                  </Col>
+                </Row>
+
+                {/* Preview del fee calculado */}
+                <div className="alert alert-light border mb-0">
+                  <strong>📊 Fee Calculado:</strong>
+                  {(() => {
+                    const tierRates = { 1: 0.0135, 2: 0.0115, 3: 0.0105, 4: 0.0097, 5: 0.0090 };
+                    const ufValue = Number(formData.fintocUfValue || 37500);
+                    const tier = Number(formData.fintocTier || 1);
+                    const tierRate = tierRates[tier];
+                    const fixedFee = Math.round(tierRate * ufValue);
+                    const percentFor10k = ((fixedFee / 10000) * 100).toFixed(2);
+
+                    return (
+                      <>
+                        <div className="mt-2">
+                          <span className="badge bg-primary me-2">{fixedFee} CLP</span> por transacción
+                        </div>
+                        <small className="text-muted d-block mt-1">
+                          = {tierRate} UF × {ufValue.toLocaleString('es-CL')} CLP
+                          <br />
+                          (~{percentFor10k}% para transferencia de 10,000 CLP)
+                        </small>
+                      </>
+                    );
+                  })()}
+                </div>
               </div>
-            </div>
 
             {/* --- SECCIÓN ANCHOR MANUAL --- */}
             <div className="p-3 bg-light rounded mb-4 border">

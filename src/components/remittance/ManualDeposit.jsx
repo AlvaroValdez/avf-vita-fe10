@@ -214,15 +214,17 @@ const ManualDeposit = ({ formData, onBack, onFinish }) => {
                             </div>
                         )}
 
-                        {/* Exchange Rate */}
-                        {transactionData.rateTracking?.rate && (
+                        {/* Exchange Rate - FIXED */}
+                        {transactionData.rateTracking?.alytoRate && (
                             <div className="mb-3 pb-3 border-bottom">
                                 <small className="text-muted d-block mb-2">Tasa de cambio</small>
-                                <div className="d-inline-flex align-items-center px-3 py-2 rounded-pill" style={{ backgroundColor: '#F7C843' }}>
-                                    <span className="fw-bold text-dark">
-                                        1 {transactionData.rateTracking.destCurrency} = {formatRate(1 / transactionData.rateTracking.rate)} {transactionData.currency}
+                                <div className="d-flex align-items-center gap-2">
+                                    <span className="badge bg-light text-dark border px-3 py-2">
+                                        <i className="bi bi-arrow-left-right me-2"></i>
+                                        <span className="fw-bold">
+                                            1 {transactionData.currency} = {formatRate(transactionData.rateTracking.alytoRate)} {transactionData.rateTracking.destCurrency || 'COP'}
+                                        </span>
                                     </span>
-                                    <i className="bi bi-arrow-down-up ms-2 text-dark"></i>
                                 </div>
                             </div>
                         )}
