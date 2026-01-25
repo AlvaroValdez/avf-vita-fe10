@@ -186,7 +186,7 @@ const PaymentSuccess = () => {
     return null;
   };
 
-  // ✅ FIX: Función para compartir IMAGEN del comprobante
+  // ✅ FIX: Función para compartir IMAGEN del comprobante (App Style)
   const handleShareReceipt = async () => {
     const cardElement = document.querySelector('.card .card-body');
     if (!cardElement) return;
@@ -194,52 +194,44 @@ const PaymentSuccess = () => {
     try {
       console.log('📸 Generando imagen del comprobante...');
       const canvas = await html2canvas(cardElement, {
-        scale: 2, // Mejor calidad
-        useCORS: true, // Para imágenes externas (banderas)
+        scale: 2,
+        useCORS: true,
         backgroundColor: '#ffffff'
       });
 
       const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
       const file = new File([blob], `comprobante-alyto-${orderId}.png`, { type: 'image/png' });
 
-      const shareData = {
-        title: 'Comprobante Alyto',
-        text: `Comprobante de envío Alyto: ${transaction.amount} ${transaction.currency} → ${transaction.amountsTracking?.destReceiveAmount} ${transaction.amountsTracking?.destCurrency}`,
-        files: [file]
-      };
-
-      // ✅ FIX: Chequeo robusto de navigator.share (evita crash si no es función)
-      const canShare =
-        navigator.share &&
-        typeof navigator.share === 'function' &&
-        navigator.canShare &&
-        navigator.canShare(shareData);
-
-      if (canShare) {
+      // ✅ Check if native share with files is supported (Mobile)
+      if (navigator.canShare?.({ files: [file] })) {
         try {
-          await navigator.share(shareData);
-          console.log('✅ Imagen compartida exitosamente');
-        } catch (err) {
-          if (err.name !== 'AbortError') console.error('Share falló:', err);
-        }
-      } else {
-        console.warn('⚠️ Web Share API no soportada o archivo no válido. Usando fallback.');
-        // Fallback: Compartir solo Texto + URL (si share texto es soportado) o Clipboard
-        const shareUrl = `${window.location.origin}/payment-success/${orderId}`;
-
-        if (navigator.share && typeof navigator.share === 'function') {
           await navigator.share({
-            title: 'Comprobante Alyto',
-            text: `${shareData.text}\nVer online: ${shareUrl}`,
-            url: shareUrl
-          }).catch(e => console.error('Share text failed:', e));
-        } else {
-          handleCopyLink();
+            files: [file],
+            title: 'Comprobante Alyto'
+          });
+          console.log('✅ Imagen compartida exitosamente');
+          return;
+        } catch (err) {
+          if (err.name === 'AbortError') return; // User cancelled
+          console.warn('Share con archivo falló, descargando...', err);
         }
       }
+
+      // ✅ FALLBACK: Descargar imagen directamente (Desktop/Browsers sin soporte)
+      console.log('📥 Descargando imagen del comprobante...');
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `comprobante-alyto-${orderId}.png`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+
+      alert('✅ Imagen descargada. Compártela manualmente por WhatsApp, Email, etc.');
+
     } catch (err) {
-      console.error('Error general compartiendo:', err);
-      // Fallback final: Copiar Link
+      console.error('Error generando imagen:', err);
       handleCopyLink();
     }
   };
