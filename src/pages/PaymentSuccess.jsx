@@ -120,6 +120,15 @@ const PaymentSuccess = () => {
     fetchTx();
   }, [orderId]);
 
+  // ✅ DEBUG LOGGING
+  useEffect(() => {
+    if (transaction) {
+      console.log('🧾 [Receipt] Transaction Full Object:', transaction);
+      console.log('📦 [Receipt] Withdrawal Payload:', transaction.withdrawalPayload);
+      console.log('🏦 [Receipt] Account Bank:', transaction.account_bank);
+    }
+  }, [transaction]);
+
   const getStatusBadge = (status) => {
     const statusMap = {
       pending: { variant: 'warning', text: 'Pendiente', icon: '⏳' },
@@ -199,22 +208,37 @@ const PaymentSuccess = () => {
         files: [file]
       };
 
-      // Intentar compartir con ARCHIVO (Nivel 2)
-      if (navigator.share && navigator.canShare && navigator.canShare(shareData)) {
-        await navigator.share(shareData);
-        console.log('✅ Imagen compartida exitosamente');
+      // ✅ FIX: Chequeo robusto de navigator.share (evita crash si no es función)
+      const canShare =
+        navigator.share &&
+        typeof navigator.share === 'function' &&
+        navigator.canShare &&
+        navigator.canShare(shareData);
+
+      if (canShare) {
+        try {
+          await navigator.share(shareData);
+          console.log('✅ Imagen compartida exitosamente');
+        } catch (err) {
+          if (err.name !== 'AbortError') console.error('Share falló:', err);
+        }
       } else {
-        // Fallback: Compartir solo Texto + URL
+        console.warn('⚠️ Web Share API no soportada o archivo no válido. Usando fallback.');
+        // Fallback: Compartir solo Texto + URL (si share texto es soportado) o Clipboard
         const shareUrl = `${window.location.origin}/payment-success/${orderId}`;
-        await navigator.share({
-          title: 'Comprobante Alyto',
-          text: `${shareData.text}\nVer online: ${shareUrl}`,
-          url: shareUrl
-        });
-        console.log('✅ Link compartido (L1)');
+
+        if (navigator.share && typeof navigator.share === 'function') {
+          await navigator.share({
+            title: 'Comprobante Alyto',
+            text: `${shareData.text}\nVer online: ${shareUrl}`,
+            url: shareUrl
+          }).catch(e => console.error('Share text failed:', e));
+        } else {
+          handleCopyLink();
+        }
       }
     } catch (err) {
-      console.error('Error compartiendo:', err);
+      console.error('Error general compartiendo:', err);
       // Fallback final: Copiar Link
       handleCopyLink();
     }
