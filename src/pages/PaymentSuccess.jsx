@@ -149,6 +149,71 @@ const PaymentSuccess = () => {
     return date.toLocaleDateString('es-CL', { day: 'numeric', month: 'long' });
   };
 
+  // ✅ FIX: Calcular tasa efectiva con fallbacks para mostrar tasa real de Alyto
+  const getEffectiveRate = () => {
+    if (!transaction) return null;
+
+    // Prioridad 1: Usar tasa Alyto almacenada (la que realmente cobra Alyto)
+    if (transaction.rateTracking?.alytoRate) {
+      return transaction.rateTracking.alytoRate;
+    }
+
+    // Prioridad 2: Calcular desde montos reales de la transacción
+    const destAmount = transaction.rateTracking?.destAmount || transaction.amountsTracking?.destReceiveAmount;
+    const originAmount = transaction.amountsTracking?.originPrincipal || transaction.amount;
+
+    if (destAmount && originAmount && originAmount > 0) {
+      return destAmount / originAmount;
+    }
+
+    // Prioridad 3: Usar tasa Vita como último recurso (con advertencia)
+    if (transaction.rateTracking?.vitaRate) {
+      console.warn('[Receipt] Usando tasa Vita como fallback - puede no reflejar tasa real del usuario');
+      return transaction.rateTracking.vitaRate;
+    }
+
+    return null;
+  };
+
+  // ✅ FIX: Función para compartir comprobante
+  const handleShareReceipt = async () => {
+    const shareUrl = `${window.location.origin}/payment-success/${orderId}`;
+    const shareText = `Comprobante de envío Alyto\nID: ${orderId}\n${transaction.amount} ${transaction.currency} → ${transaction.amountsTracking?.destReceiveAmount || '...'} ${transaction.amountsTracking?.destCurrency || ''}`;
+
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: 'Comprobante Alyto',
+          text: shareText,
+          url: shareUrl
+        });
+        console.log('✅ Comprobante compartido');
+      } catch (err) {
+        if (err.name !== 'AbortError') {
+          console.log('Share cancelado');
+        }
+      }
+    } else {
+      // Fallback: copiar al portapapeles
+      try {
+        await navigator.clipboard.writeText(`${shareText}\n\n${shareUrl}`);
+        alert('✅ Enlace copiado al portapapeles');
+      } catch (err) {
+        console.error('Error copiando:', err);
+      }
+    }
+  };
+
+  const handleCopyLink = async () => {
+    const shareUrl = `${window.location.origin}/payment-success/${orderId}`;
+    try {
+      await navigator.clipboard.writeText(shareUrl);
+      alert('✅ Enlace copiado');
+    } catch (err) {
+      console.error('Error copiando enlace:', err);
+    }
+  };
+
   return (
     <Container className="d-flex justify-content-center align-items-center py-5" style={{ minHeight: '80vh' }}>
       <Card className="border-0 shadow-lg" style={{ maxWidth: '700px', width: '100%', borderRadius: '20px' }}>
@@ -271,20 +336,25 @@ const PaymentSuccess = () => {
                     </div>
                   )}
 
-                {/* Exchange Rate - More Prominent */}
-                {transaction.rateTracking?.alytoRate && (
-                  <div className="mb-3 pb-3 border-bottom">
-                    <small className="text-muted d-block mb-2">Tasa de cambio</small>
-                    <div className="d-flex align-items-center gap-2">
-                      <span className="badge bg-light text-dark border px-3 py-2">
-                        <i className="bi bi-arrow-left-right me-2"></i>
-                        <span className="fw-bold">
-                          1 {transaction.currency} = {formatRate(transaction.rateTracking.alytoRate)} {transaction.rateTracking.destCurrency}
+                {/* Exchange Rate - With Fallback Logic */}
+                {(() => {
+                  const effectiveRate = getEffectiveRate();
+                  const destCurrency = transaction.rateTracking?.destCurrency || transaction.amountsTracking?.destCurrency;
+
+                  return effectiveRate && destCurrency ? (
+                    <div className="mb-3 pb-3 border-bottom">
+                      <small className="text-muted d-block mb-2">Tasa de cambio</small>
+                      <div className="d-flex align-items-center gap-2">
+                        <span className="badge bg-light text-dark border px-3 py-2">
+                          <i className="bi bi-arrow-left-right me-2"></i>
+                          <span className="fw-bold">
+                            1 {transaction.currency} = {formatRate(effectiveRate)} {destCurrency}
+                          </span>
                         </span>
-                      </span>
+                      </div>
                     </div>
-                  </div>
-                )}
+                  ) : null;
+                })()}
 
                 {/* Fee Information */}
                 {transaction.fee > 0 && (
@@ -309,7 +379,7 @@ const PaymentSuccess = () => {
                     )}
                   </div>
 
-                  {/* Account Number - Masked */}
+                  {/* ✅ FIX: Mostrar cuenta bancaria enmascarada */}
                   {transaction.account_bank && (
                     <div className="mb-3">
                       <small className="text-muted d-block mb-1">Nro de cuenta</small>
@@ -405,8 +475,26 @@ const PaymentSuccess = () => {
                 </div>
               </div>
 
+              {/* ✅ FIX: Botones de Compartir */}
+              <div className="d-flex gap-2 mb-3">
+                <Button
+                  variant="outline-primary"
+                  className="flex-fill"
+                  onClick={handleShareReceipt}
+                >
+                  <i className="bi bi-share me-2"></i>
+                  Compartir Comprobante
+                </Button>
+                <Button
+                  variant="outline-secondary"
+                  onClick={handleCopyLink}
+                >
+                  <i className="bi bi-clipboard"></i>
+                </Button>
+              </div>
+
               {/* Action Buttons */}
-              <div className="d-grid gap-2">
+              <div className="d-grid gap-2 mt-3">
                 <Button
                   variant="primary"
                   className="fw-bold text-white py-3"

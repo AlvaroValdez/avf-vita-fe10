@@ -60,6 +60,32 @@ const getStatusBadge = (status) => {
     );
 };
 
+// ✅ FIX: Calcular tasa efectiva con fallbacks (mismo que PaymentSuccess.jsx)
+const getEffectiveRate = (transaction) => {
+    if (!transaction) return null;
+
+    // Prioridad 1: Usar tasa Alyto almacenada
+    if (transaction.rateTracking?.alytoRate) {
+        return transaction.rateTracking.alytoRate;
+    }
+
+    // Prioridad 2: Calcular desde montos reales
+    const destAmount = transaction.rateTracking?.destAmount || transaction.amountsTracking?.destReceiveAmount;
+    const originAmount = transaction.amountsTracking?.originPrincipal || transaction.amount;
+
+    if (destAmount && originAmount && originAmount > 0) {
+        return destAmount / originAmount;
+    }
+
+    // Prioridad 3: Usar tasa Vita como último recurso
+    if (transaction.rateTracking?.vitaRate) {
+        console.warn('[ReceiptContent] Usando tasa Vita como fallback');
+        return transaction.rateTracking.vitaRate;
+    }
+
+    return null;
+};
+
 const ReceiptContent = ({ transaction, orderId }) => {
     if (!transaction) {
         return <div className="text-center p-4">No se encontró la transacción</div>;
@@ -122,20 +148,25 @@ const ReceiptContent = ({ transaction, orderId }) => {
                     </div>
                 )}
 
-            {/* Exchange Rate - More Prominent */}
-            {transaction.rateTracking?.alytoRate && (
-                <div className="mb-3 pb-3 border-bottom">
-                    <small className="text-muted d-block mb-2">Tasa de cambio</small>
-                    <div className="d-flex align-items-center gap-2">
-                        <span className="badge bg-light text-dark border px-3 py-2">
-                            <i className="bi bi-arrow-left-right me-2"></i>
-                            <span className="fw-bold">
-                                1 {transaction.currency} = {formatRate(transaction.rateTracking.alytoRate)} {transaction.rateTracking.destCurrency}
+            {/* Exchange Rate - With Fallback Logic */}
+            {(() => {
+                const effectiveRate = getEffectiveRate(transaction);
+                const destCurrency = transaction.rateTracking?.destCurrency || transaction.amountsTracking?.destCurrency;
+
+                return effectiveRate && destCurrency ? (
+                    <div className="mb-3 pb-3 border-bottom">
+                        <small className="text-muted d-block mb-2">Tasa de cambio</small>
+                        <div className="d-flex align-items-center gap-2">
+                            <span className="badge bg-light text-dark border px-3 py-2">
+                                <i className="bi bi-arrow-left-right me-2"></i>
+                                <span className="fw-bold">
+                                    1 {transaction.currency} = {formatRate(effectiveRate)} {destCurrency}
+                                </span>
                             </span>
-                        </span>
+                        </div>
                     </div>
-                </div>
-            )}
+                ) : null;
+            })()}
 
             {/* Fee Information */}
             {transaction.fee > 0 && (
