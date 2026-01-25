@@ -3,6 +3,7 @@ import { Container, Card, Button, Spinner, Badge } from 'react-bootstrap';
 import { Link, useSearchParams, useParams, useNavigate } from 'react-router-dom';
 import { getTransactions, checkPaymentStatus } from '../services/api';
 import { formatNumberForDisplay, formatRate } from '../utils/formatting';
+import html2canvas from 'html2canvas'; // ✅ FIX: Importar librería para captura
 import logo from '../assets/images/logo.png';
 
 // Import flags
@@ -149,16 +150,12 @@ const PaymentSuccess = () => {
     return date.toLocaleDateString('es-CL', { day: 'numeric', month: 'long' });
   };
 
-  // ✅ FIX: Calcular tasa efectiva con fallbacks para mostrar tasa real de Alyto
+  // ✅ FIX: Calcular tasa efectiva con fallbacks - PRIORIDAD CÁLCULO
   const getEffectiveRate = () => {
     if (!transaction) return null;
 
-    // Prioridad 1: Usar tasa Alyto almacenada (la que realmente cobra Alyto)
-    if (transaction.rateTracking?.alytoRate) {
-      return transaction.rateTracking.alytoRate;
-    }
-
-    // Prioridad 2: Calcular desde montos reales de la transacción
+    // Prioridad 1: Calcular desde montos reales (Lo que ve el usuario en Quote)
+    // Esto asegura que coincida con "10.000 -> 37.158" (Tasa ~3.71)
     const destAmount = transaction.rateTracking?.destAmount || transaction.amountsTracking?.destReceiveAmount;
     const originAmount = transaction.amountsTracking?.originPrincipal || transaction.amount;
 
@@ -166,41 +163,59 @@ const PaymentSuccess = () => {
       return destAmount / originAmount;
     }
 
-    // Prioridad 3: Usar tasa Vita como último recurso (con advertencia)
+    // Prioridad 2: Usar tasa Alyto almacenada
+    if (transaction.rateTracking?.alytoRate) {
+      return transaction.rateTracking.alytoRate;
+    }
+
+    // Prioridad 3: Usar tasa Vita como último recurso
     if (transaction.rateTracking?.vitaRate) {
-      console.warn('[Receipt] Usando tasa Vita como fallback - puede no reflejar tasa real del usuario');
       return transaction.rateTracking.vitaRate;
     }
 
     return null;
   };
 
-  // ✅ FIX: Función para compartir comprobante
+  // ✅ FIX: Función para compartir IMAGEN del comprobante
   const handleShareReceipt = async () => {
-    const shareUrl = `${window.location.origin}/payment-success/${orderId}`;
-    const shareText = `Comprobante de envío Alyto\nID: ${orderId}\n${transaction.amount} ${transaction.currency} → ${transaction.amountsTracking?.destReceiveAmount || '...'} ${transaction.amountsTracking?.destCurrency || ''}`;
+    const cardElement = document.querySelector('.card .card-body');
+    if (!cardElement) return;
 
-    if (navigator.share) {
-      try {
+    try {
+      console.log('📸 Generando imagen del comprobante...');
+      const canvas = await html2canvas(cardElement, {
+        scale: 2, // Mejor calidad
+        useCORS: true, // Para imágenes externas (banderas)
+        backgroundColor: '#ffffff'
+      });
+
+      const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+      const file = new File([blob], `comprobante-alyto-${orderId}.png`, { type: 'image/png' });
+
+      const shareData = {
+        title: 'Comprobante Alyto',
+        text: `Comprobante de envío Alyto: ${transaction.amount} ${transaction.currency} → ${transaction.amountsTracking?.destReceiveAmount} ${transaction.amountsTracking?.destCurrency}`,
+        files: [file]
+      };
+
+      // Intentar compartir con ARCHIVO (Nivel 2)
+      if (navigator.share && navigator.canShare && navigator.canShare(shareData)) {
+        await navigator.share(shareData);
+        console.log('✅ Imagen compartida exitosamente');
+      } else {
+        // Fallback: Compartir solo Texto + URL
+        const shareUrl = `${window.location.origin}/payment-success/${orderId}`;
         await navigator.share({
           title: 'Comprobante Alyto',
-          text: shareText,
+          text: `${shareData.text}\nVer online: ${shareUrl}`,
           url: shareUrl
         });
-        console.log('✅ Comprobante compartido');
-      } catch (err) {
-        if (err.name !== 'AbortError') {
-          console.log('Share cancelado');
-        }
+        console.log('✅ Link compartido (L1)');
       }
-    } else {
-      // Fallback: copiar al portapapeles
-      try {
-        await navigator.clipboard.writeText(`${shareText}\n\n${shareUrl}`);
-        alert('✅ Enlace copiado al portapapeles');
-      } catch (err) {
-        console.error('Error copiando:', err);
-      }
+    } catch (err) {
+      console.error('Error compartiendo:', err);
+      // Fallback final: Copiar Link
+      handleCopyLink();
     }
   };
 

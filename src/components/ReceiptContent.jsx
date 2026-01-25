@@ -60,16 +60,11 @@ const getStatusBadge = (status) => {
     );
 };
 
-// ✅ FIX: Calcular tasa efectiva con fallbacks (mismo que PaymentSuccess.jsx)
+// ✅ FIX: Calcular tasa efectiva con fallbacks - PRIORIDAD CÁLCULO
 const getEffectiveRate = (transaction) => {
     if (!transaction) return null;
 
-    // Prioridad 1: Usar tasa Alyto almacenada
-    if (transaction.rateTracking?.alytoRate) {
-        return transaction.rateTracking.alytoRate;
-    }
-
-    // Prioridad 2: Calcular desde montos reales
+    // Prioridad 1: Calcular desde montos reales (Lo que ve el usuario en Quote)
     const destAmount = transaction.rateTracking?.destAmount || transaction.amountsTracking?.destReceiveAmount;
     const originAmount = transaction.amountsTracking?.originPrincipal || transaction.amount;
 
@@ -77,9 +72,13 @@ const getEffectiveRate = (transaction) => {
         return destAmount / originAmount;
     }
 
+    // Prioridad 2: Usar tasa Alyto almacenada
+    if (transaction.rateTracking?.alytoRate) {
+        return transaction.rateTracking.alytoRate;
+    }
+
     // Prioridad 3: Usar tasa Vita como último recurso
     if (transaction.rateTracking?.vitaRate) {
-        console.warn('[ReceiptContent] Usando tasa Vita como fallback');
         return transaction.rateTracking.vitaRate;
     }
 
