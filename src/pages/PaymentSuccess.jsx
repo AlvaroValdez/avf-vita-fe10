@@ -157,10 +157,11 @@ const PaymentSuccess = () => {
     // Prioridad 1: Calcular desde montos reales (Lo que ve el usuario en Quote)
     // Esto asegura que coincida con "10.000 -> 37.158" (Tasa ~3.71)
     const destAmount = transaction.rateTracking?.destAmount || transaction.amountsTracking?.destReceiveAmount;
-    const originAmount = transaction.amountsTracking?.originPrincipal || transaction.amount;
+    // ✅ FIX: Usar 'transaction.amount' (Monto total/bruto) que es lo que el usuario ve en "Tú envías"
+    const originAmount = transaction.amount;
 
     if (destAmount && originAmount && originAmount > 0) {
-      return destAmount / originAmount;
+      return destAmount / originAmount; // 37158 / 10000 = 3.7158
     }
 
     // Prioridad 2: Usar tasa Alyto almacenada
@@ -394,26 +395,40 @@ const PaymentSuccess = () => {
                     )}
                   </div>
 
-                  {/* ✅ FIX: Mostrar cuenta bancaria enmascarada */}
-                  {transaction.account_bank && (
-                    <div className="mb-3">
-                      <small className="text-muted d-block mb-1">Nro de cuenta</small>
-                      <span className="badge bg-light text-dark border px-3 py-2 font-monospace" style={{ fontSize: '0.95rem' }}>
-                        {maskAccountNumber(transaction.account_bank)}
-                      </span>
-                    </div>
-                  )}
+                  {/* ✅ FIX: Robust bank details check (fallback to payload) */}
+                  {(() => {
+                    const accountBank = transaction.account_bank ||
+                      transaction.withdrawalPayload?.account_bank ||
+                      transaction.withdrawalPayload?.account_number ||
+                      transaction.withdrawalPayload?.destination_settings?.account_number;
 
-                  {/* Bank Name */}
-                  {transaction.bank_code && (
-                    <div className="d-flex align-items-center gap-2 p-3 rounded-2 mb-3" style={{ backgroundColor: '#f8f9fa' }}>
-                      <i className="bi bi-bank2 text-primary" style={{ fontSize: '1.5rem' }}></i>
-                      <div>
-                        <small className="text-muted d-block" style={{ fontSize: '0.75rem' }}>Banco</small>
-                        <span className="fw-bold" style={{ fontSize: '1rem' }}>{transaction.bank_code}</span>
-                      </div>
-                    </div>
-                  )}
+                    const bankCode = transaction.bank_code ||
+                      transaction.withdrawalPayload?.bank_code ||
+                      transaction.withdrawalPayload?.bank_name;
+
+                    return (
+                      <>
+                        {accountBank && (
+                          <div className="mb-3">
+                            <small className="text-muted d-block mb-1">Nro de cuenta</small>
+                            <span className="badge bg-light text-dark border px-3 py-2 font-monospace" style={{ fontSize: '0.95rem' }}>
+                              {maskAccountNumber(accountBank)}
+                            </span>
+                          </div>
+                        )}
+
+                        {bankCode && (
+                          <div className="d-flex align-items-center gap-2 p-3 rounded-2 mb-3" style={{ backgroundColor: '#f8f9fa' }}>
+                            <i className="bi bi-bank2 text-primary" style={{ fontSize: '1.5rem' }}></i>
+                            <div>
+                              <small className="text-muted d-block" style={{ fontSize: '0.75rem' }}>Banco</small>
+                              <span className="fw-bold" style={{ fontSize: '1rem' }}>{bankCode}</span>
+                            </div>
+                          </div>
+                        )}
+                      </>
+                    );
+                  })()}
 
 
                   {/* Additional Details Grid */}
