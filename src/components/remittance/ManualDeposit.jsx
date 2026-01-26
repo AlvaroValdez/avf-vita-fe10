@@ -113,9 +113,12 @@ const ManualDeposit = ({ formData, onBack, onFinish }) => {
             const res = await createWithdrawal(payload);
 
             if (res.ok) {
+                // ✅ FIX: El backend devuelve order en res.data.order
+                const orderFromResponse = res.data?.order || res.transaction?.order || res.order || `ORD-${Date.now()}`;
+                
                 setTransactionData({
                     ...payload,
-                    order: res.transaction?.order || res.order || 'N/A',
+                    order: orderFromResponse,
                     destCountry: destCountry,
                     originCountry: originCountry
                 });
