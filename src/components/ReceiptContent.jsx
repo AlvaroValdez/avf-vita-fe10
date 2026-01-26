@@ -64,11 +64,13 @@ const getEffectiveRate = (transaction) => {
     if (!transaction) return null;
 
     // Prioridad 1: Calcular desde montos reales (Lo que ve el usuario en Quote)
+    // ✅ FIX: Usar transaction.amount (BRUTO que el usuario ve en "Tú envías")
+    // NO usar originPrincipal (neto después de comisiones) para evitar inconsistencia
     const destAmount = transaction.rateTracking?.destAmount || transaction.amountsTracking?.destReceiveAmount;
-    const originAmount = transaction.amountsTracking?.originPrincipal || transaction.amount;
+    const originAmount = transaction.amount; // Bruto: $10.000
 
     if (destAmount && originAmount && originAmount > 0) {
-        return destAmount / originAmount;
+        return destAmount / originAmount; // 37.158 / 10.000 = 3.7158
     }
 
     // Prioridad 2: Usar tasa Alyto almacenada
