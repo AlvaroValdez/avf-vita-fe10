@@ -191,124 +191,131 @@ const ReceiptContent = ({ transaction, orderId }) => {
                     )}
                 </div>
 
-                {/* Account Number - Masked (check multiple sources) */}
+                {/* Bank Details - Unified Block matching ManualDeposit */}
                 {(() => {
+                    // Extract all potential values first
                     const accountBank = transaction.account_bank ||
                         transaction.withdrawalPayload?.account_bank ||
                         transaction.withdrawalPayload?.account_number;
-                    if (!accountBank) return null;
-                    return (
-                        <div className="mb-3">
-                            <small className="text-muted d-block mb-1">Nro de cuenta</small>
-                            <span className="badge bg-light text-dark border px-3 py-2 font-monospace" style={{ fontSize: '0.95rem' }}>
-                                {maskAccountNumber(accountBank)}
-                            </span>
-                        </div>
-                    );
-                })()}
 
-                {/* Bank Name - check multiple sources */}
-                {(() => {
                     const bankName = transaction.bank_name ||
                         transaction.withdrawalPayload?.bank_name;
                     const bankCode = transaction.bank_code ||
                         transaction.withdrawalPayload?.bank_code;
-                    if (!bankName && !bankCode) return null;
+
+                    const accountTypeName = transaction.account_type_name ||
+                        transaction.withdrawalPayload?.account_type_name;
+                    const accountType = transaction.account_type ||
+                        transaction.withdrawalPayload?.account_type_bank ||
+                        transaction.withdrawalPayload?.account_type;
+
+                    // Show block if any key data exists
+                    if (!accountBank && !bankName && !bankCode) return null;
+
                     return (
-                        <div className="d-flex align-items-center gap-2 p-3 rounded-2 mb-3" style={{ backgroundColor: '#f8f9fa' }}>
-                            <i className="bi bi-bank2 text-primary" style={{ fontSize: '1.5rem' }}></i>
-                            <div>
-                                <small className="text-muted d-block" style={{ fontSize: '0.75rem' }}>Banco</small>
-                                <span className="fw-bold" style={{ fontSize: '1rem' }}>
-                                    {bankName || getBankName(bankCode, transaction.country)}
-                                </span>
+                        <div className="mb-3 pb-3 border-bottom">
+                            <small className="text-muted d-block mb-3">Datos del Beneficiario</small>
+
+                            {/* Bank Name */}
+                            {(bankName || bankCode) && (
+                                <div className="mb-3 p-3 rounded-2" style={{ backgroundColor: '#f8f9fa' }}>
+                                    <div className="d-flex align-items-center gap-2 mb-1">
+                                        <i className="bi bi-bank2 text-primary"></i>
+                                        <small className="text-muted">Banco</small>
+                                    </div>
+                                    <div className="fw-bold fs-6">
+                                        {bankName || getBankName(bankCode, transaction.country)}
+                                    </div>
+                                </div>
+                            )}
+
+                            <div className="row g-3">
+                                {/* Account Number */}
+                                {accountBank && (
+                                    <div className="col-md-6">
+                                        <small className="text-muted d-block mb-1">Cuenta</small>
+                                        <span className="badge bg-light text-dark border px-3 py-2 font-monospace" style={{ fontSize: '0.95rem' }}>
+                                            {maskAccountNumber(accountBank)}
+                                        </span>
+                                    </div>
+                                )}
+
+                                {/* Account Type */}
+                                {(accountTypeName || accountType) && (
+                                    <div className="col-md-6">
+                                        <small className="text-muted d-block mb-1">Tipo de cuenta</small>
+                                        <span className="fw-bold">
+                                            {accountTypeName || getAccountTypeName(accountType)}
+                                        </span>
+                                    </div>
+                                )}
+
+                                {/* Document/CI */}
+                                {(() => {
+                                    const docNumber = transaction.beneficiary_cc ||
+                                        transaction.beneficiary_document_number ||
+                                        transaction.withdrawalPayload?.beneficiary_document_number ||
+                                        transaction.withdrawalPayload?.beneficiary_cc;
+                                    if (!docNumber) return null;
+                                    return (
+                                        <div className="col-md-6">
+                                            <small className="text-muted d-block mb-1">CI / Documento</small>
+                                            <span className="font-monospace fw-bold">{docNumber}</span>
+                                        </div>
+                                    );
+                                })()}
                             </div>
                         </div>
                     );
                 })()}
 
-                {/* Additional Details Grid */}
-                <div className="row g-3">
-                    {/* Document/CI - check multiple field names */}
-                    {(() => {
-                        const docNumber = transaction.beneficiary_cc ||
-                            transaction.beneficiary_document_number ||
-                            transaction.withdrawalPayload?.beneficiary_document_number ||
-                            transaction.withdrawalPayload?.beneficiary_cc;
-                        if (!docNumber) return null;
-                        return (
-                            <div className="col-md-6">
-                                <small className="text-muted d-block mb-1">CI / Documento</small>
-                                <span className="font-monospace fw-bold">{docNumber}</span>
-                            </div>
-                        );
-                    })()}
-
-                    {/* Account Type - check multiple sources */}
-                    {(() => {
-                        const accountTypeName = transaction.account_type_name ||
-                            transaction.withdrawalPayload?.account_type_name;
-                        const accountType = transaction.account_type ||
-                            transaction.withdrawalPayload?.account_type_bank ||
-                            transaction.withdrawalPayload?.account_type;
-                        if (!accountTypeName && !accountType) return null;
-                        return (
-                            <div className="col-md-6">
-                                <small className="text-muted d-block mb-1">Tipo de cuenta</small>
-                                <span className="fw-bold">
-                                    {accountTypeName || getAccountTypeName(accountType)}
-                                </span>
-                            </div>
-                        );
-                    })()}
-
-                    {/* Concept */}
-                    {(transaction.concept || transaction.withdrawalPayload?.purpose_comentary) && (
-                        <div className="col-12">
-                            <small className="text-muted d-block mb-1">Concepto</small>
-                            <span>{transaction.concept || transaction.withdrawalPayload?.purpose_comentary}</span>
-                        </div>
-                    )}
-
-                    {/* Created Date */}
-                    {transaction.createdAt && (
-                        <div className="col-md-6">
-                            <small className="text-muted d-block mb-1">Fecha de envío</small>
-                            <span>{new Date(transaction.createdAt).toLocaleString('es-ES', {
-                                year: 'numeric', month: '2-digit', day: '2-digit',
-                                hour: '2-digit', minute: '2-digit', timeZoneName: 'short'
-                            })}</span>
-                        </div>
-                    )}
-
-                    {/* Estimated Time */}
-                    <div className="col-md-6">
-                        <small className="text-muted d-block mb-1">Tiempo estimado</small>
-                        <span>En unas horas hábiles</span>
+                {/* Concept */}
+                {(transaction.concept || transaction.withdrawalPayload?.purpose_comentary) && (
+                    <div className="col-12">
+                        <small className="text-muted d-block mb-1">Concepto</small>
+                        <span>{transaction.concept || transaction.withdrawalPayload?.purpose_comentary}</span>
                     </div>
+                )}
 
-                    {/* Vita Transfer ID */}
-                    {transaction.vitaTransferId && (
-                        <div className="col-12">
-                            <small className="text-muted d-block mb-1">Transfer ID</small>
-                            <div className="d-flex align-items-center gap-2">
-                                <span className="font-monospace small text-break" style={{ fontSize: '0.85rem' }}>
-                                    {transaction.vitaTransferId}
-                                </span>
-                            </div>
+                {/* Created Date */}
+                {transaction.createdAt && (
+                    <div className="col-md-6">
+                        <small className="text-muted d-block mb-1">Fecha de envío</small>
+                        <span>{new Date(transaction.createdAt).toLocaleString('es-ES', {
+                            year: 'numeric', month: '2-digit', day: '2-digit',
+                            hour: '2-digit', minute: '2-digit', timeZoneName: 'short'
+                        })}</span>
+                    </div>
+                )}
+
+                {/* Estimated Time */}
+                <div className="col-md-6">
+                    <small className="text-muted d-block mb-1">Tiempo estimado</small>
+                    <span>En unas horas hábiles</span>
+                </div>
+
+                {/* Vita Transfer ID */}
+                {transaction.vitaTransferId && (
+                    <div className="col-12">
+                        <small className="text-muted d-block mb-1">Transfer ID</small>
+                        <div className="d-flex align-items-center gap-2">
+                            <span className="font-monospace small text-break" style={{ fontSize: '0.85rem' }}>
+                                {transaction.vitaTransferId}
+                            </span>
                         </div>
-                    )}
-                </div>
-            </div>
-
-            {/* Status */}
-            <div className="d-flex justify-content-center">
-                <div className="text-center">
-                    <small className="text-muted d-block mb-2">Estado</small>
-                    {getStatusBadge(transaction.status)}
-                </div>
+                    </div>
+                )}
             </div>
         </div>
+
+            {/* Status */ }
+    <div className="d-flex justify-content-center">
+        <div className="text-center">
+            <small className="text-muted d-block mb-2">Estado</small>
+            {getStatusBadge(transaction.status)}
+        </div>
+    </div>
+        </div >
     );
 };
 
