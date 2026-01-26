@@ -158,7 +158,27 @@ const StepBeneficiary = ({ formData, fields, onBack, onComplete }) => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setBeneficiaryData(prev => ({ ...prev, [name]: value }));
+
+    // Update main value
+    setBeneficiaryData(prev => {
+      const newData = { ...prev, [name]: value };
+
+      // ✅ FIX: Capture labels for selects immediately on change
+      // This ensures state always has the corresponding names
+      const field = countryFields.find(f => f.key === name);
+      if (field && field.type === 'select' && field.options) {
+        const selectedOption = field.options.find(opt => String(opt.value) === value);
+        if (selectedOption) {
+          if (name === 'bank_code') {
+            newData.bank_name = selectedOption.label;
+          } else if (name === 'account_type_bank') {
+            newData.account_type_name = selectedOption.label;
+          }
+        }
+      }
+      return newData;
+    });
+
     if (errors[name]) setErrors(prev => ({ ...prev, [name]: null }));
   };
 
