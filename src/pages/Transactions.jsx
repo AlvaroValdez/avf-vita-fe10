@@ -313,7 +313,7 @@ const Transactions = () => {
 
                       {/* Amounts */}
                       <div className="row g-3">
-                        <div className="col-6">
+                        <div className="col-4">
                           <small className="text-muted d-block mb-1">Enviaste</small>
                           <div className="d-flex align-items-center gap-2">
                             {getFlagUrl(tx.currency?.substring(0, 2)) && (
@@ -332,7 +332,7 @@ const Transactions = () => {
                             </span>
                           </div>
                         </div>
-                        <div className="col-6">
+                        <div className="col-4">
                           <small className="text-muted d-block mb-1">Reciben</small>
                           <div className="fw-bold text-success" style={{ fontSize: '1.1rem' }}>
                             {tx.amountsTracking?.destReceiveAmount ? (
@@ -340,6 +340,26 @@ const Transactions = () => {
                             ) : (
                               <span className="text-muted small">-</span>
                             )}
+                          </div>
+                        </div>
+                        {/* ✅ NEW: Exchange Rate Display */}
+                        <div className="col-4">
+                          <small className="text-muted d-block mb-1">Tasa</small>
+                          <div className="small">
+                            {(() => {
+                              const destAmount = tx.amountsTracking?.destReceiveAmount || tx.rateTracking?.destAmount;
+                              const originAmount = tx.amount;
+                              let rate = tx.rateTracking?.alytoRate;
+                              if (!rate && destAmount && originAmount && originAmount > 0) {
+                                rate = destAmount / originAmount;
+                              }
+                              if (!rate) return <span className="text-muted">-</span>;
+                              return (
+                                <span className="fw-bold" style={{ color: '#233E58' }}>
+                                  1 = {rate.toFixed(2)}
+                                </span>
+                              );
+                            })()}
                           </div>
                         </div>
                       </div>
