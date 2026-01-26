@@ -3,7 +3,6 @@ import { Container, Card, Button, Spinner, Badge } from 'react-bootstrap';
 import { Link, useSearchParams, useParams, useNavigate } from 'react-router-dom';
 import { getTransactions, checkPaymentStatus } from '../services/api';
 import { formatNumberForDisplay, formatRate } from '../utils/formatting';
-import { getBankName, getAccountTypeName } from '../utils/bankMappings'; // ✅ Bank name mappings
 import html2canvas from 'html2canvas';
 import logo from '../assets/images/logo.png';
 
@@ -416,12 +415,16 @@ const PaymentSuccess = () => {
                   {(() => {
                     const accountBank = transaction.account_bank ||
                       transaction.withdrawalPayload?.account_bank ||
-                      transaction.withdrawalPayload?.account_number ||
-                      transaction.withdrawalPayload?.destination_settings?.account_number;
+                      transaction.withdrawalPayload?.account_number;
 
-                    const bankCode = transaction.bank_code ||
-                      transaction.withdrawalPayload?.bank_code ||
-                      transaction.withdrawalPayload?.bank_name;
+                    // ✅ Usar nombre legible (bank_name) con fallback a código
+                    const bankDisplayName = transaction.bank_name ||
+                      transaction.withdrawalPayload?.bank_name ||
+                      transaction.bank_code;
+
+                    // ✅ Usar nombre legible de tipo de cuenta
+                    const accountTypeName = transaction.account_type_name ||
+                      transaction.account_type;
 
                     return (
                       <>
@@ -434,13 +437,20 @@ const PaymentSuccess = () => {
                           </div>
                         )}
 
-                        {bankCode && (
+                        {bankDisplayName && (
                           <div className="d-flex align-items-center gap-2 p-3 rounded-2 mb-3" style={{ backgroundColor: '#f8f9fa' }}>
                             <i className="bi bi-bank2 text-primary" style={{ fontSize: '1.5rem' }}></i>
                             <div>
                               <small className="text-muted d-block" style={{ fontSize: '0.75rem' }}>Banco</small>
-                              <span className="fw-bold" style={{ fontSize: '1rem' }}>{getBankName(bankCode, transaction.country)}</span>
+                              <span className="fw-bold" style={{ fontSize: '1rem' }}>{bankDisplayName}</span>
                             </div>
+                          </div>
+                        )}
+
+                        {accountTypeName && (
+                          <div className="mb-3">
+                            <small className="text-muted d-block mb-1">Tipo de cuenta</small>
+                            <span className="fw-bold">{accountTypeName}</span>
                           </div>
                         )}
                       </>
@@ -458,13 +468,7 @@ const PaymentSuccess = () => {
                       </div>
                     )}
 
-                    {/* Account Type */}
-                    {transaction.account_type && (
-                      <div className="col-md-6">
-                        <small className="text-muted d-block mb-1">Tipo de cuenta</small>
-                        <span className="fw-bold">{getAccountTypeName(transaction.account_type)}</span>
-                      </div>
-                    )}
+                    {/* Account Type - REMOVED: Now shown in bank details block above */}
 
                     {/* Concept */}
                     {transaction.concept && (

@@ -1,7 +1,6 @@
 import React from 'react';
 import { Badge } from 'react-bootstrap';
 import { formatNumberForDisplay, formatRate } from '../utils/formatting';
-import { getBankName, getAccountTypeName } from '../utils/bankMappings'; // ✅ Bank name mappings
 
 // Import flags
 import flagCL from '../assets/flags/cl.svg';
@@ -201,13 +200,13 @@ const ReceiptContent = ({ transaction, orderId }) => {
                     </div>
                 )}
 
-                {/* Bank Name */}
-                {transaction.bank_code && (
+                {/* Bank Name - using actual stored name */}
+                {(transaction.bank_name || transaction.bank_code) && (
                     <div className="d-flex align-items-center gap-2 p-3 rounded-2 mb-3" style={{ backgroundColor: '#f8f9fa' }}>
                         <i className="bi bi-bank2 text-primary" style={{ fontSize: '1.5rem' }}></i>
                         <div>
                             <small className="text-muted d-block" style={{ fontSize: '0.75rem' }}>Banco</small>
-                            <span className="fw-bold" style={{ fontSize: '1rem' }}>{getBankName(transaction.bank_code, transaction.country)}</span>
+                            <span className="fw-bold" style={{ fontSize: '1rem' }}>{transaction.bank_name || transaction.bank_code}</span>
                         </div>
                     </div>
                 )}
@@ -222,11 +221,11 @@ const ReceiptContent = ({ transaction, orderId }) => {
                         </div>
                     )}
 
-                    {/* Account Type */}
-                    {transaction.account_type && (
+                    {/* Account Type - using actual stored name */}
+                    {(transaction.account_type_name || transaction.account_type) && (
                         <div className="col-md-6">
                             <small className="text-muted d-block mb-1">Tipo de cuenta</small>
-                            <span className="fw-bold">{getAccountTypeName(transaction.account_type)}</span>
+                            <span className="fw-bold">{transaction.account_type_name || transaction.account_type}</span>
                         </div>
                     )}
 

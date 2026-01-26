@@ -176,6 +176,20 @@ const StepBeneficiary = ({ formData, fields, onBack, onComplete }) => {
     fieldsToRender.forEach(field => {
       const value = beneficiaryData[field.key] ? String(beneficiaryData[field.key]).trim() : '';
       cleanData[field.key] = value;
+
+      // ✅ FIX: Para campos select, también capturar el LABEL (nombre legible)
+      if (field.type === 'select' && value && field.options) {
+        const selectedOption = field.options.find(opt => String(opt.value) === value);
+        if (selectedOption) {
+          // Guardar el nombre legible según el campo
+          if (field.key === 'bank_code') {
+            cleanData.bank_name = selectedOption.label; // "Bancolombia"
+          } else if (field.key === 'account_type_bank') {
+            cleanData.account_type_name = selectedOption.label; // "Cuenta de Ahorros"
+          }
+        }
+      }
+
       // Add QR file if present
       if (qrFile) {
         cleanData.beneficiaryQrFile = qrFile;
@@ -194,6 +208,7 @@ const StepBeneficiary = ({ formData, fields, onBack, onComplete }) => {
 
     if (isFormValid) {
       console.log("Formulario válido, avanzando...");
+      console.log("✅ [StepBeneficiary] cleanData with labels:", cleanData);
       onComplete(cleanData, !!selectedFavorite);
     } else {
       console.log("Errores en formulario:", allErrors);
