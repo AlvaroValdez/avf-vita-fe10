@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, Button, Form, Alert, Spinner, Image, Badge } from 'react-bootstrap';
 import { createWithdrawal, uploadImage, getTransactionRules } from '../../services/api';
+import { getBankName, getAccountTypeName } from '../../utils/bankMappings'; // ✅ Bank name mappings
 import { formatNumberForDisplay, formatRate } from '../../utils/formatting';
 import logo from '../../assets/images/logo.png';
 
@@ -193,7 +194,7 @@ const ManualDeposit = ({ formData, onBack, onFinish }) => {
                         </div>
 
                         {/* Destination Amount with Flag - PROMINENT */}
-                        {transactionData.rateTracking?.destAmount && transactionData.rateTracking?.destCurrency && (
+                        {(transactionData.amountsTracking?.destReceiveAmount || transactionData.rateTracking?.destAmount) && (
                             <div className="mb-3 pb-3 border-bottom">
                                 <small className="text-muted d-block mb-2">Ellos reciben</small>
                                 <div className="d-flex align-items-center justify-content-between">
@@ -205,29 +206,44 @@ const ManualDeposit = ({ formData, onBack, onFinish }) => {
                                                 style={{ width: '40px', height: '40px', borderRadius: '50%', objectFit: 'cover' }}
                                             />
                                         )}
-                                        <span className="fw-bold fs-5 text-dark">{transactionData.rateTracking.destCurrency}</span>
+                                        <span className="fw-bold fs-5 text-dark">
+                                            {transactionData.amountsTracking?.destCurrency || transactionData.rateTracking?.destCurrency || 'COP'}
+                                        </span>
                                     </div>
                                     <span className="fw-bold" style={{ fontSize: '2rem', color: '#28a745' }}>
-                                        {formatNumberForDisplay(transactionData.rateTracking.destAmount)}
+                                        {formatNumberForDisplay(transactionData.amountsTracking?.destReceiveAmount || transactionData.rateTracking?.destAmount)}
                                     </span>
                                 </div>
                             </div>
                         )}
 
-                        {/* Exchange Rate - FIXED */}
-                        {transactionData.rateTracking?.alytoRate && (
-                            <div className="mb-3 pb-3 border-bottom">
-                                <small className="text-muted d-block mb-2">Tasa de cambio</small>
-                                <div className="d-flex align-items-center gap-2">
-                                    <span className="badge bg-light text-dark border px-3 py-2">
-                                        <i className="bi bi-arrow-left-right me-2"></i>
-                                        <span className="fw-bold">
-                                            1 {transactionData.currency} = {formatRate(transactionData.rateTracking.alytoRate)} {transactionData.rateTracking.destCurrency || 'COP'}
+                        {/* Exchange Rate - FIXED: Calculate from amounts if alytoRate missing */}
+                        {(() => {
+                            const destAmount = transactionData.amountsTracking?.destReceiveAmount || transactionData.rateTracking?.destAmount;
+                            const originAmount = transactionData.amount;
+                            const destCurrency = transactionData.amountsTracking?.destCurrency || transactionData.rateTracking?.destCurrency || 'COP';
+
+                            let effectiveRate = transactionData.rateTracking?.alytoRate;
+                            if (!effectiveRate && destAmount && originAmount && originAmount > 0) {
+                                effectiveRate = destAmount / originAmount;
+                            }
+
+                            if (!effectiveRate) return null;
+
+                            return (
+                                <div className="mb-3 pb-3 border-bottom">
+                                    <small className="text-muted d-block mb-2">Tasa de cambio</small>
+                                    <div className="d-flex align-items-center gap-2">
+                                        <span className="badge bg-light text-dark border px-3 py-2">
+                                            <i className="bi bi-arrow-left-right me-2"></i>
+                                            <span className="fw-bold">
+                                                1 {transactionData.currency} = {formatRate(effectiveRate)} {destCurrency}
+                                            </span>
                                         </span>
-                                    </span>
+                                    </div>
                                 </div>
-                            </div>
-                        )}
+                            );
+                        })()}
 
                         {/* Beneficiary */}
                         <div className="mb-3 pb-3 border-bottom">
@@ -240,18 +256,34 @@ const ManualDeposit = ({ formData, onBack, onFinish }) => {
                             )}
                         </div>
 
-                        {/* Bank Details - Updated */}
-                        {transactionData.account_bank && (
+                        {/* Bank Details - Updated with bank name mapping */}
+                        {(transactionData.account_bank || transactionData.bank_code) && (
                             <div className="mb-3 pb-3 border-bottom">
                                 <small className="text-muted d-block mb-2">Datos del Beneficiario</small>
-                                <div className="mb-2">
-                                    <span className="fw-bold d-block mb-1">Banco</span>
-                                    <span>{transactionData.bank_code || 'N/A'}</span>
-                                </div>
-                                <div>
-                                    <span className="fw-bold d-block mb-1">Cuenta</span>
-                                    <span className="font-monospace">{maskAccountNumber(transactionData.account_bank)}</span>
-                                </div>
+
+                                {/* Bank Name */}
+                                {(transactionData.bank_name || transactionData.bank_code) && (
+                                    <div className="mb-2">
+                                        <span className="fw-bold d-block mb-1">Banco</span>
+                                        <span>{transactionData.bank_name || getBankName(transactionData.bank_code, transactionData.country || destCountry)}</span>
+                                    </div>
+                                )}
+
+                                {/* Account Number */}
+                                {transactionData.account_bank && (
+                                    <div className="mb-2">
+                                        <span className="fw-bold d-block mb-1">Cuenta</span>
+                                        <span className="font-monospace">{maskAccountNumber(transactionData.account_bank)}</span>
+                                    </div>
+                                )}
+
+                                {/* Account Type */}
+                                {(transactionData.account_type_name || transactionData.account_type) && (
+                                    <div>
+                                        <span className="fw-bold d-block mb-1">Tipo de cuenta</span>
+                                        <span>{transactionData.account_type_name || getAccountTypeName(transactionData.account_type)}</span>
+                                    </div>
+                                )}
                             </div>
                         )}
 
