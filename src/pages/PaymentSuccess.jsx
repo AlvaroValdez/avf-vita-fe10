@@ -3,6 +3,7 @@ import { Container, Card, Button, Spinner, Badge } from 'react-bootstrap';
 import { Link, useSearchParams, useParams, useNavigate } from 'react-router-dom';
 import { getTransactions, checkPaymentStatus } from '../services/api';
 import { formatNumberForDisplay, formatRate } from '../utils/formatting';
+import { getBankName, getAccountTypeName } from '../utils/bankMappings'; // ✅ Static fallback mappings
 import html2canvas from 'html2canvas';
 import logo from '../assets/images/logo.png';
 
@@ -417,14 +418,14 @@ const PaymentSuccess = () => {
                       transaction.withdrawalPayload?.account_bank ||
                       transaction.withdrawalPayload?.account_number;
 
-                    // ✅ Usar nombre legible (bank_name) con fallback a código
+                    // ✅ Usar nombre legible con fallback a mapeo estático
                     const bankDisplayName = transaction.bank_name ||
                       transaction.withdrawalPayload?.bank_name ||
-                      transaction.bank_code;
+                      getBankName(transaction.bank_code, transaction.country); // Fallback estático
 
-                    // ✅ Usar nombre legible de tipo de cuenta
+                    // ✅ Usar nombre legible de tipo de cuenta con fallback
                     const accountTypeName = transaction.account_type_name ||
-                      transaction.account_type;
+                      getAccountTypeName(transaction.account_type); // Fallback estático
 
                     return (
                       <>
