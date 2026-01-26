@@ -1,6 +1,7 @@
 import React from 'react';
 import { Badge } from 'react-bootstrap';
 import { formatNumberForDisplay, formatRate } from '../utils/formatting';
+import { getBankName, getAccountTypeName } from '../utils/bankMappings'; // ✅ Bank name mappings
 
 // Import flags
 import flagCL from '../assets/flags/cl.svg';
@@ -206,7 +207,7 @@ const ReceiptContent = ({ transaction, orderId }) => {
                         <i className="bi bi-bank2 text-primary" style={{ fontSize: '1.5rem' }}></i>
                         <div>
                             <small className="text-muted d-block" style={{ fontSize: '0.75rem' }}>Banco</small>
-                            <span className="fw-bold" style={{ fontSize: '1rem' }}>{transaction.bank_code}</span>
+                            <span className="fw-bold" style={{ fontSize: '1rem' }}>{getBankName(transaction.bank_code, transaction.country)}</span>
                         </div>
                     </div>
                 )}
@@ -225,7 +226,7 @@ const ReceiptContent = ({ transaction, orderId }) => {
                     {transaction.account_type && (
                         <div className="col-md-6">
                             <small className="text-muted d-block mb-1">Tipo de cuenta</small>
-                            <span className="fw-bold">{transaction.account_type}</span>
+                            <span className="fw-bold">{getAccountTypeName(transaction.account_type)}</span>
                         </div>
                     )}
 

@@ -3,7 +3,8 @@ import { Container, Card, Button, Spinner, Badge } from 'react-bootstrap';
 import { Link, useSearchParams, useParams, useNavigate } from 'react-router-dom';
 import { getTransactions, checkPaymentStatus } from '../services/api';
 import { formatNumberForDisplay, formatRate } from '../utils/formatting';
-import html2canvas from 'html2canvas'; // ✅ FIX: Importar librería para captura
+import { getBankName, getAccountTypeName } from '../utils/bankMappings'; // ✅ Bank name mappings
+import html2canvas from 'html2canvas';
 import logo from '../assets/images/logo.png';
 
 // Import flags
@@ -438,7 +439,7 @@ const PaymentSuccess = () => {
                             <i className="bi bi-bank2 text-primary" style={{ fontSize: '1.5rem' }}></i>
                             <div>
                               <small className="text-muted d-block" style={{ fontSize: '0.75rem' }}>Banco</small>
-                              <span className="fw-bold" style={{ fontSize: '1rem' }}>{bankCode}</span>
+                              <span className="fw-bold" style={{ fontSize: '1rem' }}>{getBankName(bankCode, transaction.country)}</span>
                             </div>
                           </div>
                         )}
@@ -461,7 +462,7 @@ const PaymentSuccess = () => {
                     {transaction.account_type && (
                       <div className="col-md-6">
                         <small className="text-muted d-block mb-1">Tipo de cuenta</small>
-                        <span className="fw-bold">{transaction.account_type}</span>
+                        <span className="fw-bold">{getAccountTypeName(transaction.account_type)}</span>
                       </div>
                     )}
 
