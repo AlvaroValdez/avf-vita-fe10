@@ -43,22 +43,22 @@ const ReceiptModal = ({ show, onHide, transaction, orderId }) => {
 
     return (
         <Modal show={show} onHide={onHide} size="lg" centered>
-            <Modal.Header closeButton className="border-0 pb-0">
-                <Modal.Title className="d-flex align-items-center gap-2">
-                    <img src={logo} alt="Alyto" style={{ height: '40px' }} />
-                    <span className="fw-bold">Comprobante de Transacción</span>
-                </Modal.Title>
-            </Modal.Header>
+            {/* Header removed - clean modal design */}
 
-            <Modal.Body id="receipt-modal-content" className="px-4 py-3">
-                {/* Logo for PDF */}
-                <div className="text-center mb-3">
-                    <img src={logo} alt="Alyto" style={{ height: '70px' }} />
+            <Modal.Body id="receipt-modal-content" className="px-4 py-4">
+                {/* Close button in top right */}
+                <button
+                    type="button"
+                    className="btn-close position-absolute"
+                    style={{ top: '15px', right: '15px', zIndex: 10 }}
+                    onClick={onHide}
+                    aria-label="Cerrar"
+                />
+
+                {/* Larger centered logo */}
+                <div className="text-center mb-4">
+                    <img src={logo} alt="Alyto" style={{ height: '100px' }} />
                 </div>
-
-                <h5 className="text-center fw-bold mb-3" style={{ color: '#233E58' }}>
-                    Comprobante de Transacción
-                </h5>
 
                 <ReceiptContent transaction={transaction} orderId={orderId} />
             </Modal.Body>
