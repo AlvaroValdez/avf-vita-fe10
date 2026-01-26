@@ -185,60 +185,88 @@ const ReceiptContent = ({ transaction, orderId }) => {
 
                 {/* Name */}
                 <div className="fw-bold fs-5 mb-3" style={{ color: '#233E58' }}>
-                    {transaction.beneficiary_first_name} {transaction.beneficiary_last_name}
-                    {transaction.company_name && (
-                        <small className="text-muted d-block mt-1">{transaction.company_name}</small>
+                    {transaction.beneficiary_first_name || transaction.withdrawalPayload?.beneficiary_first_name} {transaction.beneficiary_last_name || transaction.withdrawalPayload?.beneficiary_last_name}
+                    {(transaction.company_name || transaction.withdrawalPayload?.company_name) && (
+                        <small className="text-muted d-block mt-1">{transaction.company_name || transaction.withdrawalPayload?.company_name}</small>
                     )}
                 </div>
 
-                {/* Account Number - Masked */}
-                {transaction.account_bank && (
-                    <div className="mb-3">
-                        <small className="text-muted d-block mb-1">Nro de cuenta</small>
-                        <span className="badge bg-light text-dark border px-3 py-2 font-monospace" style={{ fontSize: '0.95rem' }}>
-                            {maskAccountNumber(transaction.account_bank)}
-                        </span>
-                    </div>
-                )}
-
-                {/* Bank Name - using actual stored name with static fallback */}
-                {(transaction.bank_name || transaction.bank_code) && (
-                    <div className="d-flex align-items-center gap-2 p-3 rounded-2 mb-3" style={{ backgroundColor: '#f8f9fa' }}>
-                        <i className="bi bi-bank2 text-primary" style={{ fontSize: '1.5rem' }}></i>
-                        <div>
-                            <small className="text-muted d-block" style={{ fontSize: '0.75rem' }}>Banco</small>
-                            <span className="fw-bold" style={{ fontSize: '1rem' }}>
-                                {transaction.bank_name || getBankName(transaction.bank_code, transaction.country)}
+                {/* Account Number - Masked (check multiple sources) */}
+                {(() => {
+                    const accountBank = transaction.account_bank ||
+                        transaction.withdrawalPayload?.account_bank ||
+                        transaction.withdrawalPayload?.account_number;
+                    if (!accountBank) return null;
+                    return (
+                        <div className="mb-3">
+                            <small className="text-muted d-block mb-1">Nro de cuenta</small>
+                            <span className="badge bg-light text-dark border px-3 py-2 font-monospace" style={{ fontSize: '0.95rem' }}>
+                                {maskAccountNumber(accountBank)}
                             </span>
                         </div>
-                    </div>
-                )}
+                    );
+                })()}
+
+                {/* Bank Name - check multiple sources */}
+                {(() => {
+                    const bankName = transaction.bank_name ||
+                        transaction.withdrawalPayload?.bank_name;
+                    const bankCode = transaction.bank_code ||
+                        transaction.withdrawalPayload?.bank_code;
+                    if (!bankName && !bankCode) return null;
+                    return (
+                        <div className="d-flex align-items-center gap-2 p-3 rounded-2 mb-3" style={{ backgroundColor: '#f8f9fa' }}>
+                            <i className="bi bi-bank2 text-primary" style={{ fontSize: '1.5rem' }}></i>
+                            <div>
+                                <small className="text-muted d-block" style={{ fontSize: '0.75rem' }}>Banco</small>
+                                <span className="fw-bold" style={{ fontSize: '1rem' }}>
+                                    {bankName || getBankName(bankCode, transaction.country)}
+                                </span>
+                            </div>
+                        </div>
+                    );
+                })()}
 
                 {/* Additional Details Grid */}
                 <div className="row g-3">
-                    {/* Document/CI */}
-                    {transaction.beneficiary_cc && (
-                        <div className="col-md-6">
-                            <small className="text-muted d-block mb-1">CI</small>
-                            <span className="font-monospace fw-bold">{transaction.beneficiary_cc}</span>
-                        </div>
-                    )}
+                    {/* Document/CI - check multiple field names */}
+                    {(() => {
+                        const docNumber = transaction.beneficiary_cc ||
+                            transaction.beneficiary_document_number ||
+                            transaction.withdrawalPayload?.beneficiary_document_number ||
+                            transaction.withdrawalPayload?.beneficiary_cc;
+                        if (!docNumber) return null;
+                        return (
+                            <div className="col-md-6">
+                                <small className="text-muted d-block mb-1">CI / Documento</small>
+                                <span className="font-monospace fw-bold">{docNumber}</span>
+                            </div>
+                        );
+                    })()}
 
-                    {/* Account Type - using actual stored name with static fallback */}
-                    {(transaction.account_type_name || transaction.account_type) && (
-                        <div className="col-md-6">
-                            <small className="text-muted d-block mb-1">Tipo de cuenta</small>
-                            <span className="fw-bold">
-                                {transaction.account_type_name || getAccountTypeName(transaction.account_type)}
-                            </span>
-                        </div>
-                    )}
+                    {/* Account Type - check multiple sources */}
+                    {(() => {
+                        const accountTypeName = transaction.account_type_name ||
+                            transaction.withdrawalPayload?.account_type_name;
+                        const accountType = transaction.account_type ||
+                            transaction.withdrawalPayload?.account_type_bank ||
+                            transaction.withdrawalPayload?.account_type;
+                        if (!accountTypeName && !accountType) return null;
+                        return (
+                            <div className="col-md-6">
+                                <small className="text-muted d-block mb-1">Tipo de cuenta</small>
+                                <span className="fw-bold">
+                                    {accountTypeName || getAccountTypeName(accountType)}
+                                </span>
+                            </div>
+                        );
+                    })()}
 
                     {/* Concept */}
-                    {transaction.concept && (
+                    {(transaction.concept || transaction.withdrawalPayload?.purpose_comentary) && (
                         <div className="col-12">
                             <small className="text-muted d-block mb-1">Concepto</small>
-                            <span>{transaction.concept}</span>
+                            <span>{transaction.concept || transaction.withdrawalPayload?.purpose_comentary}</span>
                         </div>
                     )}
 
