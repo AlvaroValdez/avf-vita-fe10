@@ -305,17 +305,17 @@ const ReceiptContent = ({ transaction, orderId }) => {
                         </div>
                     </div>
                 )}
+                )}
+            </div>
+
+            {/* Status */}
+            <div className="d-flex justify-content-center">
+                <div className="text-center">
+                    <small className="text-muted d-block mb-2">Estado</small>
+                    {getStatusBadge(transaction.status)}
+                </div>
             </div>
         </div>
-
-            {/* Status */ }
-    <div className="d-flex justify-content-center">
-        <div className="text-center">
-            <small className="text-muted d-block mb-2">Estado</small>
-            {getStatusBadge(transaction.status)}
-        </div>
-    </div>
-        </div >
     );
 };
 
