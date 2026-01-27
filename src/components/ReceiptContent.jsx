@@ -305,7 +305,6 @@ const ReceiptContent = ({ transaction, orderId }) => {
                         </div>
                     </div>
                 )}
-                )}
             </div>
 
             {/* Status */}
