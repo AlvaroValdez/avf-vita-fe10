@@ -313,7 +313,7 @@ const Transactions = () => {
 
                       {/* Amounts */}
                       <div className="row g-3">
-                        <div className="col-12 col-md-5">
+                        <div className="col-12 col-md-6">
                           <small className="text-muted d-block mb-1">Enviaste</small>
                           <div className="d-flex align-items-center gap-2">
                             {getFlagUrl(tx.currency?.substring(0, 2)) && (
@@ -332,7 +332,7 @@ const Transactions = () => {
                             </span>
                           </div>
                         </div>
-                        <div className="col-12 col-md-4">
+                        <div className="col-12 col-md-6">
                           <small className="text-muted d-block mb-1">Reciben</small>
                           <div className="fw-bold text-success" style={{ fontSize: '1.1rem' }}>
                             {tx.amountsTracking?.destReceiveAmount ? (
@@ -340,42 +340,6 @@ const Transactions = () => {
                             ) : (
                               <span className="text-muted small">-</span>
                             )}
-                          </div>
-                        </div>
-                        {/* ✅ FIX: Exchange Rate - Prioritize alytoRate */}
-                        <div className="col-12 col-md-3">
-                          <small className="text-muted d-block mb-1">Tasa</small>
-                          <div className="small">
-                            {(() => {
-                              // 🎯 Prioridad 1: TASA ALYTO (la que el usuario vio)
-                              let rate = tx.rateTracking?.alytoRate;
-
-                              if (!rate) {
-                                // Prioridad 2: Calcular desde montos solo si NO hay alytoRate
-                                const destAmount = tx.amountsTracking?.destReceiveAmount || tx.rateTracking?.destAmount;
-                                const originAmount = tx.amount;
-                                if (destAmount && originAmount && originAmount > 0) {
-                                  rate = destAmount / originAmount;
-                                }
-                              }
-
-                              if (!rate) {
-                                // Prioridad 3: Usar vitaRate como último recurso (NO DESEADO)
-                                rate = tx.rateTracking?.vitaRate;
-                                if (rate) {
-                                  console.warn('⚠️ Mostrando tasa Vita en historial - Debería ser Alyto');
-                                }
-                              }
-
-                              if (!rate) return <span className="text-muted">-</span>;
-
-                              const destCurrency = tx.amountsTracking?.destCurrency || tx.rateTracking?.destCurrency || 'COP';
-                              return (
-                                <span className="fw-bold" style={{ color: '#233E58' }}>
-                                  1 = {rate.toFixed(2)}
-                                </span>
-                              );
-                            })()}
                           </div>
                         </div>
                       </div>
