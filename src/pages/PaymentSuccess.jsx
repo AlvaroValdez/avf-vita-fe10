@@ -160,27 +160,26 @@ const PaymentSuccess = () => {
     return date.toLocaleDateString('es-CL', { day: 'numeric', month: 'long' });
   };
 
-  // ✅ FIX: Calcular tasa efectiva con fallbacks - PRIORIDAD CÁLCULO
+  // ✅ FIX: PRIORIDAD ALYTO RATE - Mostrar tasa de Alyto (con spread aplicado)
   const getEffectiveRate = () => {
     if (!transaction) return null;
 
-    // Prioridad 1: Calcular desde montos reales (Lo que ve el usuario en Quote)
-    // Esto asegura que coincida con "10.000 -> 37.158" (Tasa ~3.71)
-    const destAmount = transaction.rateTracking?.destAmount || transaction.amountsTracking?.destReceiveAmount;
-    // ✅ FIX: Usar 'transaction.amount' (Monto total/bruto) que es lo que el usuario ve en "Tú envías"
-    const originAmount = transaction.amount;
-
-    if (destAmount && originAmount && originAmount > 0) {
-      return destAmount / originAmount; // 37158 / 10000 = 3.7158
-    }
-
-    // Prioridad 2: Usar tasa Alyto almacenada
+    // 🎯 Prioridad 1: TASA ALYTO (la que el usuario vio en quote)
     if (transaction.rateTracking?.alytoRate) {
       return transaction.rateTracking.alytoRate;
     }
 
-    // Prioridad 3: Usar tasa Vita como último recurso
+    // Prioridad 2: Calcular desde montos si no hay alytoRate guardada
+    const destAmount = transaction.rateTracking?.destAmount || transaction.amountsTracking?.destReceiveAmount;
+    const originAmount = transaction.amount;
+
+    if (destAmount && originAmount && originAmount > 0) {
+      return destAmount / originAmount;
+    }
+
+    // Prioridad 3: Usar tasa Vita como último recurso (NO DESEADO)
     if (transaction.rateTracking?.vitaRate) {
+      console.warn('⚠️ Mostrando tasa Vita en comprobante - Debería ser Alyto');
       return transaction.rateTracking.vitaRate;
     }
 
@@ -461,13 +460,18 @@ const PaymentSuccess = () => {
 
                   {/* Additional Details Grid */}
                   <div className="row g-3">
-                    {/* Document/CI */}
-                    {transaction.beneficiary_cc && (
-                      <div className="col-md-6">
-                        <small className="text-muted d-block mb-1">CI</small>
-                        <span className="font-monospace fw-bold">{transaction.beneficiary_cc}</span>
-                      </div>
-                    )}
+                    {/* Document/CI - With Fallback to Snapshot */}
+                    {(() => {
+                      const docId = transaction.beneficiary_cc || transaction.beneficiarySnapshot?.beneficiary_cc;
+                      const docType = transaction.beneficiarySnapshot?.cc_type || 'CI'; // CI, RUT, DNI, etc.
+
+                      return docId ? (
+                        <div className="col-md-6">
+                          <small className="text-muted d-block mb-1">{docType}</small>
+                          <span className="font-monospace fw-bold">{docId}</span>
+                        </div>
+                      ) : null;
+                    })()}
 
                     {/* Account Type - REMOVED: Now shown in bank details block above */}
 
@@ -496,24 +500,37 @@ const PaymentSuccess = () => {
                       <span>En unas horas hábiles</span>
                     </div>
 
-                    {/* Vita Transfer ID */}
-                    {transaction.vitaTransferId && (
-                      <div className="col-12">
-                        <small className="text-muted d-block mb-1">Transfer ID</small>
-                        <div className="d-flex align-items-center gap-2">
-                          <span className="font-monospace small text-break" style={{ fontSize: '0.85rem' }}>
-                            {transaction.vitaTransferId}
-                          </span>
-                          <button
-                            className="btn btn-sm btn-outline-secondary"
-                            onClick={() => navigator.clipboard.writeText(transaction.vitaTransferId)}
-                            title="Copiar Transfer ID"
-                          >
-                            <i className="bi bi-clipboard"></i>
-                          </button>
+                    {/* Vita Transfer ID - With Fallback */}
+                    {(() => {
+                      const transferId = transaction.vitaTransferId ||
+                        transaction.withdrawalResponse?.transfer_id ||
+                        transaction.beneficiarySnapshot?.transferId;
+
+                      return transferId ? (
+                        <div className="col-12">
+                          <small className="text-muted d-block mb-1">Transfer ID de Vita</small>
+                          <div className="d-flex align-items-center gap-2">
+                            <span className="font-monospace small text-break" style={{ fontSize: '0.85rem' }}>
+                              {transferId}
+                            </span>
+                            <button
+                              className="btn btn-sm btn-outline-secondary"
+                              onClick={() => {
+                                navigator.clipboard.writeText(transferId);
+                                // Optional: Show feedback
+                                const btn = event.target.closest('button');
+                                const originalHTML = btn.innerHTML;
+                                btn.innerHTML = '<i class="bi bi-check"></i>';
+                                setTimeout(() => btn.innerHTML = originalHTML, 1000);
+                              }}
+                              title="Copiar Transfer ID"
+                            >
+                              <i className="bi bi-clipboard"></i>
+                            </button>
+                          </div>
                         </div>
-                      </div>
-                    )}
+                      ) : null;
+                    })()}
                   </div>
                 </div>
 
