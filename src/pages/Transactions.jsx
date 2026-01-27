@@ -220,7 +220,7 @@ const Transactions = () => {
                 <td className="text-end">
                   {tx.amountsTracking?.profitOriginCurrency ? (
                     <span className="text-success fw-bold">
-                      {new Intl.NumberFormat('es-CL', { minimumFractionDigits: 0 }).format(tx.amountsTracking.profitOriginCurrency)} {tx.amountsTracking.originCurrency || 'CLP'}
+                      {new Intl.NumberFormat('es-CL', { minimumFractionDigits: 0 }).format(tx.amountsTracking.profitOriginCurrency)} CLP
                     </span>
                   ) : (
                     <span className="text-muted">-</span>
@@ -257,7 +257,7 @@ const Transactions = () => {
               </tr>
             ))}
           </tbody>
-        </Table>
+        </Table >
       );
     } else {
       // Vista mejorada con cards para usuarios normales
