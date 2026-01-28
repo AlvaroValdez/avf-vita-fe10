@@ -1,6 +1,8 @@
 import React from 'react';
 import { Routes, Route, Navigate, Outlet } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { useInactivityTimeout } from './hooks/useInactivityTimeout';
+import SessionWarningModal from './components/SessionWarningModal';
 
 // Páginas
 import Home from './pages/Home.jsx';
@@ -38,6 +40,11 @@ const AdminRouteWrapper = () => {
 };
 
 function AppContent() {
+  const { token } = useAuth();
+
+  // Hook de inactividad - solo activo si hay sesión
+  const { showWarning, timeRemaining, extendSession, handleLogout } = useInactivityTimeout();
+
   return (
     <MainLayout>
       <Routes>
@@ -71,6 +78,16 @@ function AppContent() {
 
       </Routes>
       <Toaster />
+
+      {/* Modal de advertencia de sesión - solo si hay token */}
+      {token && (
+        <SessionWarningModal
+          show={showWarning}
+          timeRemaining={timeRemaining}
+          onExtend={extendSession}
+          onLogout={handleLogout}
+        />
+      )}
     </MainLayout>
   );
 }

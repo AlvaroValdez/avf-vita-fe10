@@ -16,11 +16,21 @@ const Login = () => {
   // Detectar si llegamos aquí por sesión expirada
   React.useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    if (params.get('expired') === 'true') {
+    if (params.get('session') === 'expired') {
+      setError('Tu sesión ha expirado por inactividad. Por favor, inicia sesión nuevamente.');
+      toast.warning('Sesión Expirada', {
+        description: 'Por tu seguridad, cerramos tu sesión después de 30 minutos de inactividad.',
+        duration: 5000
+      });
+
+      // Limpiar el query param de la URL sin recargar
+      window.history.replaceState({}, document.title, window.location.pathname);
+    } else if (params.get('expired') === 'true') {
       setError('Tu sesión ha expirado. Por favor, inicia sesión nuevamente.');
       toast.warning('Sesión expirada', {
         description: 'Por seguridad, tu sesión ha caducado. Inicia sesión de nuevo.'
       });
+      window.history.replaceState({}, document.title, window.location.pathname);
     }
   }, []);
 
