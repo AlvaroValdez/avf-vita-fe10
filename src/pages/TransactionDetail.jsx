@@ -258,6 +258,29 @@ const TransactionDetail = () => {
             </Card.Header>
             <Card.Body>
               {renderTimeline()}
+
+              {/* 📄 Comprobante de Pago */}
+              {transaction.proofOfPayment && (
+                <div className="mt-4 pt-4 border-top">
+                  <h6 className="text-primary mb-3">📄 Comprobante Bancario</h6>
+                  <Alert variant="success" className="mb-2">
+                    <small>
+                      <strong>✅ Pago Completado</strong><br />
+                      El administrador confirmó que tu transferencia fue ejecutada exitosamente.
+                    </small>
+                  </Alert>
+                  <Button
+                    variant="outline-primary"
+                    size="sm"
+                    className="w-100"
+                    href={transaction.proofOfPayment}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    🔍 Ver Comprobante Bancario
+                  </Button>
+                </div>
+              )}
             </Card.Body>
           </Card>
         </Col>
