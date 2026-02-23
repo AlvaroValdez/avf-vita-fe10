@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: remesas-frontend
+    name: alyto-frontend
     env: static
     buildCommand: npm install && npm run build
     staticPublishPath: ./dist

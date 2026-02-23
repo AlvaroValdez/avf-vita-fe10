@@ -60,7 +60,7 @@ export const usePushNotifications = () => {
                 const prevToken = localStorage.getItem('fcmToken');
                 if (token !== prevToken) {
                     // 7. Registrar en backend
-                    await api.put('/auth/fcm-token', { token });
+                    await registerFcmToken(token);
                     localStorage.setItem('fcmToken', token);
                     console.log('[Push] ✅ Token FCM registrado en backend');
                 }
@@ -95,7 +95,7 @@ export const usePushNotifications = () => {
  */
 export const clearPushToken = async () => {
     try {
-        await api.delete('/auth/fcm-token');
+        await deleteFcmToken();
         localStorage.removeItem('fcmToken');
         console.log('[Push] Token FCM eliminado');
     } catch (err) {

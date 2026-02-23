@@ -27,7 +27,7 @@ const ContractModal = ({ show, onHide, onAccept }) => {
                 <p className="text-justify">EL USUARIO declara bajo juramento que los fondos (fiat o cripto) introducidos en la plataforma provienen de actividades lícitas, comerciales, profesionales o de ahorros personales, y no tienen relación alguna con actividades ilícitas tipificadas en la Ley N° 004 o delitos financieros. <strong>EL USUARIO exime a AV FINANCE de toda responsabilidad penal o civil por el origen de dichos fondos.</strong></p>
 
                 <h6 className="fw-bold text-dark mt-3">CLÁUSULA TERCERA: AUTORIZACIÓN DE INTERMEDIACIÓN</h6>
-                <p className="text-justify">EL USUARIO autoriza expresamente a AV FINANCE a utilizar sus cuentas bancarias custodias y la red Blockchain (Stellar) para ejecutar las instrucciones de pago a proveedores o remesas. Se entiende que AV FINANCE actúa como un intermediario tecnológico y financiero regulado.</p>
+                <p className="text-justify">EL USUARIO autoriza expresamente a AV FINANCE a utilizar sus cuentas bancarias custodias y la red Blockchain (Stellar) para ejecutar las instrucciones de pago a proveedores o transferencias. Se entiende que AV FINANCE actúa como un intermediario tecnológico y financiero regulado.</p>
 
                 <h6 className="fw-bold text-dark mt-3">CLÁUSULA CUARTA: COMISIONES Y FACTURACIÓN</h6>
                 <p className="text-justify">Por el servicio de intermediación, EL USUARIO acepta pagar las comisiones (Fees) vigentes en la App. AV FINANCE emitirá el Comprobante de Operación correspondiente para fines de descargo y bancarización conforme a la normativa tributaria vigente.</p>

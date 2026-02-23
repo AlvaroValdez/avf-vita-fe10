@@ -230,7 +230,7 @@ const AdminMarkup = () => {
                     disabled={loadingCountries}
                   >
                     <option value="">Seleccionar...</option>
-                    {/* Solo países de origen válidos (donde se pueden enviar remesas desde) */}
+                    {/* Solo países de origen válidos (donde se pueden enviar transferencias desde) */}
                     {(countries || [])
                       .filter(c => validOriginCountries.includes(c.code))
                       .map(c => (

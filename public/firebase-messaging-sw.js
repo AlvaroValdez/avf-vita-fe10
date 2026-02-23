@@ -22,7 +22,7 @@ messaging.onBackgroundMessage((payload) => {
     const { title, body } = payload.notification || {};
     const data = payload.data || {};
 
-    self.registration.showNotification(title || 'AVF Remesas', {
+    self.registration.showNotification(title || 'Alyto', {
         body: body || '',
         icon: '/logo192.png',
         badge: '/badge72.png',

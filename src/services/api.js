@@ -160,7 +160,7 @@ export const reviewKycUser = async (userId, action, reason = '') => {
   }
 };
 
-// --- REMESAS Y REGLAS ---
+// --- TRANSFERENCIAS Y REGLAS ---
 
 export const getPrices = async () => {
   try {
