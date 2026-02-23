@@ -1,5 +1,6 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import { loginUser, apiClient } from '../services/api';
+import { clearPushToken } from '../hooks/usePushNotifications';
 
 const AuthContext = createContext();
 
@@ -58,6 +59,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   const logout = () => {
+    clearPushToken().catch(() => { }); // 🔔 Eliminar token FCM al salir
     localStorage.removeItem('token');
     localStorage.removeItem('user');
     setToken(null);

@@ -220,8 +220,8 @@ const Home = () => {
             {/* Share App - MOVED TO SECOND POSITION */}
             <div className="text-center" style={{ cursor: 'pointer' }} onClick={() => {
               const shareData = {
-                title: 'Alyto - Remesas al instante',
-                text: '¡Prueba Alyto para enviar remesas de forma rápida y segura!',
+                title: 'Alyto - Transferencias al instante',
+                text: '¡Prueba Alyto para enviar dinero de forma rápida y segura!',
                 url: window.location.origin
               };
 
@@ -406,10 +406,10 @@ const Home = () => {
               </div>
 
               <h1 className="display-4 fw-bold mb-3" style={{ color: '#233E58', lineHeight: '1.2' }}>
-                Remesas <span style={{ color: '#F7C843' }}>al instante</span> con<br className="d-md-none" /> tecnología Blockchain
+                Transferencias <span style={{ color: '#F7C843' }}>al instante</span> con<br className="d-md-none" /> tecnología Blockchain
               </h1>
               <p className="lead mb-5 text-muted">
-                La forma más segura y rápida de enviar remesas. Conectamos fronteras usando la red Stellar.
+                La forma más segura y rápida de enviar dinero. Conectamos fronteras usando la red Stellar.
               </p>
 
               <div className="d-flex flex-column flex-sm-row gap-3 justify-content-center justify-content-lg-start">

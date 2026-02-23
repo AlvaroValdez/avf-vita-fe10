@@ -7,7 +7,7 @@ const Footer = () => {
       <Container>
         <Row>
           <Col md={6} className="text-center text-md-start">
-            <p className="mb-0">&copy; {new Date().getFullYear()} AVF Remesas. Todos los derechos reservados.</p>
+            <p className="mb-0">&copy; {new Date().getFullYear()} Alyto. Todos los derechos reservados.</p>
           </Col>
           <Col md={6} className="text-center text-md-end">
             <a href="#!" className="text-white me-3 text-decoration-none">Términos y Condiciones</a>

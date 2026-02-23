@@ -593,4 +593,26 @@ export const approveDeposit = async (transactionId) => {
   }
 };
 
+// --- NOTIFICACIONES PUSH (FCM) ---
+export const registerFcmToken = async (token) => {
+  try {
+    const response = await apiClient.put('/auth/fcm-token', { token });
+    return response.data;
+  } catch (error) {
+    // No crítico - no lanzar, solo loguear
+    console.warn('[API] Error registrando FCM token:', error?.response?.data || error.message);
+    return { ok: false };
+  }
+};
+
+export const deleteFcmToken = async () => {
+  try {
+    const response = await apiClient.delete('/auth/fcm-token');
+    return response.data;
+  } catch (error) {
+    console.warn('[API] Error eliminando FCM token:', error?.response?.data || error.message);
+    return { ok: false };
+  }
+};
+
 export default apiClient;

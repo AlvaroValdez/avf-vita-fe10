@@ -2,6 +2,7 @@ import React from 'react';
 import { Routes, Route, Navigate, Outlet } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { useInactivityTimeout } from './hooks/useInactivityTimeout';
+import { usePushNotifications } from './hooks/usePushNotifications';
 import SessionWarningModal from './components/SessionWarningModal';
 
 // Páginas
@@ -44,6 +45,9 @@ function AppContent() {
 
   // Hook de inactividad - solo activo si hay sesión
   const { showWarning, timeRemaining, extendSession, handleLogout } = useInactivityTimeout();
+
+  // 🔔 Push Notifications - registrar FCM token cuando hay sesión
+  usePushNotifications();
 
   return (
     <MainLayout>
