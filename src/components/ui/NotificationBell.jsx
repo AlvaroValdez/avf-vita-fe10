@@ -14,6 +14,19 @@ const NotificationBell = ({ color = "currentColor", dropDirection = "down" }) =>
         // if (notif.data?.orderId) navigate(`/transactions`);
     };
 
+    const handleTestPush = async () => {
+        try {
+            const res = await fetch(`${import.meta.env.VITE_API_URL}/auth/test-push`, {
+                headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+            });
+            const data = await res.json();
+            if (!data.ok) throw new Error(data.error);
+        } catch (e) {
+            console.error('Test Push Error:', e);
+            alert('Error probando push: ' + e.message);
+        }
+    };
+
     return (
         <Dropdown align="end" drop={dropDirection} onToggle={(isOpen) => isOpen && unreadCount > 0 && markAllAsRead()}>
             <Dropdown.Toggle
@@ -70,6 +83,12 @@ const NotificationBell = ({ color = "currentColor", dropDirection = "down" }) =>
                             </div>
                         ))
                     )}
+                </div>
+
+                <div className="p-2 border-top bg-light text-center">
+                    <button className="btn btn-sm btn-outline-primary" onClick={handleTestPush}>
+                        <i className="bi bi-bug me-1"></i> Probar Notificación
+                    </button>
                 </div>
             </Dropdown.Menu>
         </Dropdown>
