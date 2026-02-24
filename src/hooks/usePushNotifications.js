@@ -3,6 +3,8 @@ import { useEffect, useRef } from 'react';
 import { getToken, onMessage } from 'firebase/messaging';
 import { getFirebaseMessaging } from '../config/firebase';
 import { registerFcmToken, deleteFcmToken } from '../services/api';
+import { useNotifications } from './context/NotificationContext';
+import { toast } from 'sonner';
 
 const VAPID_KEY = import.meta.env.VITE_FCM_VAPID_KEY;
 
@@ -15,6 +17,7 @@ const VAPID_KEY = import.meta.env.VITE_FCM_VAPID_KEY;
  */
 export const usePushNotifications = () => {
     const registered = useRef(false);
+    const { addNotification } = useNotifications();
 
     useEffect(() => {
         if (registered.current) return;
@@ -69,13 +72,24 @@ export const usePushNotifications = () => {
                 onMessage(messaging, (payload) => {
                     console.log('[Push] Mensaje en foreground:', payload);
                     const { title, body } = payload.notification || {};
+                    const data = payload.data || {};
 
-                    // Mostrar notificación nativa del sistema aunque la app esté abierta
+                    // Agregar al Contexto (Campana)
+                    addNotification({ title, body, type: data.type, link: data.link });
+
+                    // Mostrar popup (Toaster in-app)
+                    toast(title || 'Notificación', {
+                        description: body,
+                        icon: '🔔',
+                        duration: 5000,
+                    });
+
+                    // Mostrar notificación nativa opcionalmente
                     if (Notification.permission === 'granted') {
                         new Notification(title || 'Alyto', {
                             body,
                             icon: '/logo192.png',
-                            tag: payload.data?.type || 'default'
+                            tag: data.type || 'default'
                         });
                     }
                 });

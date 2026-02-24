@@ -3,6 +3,7 @@ import { Routes, Route, Navigate, Outlet } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { useInactivityTimeout } from './hooks/useInactivityTimeout';
 import { usePushNotifications } from './hooks/usePushNotifications';
+import { NotificationProvider } from './context/NotificationContext';
 import SessionWarningModal from './components/SessionWarningModal';
 
 // Páginas
@@ -99,7 +100,9 @@ function AppContent() {
 function App() {
   return (
     <AuthProvider>
-      <AppContent />
+      <NotificationProvider>
+        <AppContent />
+      </NotificationProvider>
     </AuthProvider>
   );
 }

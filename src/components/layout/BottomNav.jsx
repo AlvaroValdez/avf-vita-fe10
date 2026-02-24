@@ -1,6 +1,7 @@
 import React from 'react';
 import { Nav } from 'react-bootstrap';
 import { Link, useLocation } from 'react-router-dom';
+import NotificationBell from '../ui/NotificationBell';
 
 const BottomNav = () => {
     const location = useLocation();
@@ -74,6 +75,11 @@ const BottomNav = () => {
                     <Icons.Profile active={isActive('/profile')} />
                     {isActive('/profile') && <span style={{ fontSize: '0.9rem' }}>Perfil</span>}
                 </Link>
+
+                {/* Notificaciones */}
+                <div className={navItemClass} style={inactiveStyle}>
+                    <NotificationBell color="#A0A0A0" dropDirection="up" />
+                </div>
 
             </div>
         </div>

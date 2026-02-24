@@ -4,6 +4,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 
 import logo from '../../assets/images/logo-white.png';
+import NotificationBell from '../ui/NotificationBell';
 
 const Sidebar = () => {
     const { user, logout } = useAuth();
@@ -78,20 +79,26 @@ const Sidebar = () => {
             </Nav>
 
             <hr className="text-white-50" />
-            <Dropdown>
-                <Dropdown.Toggle variant="link" className="d-flex align-items-center text-white text-decoration-none border-0 p-0" style={{ boxShadow: 'none' }}>
-                    <div className="bg-warning rounded-circle d-flex align-items-center justify-content-center text-dark fw-bold me-2" style={{ width: 32, height: 32 }}>
-                        {user?.name?.charAt(0) || 'U'}
-                    </div>
-                    <strong>{user?.name || 'Usuario'}</strong>
-                </Dropdown.Toggle>
+            <div className="d-flex align-items-center justify-content-between">
+                <Dropdown>
+                    <Dropdown.Toggle variant="link" className="d-flex align-items-center text-white text-decoration-none border-0 p-0" style={{ boxShadow: 'none' }}>
+                        <div className="bg-warning rounded-circle d-flex align-items-center justify-content-center text-dark fw-bold me-2" style={{ width: 32, height: 32 }}>
+                            {user?.name?.charAt(0) || 'U'}
+                        </div>
+                        <strong className="text-truncate" style={{ maxWidth: '120px' }}>{user?.name || 'Usuario'}</strong>
+                    </Dropdown.Toggle>
 
-                <Dropdown.Menu>
-                    <Dropdown.Item as={Link} to="/profile">Perfil</Dropdown.Item>
-                    <Dropdown.Divider />
-                    <Dropdown.Item onClick={logout}>Cerrar Sesión</Dropdown.Item>
-                </Dropdown.Menu>
-            </Dropdown>
+                    <Dropdown.Menu>
+                        <Dropdown.Item as={Link} to="/profile">Perfil</Dropdown.Item>
+                        <Dropdown.Divider />
+                        <Dropdown.Item onClick={logout}>Cerrar Sesión</Dropdown.Item>
+                    </Dropdown.Menu>
+                </Dropdown>
+
+                <div className="ms-2">
+                    <NotificationBell color="white" />
+                </div>
+            </div>
         </div>
     );
 };
