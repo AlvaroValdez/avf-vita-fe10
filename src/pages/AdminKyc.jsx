@@ -140,14 +140,20 @@ const AdminKyc = () => {
             <>
               {selectedUser.accountType === 'business' ? (
                 <div className="bg-light p-3 rounded mb-4">
-                  <h6 className="fw-bold text-primary mb-2">Información Corporativa</h6>
+                  <div className="d-flex justify-content-between align-items-start mb-2">
+                    <h6 className="fw-bold text-primary mb-0">Información Corporativa</h6>
+                    <Badge bg="dark">{selectedUser.registrationCountry || 'BO'}</Badge>
+                  </div>
                   <p className="mb-1"><strong>Razón Social:</strong> {selectedUser.business?.name}</p>
                   <p className="mb-1"><strong>ID Fiscal:</strong> {selectedUser.business?.taxId}</p>
                   <p className="mb-1"><strong>Dirección:</strong> {selectedUser.business?.registeredAddress}</p>
                 </div>
               ) : (
                 <div className="bg-light p-3 rounded mb-4">
-                  <h6 className="fw-bold text-primary mb-2">Información Personal</h6>
+                  <div className="d-flex justify-content-between align-items-start mb-2">
+                    <h6 className="fw-bold text-primary mb-0">Información Personal</h6>
+                    <Badge bg="dark">{selectedUser.registrationCountry || 'BO'}</Badge>
+                  </div>
                   <p className="mb-1"><strong>Documento:</strong> {selectedUser.documentType} {selectedUser.documentNumber}</p>
                   <p className="mb-1"><strong>Teléfono:</strong> {selectedUser.phoneNumber || 'No registrado'}</p>
                 </div>

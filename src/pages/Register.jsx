@@ -15,6 +15,7 @@ const Register = () => {
   const [success, setSuccess] = useState(''); // Estado para el mensaje de éxito
   const [loading, setLoading] = useState(false);
   const [accountType, setAccountType] = useState('individual'); // 'individual' or 'business'
+  const [registrationCountry, setRegistrationCountry] = useState('BO'); // 'BO', 'CL', 'OTHER'
 
   // --- Compliance Contract State ---
   const [showContractModal, setShowContractModal] = useState(false);
@@ -37,7 +38,10 @@ const Register = () => {
     }
 
     if (!contractAccepted) {
-      setError('Debes leer y aceptar el Contrato de Mandato para continuar.');
+      const contractError = registrationCountry === 'BO'
+        ? 'Debes leer y aceptar el Contrato de Mandato para continuar.'
+        : 'Debes leer y aceptar los Términos y Condiciones para continuar.';
+      setError(contractError);
       return;
     }
 
@@ -50,7 +54,8 @@ const Register = () => {
         name,
         email,
         password,
-        accountType, // Enviamos el tipo de cuenta
+        accountType,
+        registrationCountry,
         contractAccepted: true,
         contractVersion: 'v1.0',
         deviceFingerprint: fingerprint
@@ -120,6 +125,36 @@ const Register = () => {
                 </div>
               </Form.Group>
 
+              <Form.Group className="mb-4 text-center">
+                <Form.Label className="small fw-bold text-muted d-block mb-2">País de Residencia</Form.Label>
+                <div className="d-flex justify-content-center gap-2">
+                  <Button
+                    variant={registrationCountry === 'BO' ? 'outline-primary active' : 'outline-muted'}
+                    size="sm"
+                    className="flex-fill"
+                    onClick={() => setRegistrationCountry('BO')}
+                  >
+                    🇧🇴 Bolivia
+                  </Button>
+                  <Button
+                    variant={registrationCountry === 'CL' ? 'outline-primary active' : 'outline-muted'}
+                    size="sm"
+                    className="flex-fill"
+                    onClick={() => setRegistrationCountry('CL')}
+                  >
+                    🇨🇱 Chile
+                  </Button>
+                  <Button
+                    variant={registrationCountry === 'OTHER' ? 'outline-primary active' : 'outline-muted'}
+                    size="sm"
+                    className="flex-fill"
+                    onClick={() => setRegistrationCountry('OTHER')}
+                  >
+                    🌎 Otro
+                  </Button>
+                </div>
+              </Form.Group>
+
               <Form.Group className="mb-3">
                 <Form.Label className="small fw-bold text-muted">{accountType === 'business' ? 'Nombre de la Empresa' : 'Nombre Completo'}</Form.Label>
                 <Form.Control type="text" value={name} onChange={(e) => setName(e.target.value)} required placeholder={accountType === 'business' ? 'Ej: Exportadora S.A.' : 'Ej: Juan Pérez'} className="py-2" />
@@ -179,12 +214,14 @@ const Register = () => {
                     required
                   />
                   <Form.Check.Label className="small text-muted ms-1">
-                    He leído y acepto el <span
+                    He leído y acepto los <span
                       className="text-primary text-decoration-underline pointer-cursor"
                       style={{ cursor: 'pointer' }}
                       onClick={() => setShowContractModal(true)}
                     >
-                      Contrato de Mandato y Declaro el Origen Lícito de mis Fondos
+                      {registrationCountry === 'BO'
+                        ? 'Términos, Condiciones y Contrato de Mandato'
+                        : 'Términos y Condiciones de Uso'}
                     </span>
                   </Form.Check.Label>
                 </Form.Check>
@@ -208,6 +245,7 @@ const Register = () => {
 
       <ContractModal
         show={showContractModal}
+        country={registrationCountry}
         onHide={() => setShowContractModal(false)}
         onAccept={() => {
           setContractAccepted(true);
