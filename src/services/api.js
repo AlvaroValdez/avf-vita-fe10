@@ -130,6 +130,17 @@ export const uploadKycDocuments = async (formData) => {
   }
 };
 
+export const uploadKybDocuments = async (formData) => {
+  try {
+    const response = await apiClient.post('/auth/kyb-documents', formData, {
+      headers: { 'Content-Type': undefined },
+    });
+    return response.data;
+  } catch (error) {
+    throw normalizeAxiosError(error, 'Error subiendo documentos corporativos.');
+  }
+};
+
 export const uploadAvatar = async (formData) => {
   try {
     const response = await apiClient.post('/auth/avatar', formData, {

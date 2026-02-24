@@ -2,6 +2,7 @@ import React, { useState, useRef } from 'react';
 import { Container, Row, Col, Card, ListGroup, Badge, Spinner, Button } from 'react-bootstrap';
 import { useAuth } from '../context/AuthContext';
 import KycLevel2Form from '../components/auth/KycLevel2Form';
+import KybLevel2Form from '../components/auth/KybLevel2Form';
 import { uploadAvatar } from '../services/api';
 import logo from '../assets/images/logo.png';
 
@@ -105,24 +106,41 @@ const Profile = () => {
                 <p className="text-muted small">{user?.email}</p>
 
                 <div className="mb-2">
-                  Nivel KYC: <strong className="fs-5">{user?.kyc?.level || 1}</strong>
+                  Tipo de Cuenta: <Badge bg="info" className="text-dark ms-1">{user?.accountType === 'business' ? 'Empresa' : 'Personal'}</Badge>
+                </div>
+                <div className="mb-2">
+                  Nivel {user?.accountType === 'business' ? 'KYB' : 'KYC'}: <strong className="fs-5">{user?.kyc?.level || 1}</strong>
                 </div>
                 <div>{getKycStatusBadge(user?.kyc?.status)}</div>
               </div>
 
               <hr />
 
-              <ListGroup variant="flush" className="small">
-                <ListGroup.Item className="px-0">
-                  <strong>Teléfono:</strong> <br /> {user?.phoneNumber || 'No registrado'}
-                </ListGroup.Item>
-                <ListGroup.Item className="px-0">
-                  <strong>Documento ({user?.documentType}):</strong> <br /> {user?.documentNumber || 'No registrado'}
-                </ListGroup.Item>
-                <ListGroup.Item className="px-0">
-                  <strong>Dirección:</strong> <br /> {user?.address || 'No registrado'}
-                </ListGroup.Item>
-              </ListGroup>
+              {user?.accountType === 'business' ? (
+                <ListGroup variant="flush" className="small">
+                  <ListGroup.Item className="px-0">
+                    <strong>Razón Social:</strong> <br /> {user?.business?.name || 'No registrada'}
+                  </ListGroup.Item>
+                  <ListGroup.Item className="px-0">
+                    <strong>ID Fiscal (NIT/RUT):</strong> <br /> {user?.business?.taxId || 'No registrado'}
+                  </ListGroup.Item>
+                  <ListGroup.Item className="px-0">
+                    <strong>Dirección Legal:</strong> <br /> {user?.business?.registeredAddress || 'No registrada'}
+                  </ListGroup.Item>
+                </ListGroup>
+              ) : (
+                <ListGroup variant="flush" className="small">
+                  <ListGroup.Item className="px-0">
+                    <strong>Teléfono:</strong> <br /> {user?.phoneNumber || 'No registrado'}
+                  </ListGroup.Item>
+                  <ListGroup.Item className="px-0">
+                    <strong>Documento ({user?.documentType}):</strong> <br /> {user?.documentNumber || 'No registrado'}
+                  </ListGroup.Item>
+                  <ListGroup.Item className="px-0">
+                    <strong>Dirección:</strong> <br /> {user?.address || 'No registrado'}
+                  </ListGroup.Item>
+                </ListGroup>
+              )}
 
               <hr />
 
@@ -161,10 +179,12 @@ const Profile = () => {
         <Col lg={8}>
           <Card className="shadow-sm border-0">
             <Card.Header className="bg-white border-bottom-0 pt-4 pb-0">
-              <h4 style={{ color: 'var(--avf-primary)' }}>Aumentar Límites (Nivel 2)</h4>
+              <h4 style={{ color: 'var(--avf-primary)' }}>
+                {user?.accountType === 'business' ? 'Verificación Corporativa' : 'Aumentar Límites (Nivel 2)'}
+              </h4>
             </Card.Header>
             <Card.Body>
-              <KycLevel2Form />
+              {user?.accountType === 'business' ? <KybLevel2Form /> : <KycLevel2Form />}
             </Card.Body>
           </Card>
         </Col>

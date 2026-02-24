@@ -14,6 +14,7 @@ const Register = () => {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(''); // Estado para el mensaje de éxito
   const [loading, setLoading] = useState(false);
+  const [accountType, setAccountType] = useState('individual'); // 'individual' or 'business'
 
   // --- Compliance Contract State ---
   const [showContractModal, setShowContractModal] = useState(false);
@@ -49,6 +50,7 @@ const Register = () => {
         name,
         email,
         password,
+        accountType, // Enviamos el tipo de cuenta
         contractAccepted: true,
         contractVersion: 'v1.0',
         deviceFingerprint: fingerprint
@@ -96,9 +98,31 @@ const Register = () => {
             </Alert>
           ) : (
             <Form onSubmit={handleSubmit}>
+              <Form.Group className="mb-4 text-center">
+                <Form.Label className="small fw-bold text-muted d-block mb-2">Tipo de Cuenta</Form.Label>
+                <div className="d-flex justify-content-center gap-2">
+                  <Button
+                    variant={accountType === 'individual' ? 'primary' : 'outline-primary'}
+                    size="sm"
+                    className={accountType === 'individual' ? 'text-primary' : ''}
+                    onClick={() => setAccountType('individual')}
+                  >
+                    Personal
+                  </Button>
+                  <Button
+                    variant={accountType === 'business' ? 'primary' : 'outline-primary'}
+                    size="sm"
+                    className={accountType === 'business' ? 'text-primary' : ''}
+                    onClick={() => setAccountType('business')}
+                  >
+                    Empresa (B2B)
+                  </Button>
+                </div>
+              </Form.Group>
+
               <Form.Group className="mb-3">
-                <Form.Label className="small fw-bold text-muted">Nombre Completo</Form.Label>
-                <Form.Control type="text" value={name} onChange={(e) => setName(e.target.value)} required placeholder="Ej: Juan Pérez" className="py-2" />
+                <Form.Label className="small fw-bold text-muted">{accountType === 'business' ? 'Nombre de la Empresa' : 'Nombre Completo'}</Form.Label>
+                <Form.Control type="text" value={name} onChange={(e) => setName(e.target.value)} required placeholder={accountType === 'business' ? 'Ej: Exportadora S.A.' : 'Ej: Juan Pérez'} className="py-2" />
               </Form.Group>
               <Form.Group className="mb-3">
                 <Form.Label className="small fw-bold text-muted">Correo Electrónico</Form.Label>
