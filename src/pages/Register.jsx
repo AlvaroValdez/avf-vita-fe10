@@ -3,6 +3,7 @@ import { Container, Card, Form, Button, Alert, Spinner, InputGroup } from 'react
 import { registerUser } from '../services/api';
 import { useNavigate, Link } from 'react-router-dom';
 import ContractModal from '../components/ContractModal';
+import logo from '../assets/images/logo.png';
 
 const Register = () => {
   const [name, setName] = useState('');
@@ -87,158 +88,166 @@ const Register = () => {
     <Container className="d-flex justify-content-center align-items-center py-5" style={{ minHeight: '100vh' }}>
       <Card className="shadow-sm border-0" style={{ width: '100%', maxWidth: '450px' }}>
         <Card.Body className="p-4 p-md-5">
-          <div className="text-center mb-4">
-            <h3 className="fw-bold text-dark">Crear Cuenta</h3>
-            <p className="text-muted small">Únete a Alyto en minutos</p>
-          </div>
-
-          {/* Si el registro fue exitoso, muestra el mensaje y oculta el formulario */}
+          {/* Si el registro fue exitoso, muestra el mensaje de éxito institucional */}
           {success ? (
-            <Alert variant="success" className="text-center">
-              <div className="mb-2 fs-1">🎉</div>
-              {success}
-              <div className="mt-3">
-                <Link to="/login" className="btn btn-primary fw-bold text-primary w-100">Iniciar Sesión</Link>
+            <div className="text-center py-4">
+              <img src={logo} alt="Alyto Logo" width="120" className="mb-4" />
+              <div className="mb-3">
+                <i className="bi bi-check-circle-fill text-success" style={{ fontSize: '3rem' }}></i>
               </div>
-            </Alert>
+              <h4 className="fw-bold text-dark mb-3">¡Registro Exitoso!</h4>
+              <p className="text-secondary mb-4" style={{ fontSize: '0.95rem' }}>
+                {success}
+              </p>
+              <Link to="/login" className="btn btn-primary w-100 py-3 fw-bold text-primary" style={{ borderRadius: '8px' }}>
+                Continuar a Iniciar Sesión
+              </Link>
+            </div>
           ) : (
-            <Form onSubmit={handleSubmit}>
-              <Form.Group className="mb-4 text-center">
-                <Form.Label className="small fw-bold text-muted d-block mb-2">Tipo de Cuenta</Form.Label>
-                <div className="d-flex justify-content-center gap-2">
-                  <Button
-                    variant={accountType === 'individual' ? 'primary' : 'outline-primary'}
-                    size="sm"
-                    className={accountType === 'individual' ? 'text-primary' : ''}
-                    onClick={() => setAccountType('individual')}
-                  >
-                    Personal
-                  </Button>
-                  <Button
-                    variant={accountType === 'business' ? 'primary' : 'outline-primary'}
-                    size="sm"
-                    className={accountType === 'business' ? 'text-primary' : ''}
-                    onClick={() => setAccountType('business')}
-                  >
-                    Empresa (B2B)
-                  </Button>
-                </div>
-              </Form.Group>
+            <>
+              <div className="text-center mb-4">
+                <h3 className="fw-bold text-dark">Crear Cuenta</h3>
+                <p className="text-muted small">Únete a Alyto en minutos</p>
+              </div>
 
-              <Form.Group className="mb-4 text-center">
-                <Form.Label className="small fw-bold text-muted d-block mb-2">País de Residencia</Form.Label>
-                <div className="d-flex justify-content-center gap-2">
-                  <Button
-                    variant={registrationCountry === 'BO' ? 'outline-primary active' : 'outline-muted'}
-                    size="sm"
-                    className="flex-fill"
-                    onClick={() => setRegistrationCountry('BO')}
-                  >
-                    🇧🇴 Bolivia
-                  </Button>
-                  <Button
-                    variant={registrationCountry === 'CL' ? 'outline-primary active' : 'outline-muted'}
-                    size="sm"
-                    className="flex-fill"
-                    onClick={() => setRegistrationCountry('CL')}
-                  >
-                    🇨🇱 Chile
-                  </Button>
-                  <Button
-                    variant={registrationCountry === 'OTHER' ? 'outline-primary active' : 'outline-muted'}
-                    size="sm"
-                    className="flex-fill"
-                    onClick={() => setRegistrationCountry('OTHER')}
-                  >
-                    🌎 Otro
-                  </Button>
-                </div>
-              </Form.Group>
-
-              <Form.Group className="mb-3">
-                <Form.Label className="small fw-bold text-muted">{accountType === 'business' ? 'Nombre de la Empresa' : 'Nombre Completo'}</Form.Label>
-                <Form.Control type="text" value={name} onChange={(e) => setName(e.target.value)} required placeholder={accountType === 'business' ? 'Ej: Exportadora S.A.' : 'Ej: Juan Pérez'} className="py-2" />
-              </Form.Group>
-              <Form.Group className="mb-3">
-                <Form.Label className="small fw-bold text-muted">Correo Electrónico</Form.Label>
-                <Form.Control type="email" value={email} onChange={(e) => setEmail(e.target.value)} required placeholder="correo@ejemplo.com" className="py-2" />
-              </Form.Group>
-              <Form.Group className="mb-3">
-                <Form.Label className="small fw-bold text-muted">Contraseña</Form.Label>
-                <InputGroup>
-                  <Form.Control
-                    type={showPassword ? "text" : "password"}
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
-                    placeholder="Mínimo 6 caracteres"
-                    className="py-2"
-                  />
-                  <Button
-                    variant="outline-secondary"
-                    onClick={() => setShowPassword(!showPassword)}
-                    style={{ borderLeft: 'none' }}
-                  >
-                    <i className={`bi bi-eye${showPassword ? '-slash' : ''}`}></i>
-                  </Button>
-                </InputGroup>
-              </Form.Group>
-              <Form.Group className="mb-4">
-                <Form.Label className="small fw-bold text-muted">Confirmar Contraseña</Form.Label>
-                <InputGroup>
-                  <Form.Control
-                    type={showConfirmPassword ? "text" : "password"}
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    required
-                    placeholder="Repite tu contraseña"
-                    className="py-2"
-                  />
-                  <Button
-                    variant="outline-secondary"
-                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                    style={{ borderLeft: 'none' }}
-                  >
-                    <i className={`bi bi-eye${showConfirmPassword ? '-slash' : ''}`}></i>
-                  </Button>
-                </InputGroup>
-              </Form.Group>
-
-              {/* --- COMPLIANCE CHECKBOX --- */}
-              <Form.Group className="mb-4">
-                <Form.Check type="checkbox" id="contract-check">
-                  <Form.Check.Input
-                    type="checkbox"
-                    checked={contractAccepted}
-                    onChange={(e) => setContractAccepted(e.target.checked)}
-                    required
-                  />
-                  <Form.Check.Label className="small text-muted ms-1">
-                    He leído y acepto los <span
-                      className="text-primary text-decoration-underline pointer-cursor"
-                      style={{ cursor: 'pointer' }}
-                      onClick={() => setShowContractModal(true)}
+              <Form onSubmit={handleSubmit}>
+                <Form.Group className="mb-4 text-center">
+                  <Form.Label className="small fw-bold text-muted d-block mb-2">Tipo de Cuenta</Form.Label>
+                  <div className="d-flex justify-content-center gap-2">
+                    <Button
+                      variant={accountType === 'individual' ? 'primary' : 'outline-primary'}
+                      size="sm"
+                      className={accountType === 'individual' ? 'text-primary' : ''}
+                      onClick={() => setAccountType('individual')}
                     >
-                      {registrationCountry === 'BO'
-                        ? 'Términos, Condiciones y Contrato de Mandato'
-                        : 'Términos y Condiciones de Uso'}
-                    </span>
-                  </Form.Check.Label>
-                </Form.Check>
-              </Form.Group>
+                      Personal
+                    </Button>
+                    <Button
+                      variant={accountType === 'business' ? 'primary' : 'outline-primary'}
+                      size="sm"
+                      className={accountType === 'business' ? 'text-primary' : ''}
+                      onClick={() => setAccountType('business')}
+                    >
+                      Empresa (B2B)
+                    </Button>
+                  </div>
+                </Form.Group>
 
-              {error && <Alert variant="danger" className="py-2 text-center small">{error}</Alert>}
+                <Form.Group className="mb-4 text-center">
+                  <Form.Label className="small fw-bold text-muted d-block mb-2">País de Residencia</Form.Label>
+                  <div className="d-flex justify-content-center gap-2">
+                    <Button
+                      variant={registrationCountry === 'BO' ? 'outline-primary active' : 'outline-muted'}
+                      size="sm"
+                      className="flex-fill"
+                      onClick={() => setRegistrationCountry('BO')}
+                    >
+                      🇧🇴 Bolivia
+                    </Button>
+                    <Button
+                      variant={registrationCountry === 'CL' ? 'outline-primary active' : 'outline-muted'}
+                      size="sm"
+                      className="flex-fill"
+                      onClick={() => setRegistrationCountry('CL')}
+                    >
+                      🇨🇱 Chile
+                    </Button>
+                    <Button
+                      variant={registrationCountry === 'OTHER' ? 'outline-primary active' : 'outline-muted'}
+                      size="sm"
+                      className="flex-fill"
+                      onClick={() => setRegistrationCountry('OTHER')}
+                    >
+                      🌎 Otro
+                    </Button>
+                  </div>
+                </Form.Group>
 
-              <div className="d-grid mb-3">
-                <Button type="submit" variant="primary" disabled={loading} className="py-3 fw-bold text-primary">
-                  {loading ? <Spinner as="span" size="sm" /> : 'Registrarse'}
-                </Button>
-              </div>
-              <div className="text-center">
-                <span className="text-muted small">¿Ya tienes cuenta? </span>
-                <Link to="/login" className="text-accent fw-bold text-decoration-none">Inicia Sesión</Link>
-              </div>
-            </Form>
+                <Form.Group className="mb-3">
+                  <Form.Label className="small fw-bold text-muted">{accountType === 'business' ? 'Nombre de la Empresa' : 'Nombre Completo'}</Form.Label>
+                  <Form.Control type="text" value={name} onChange={(e) => setName(e.target.value)} required placeholder={accountType === 'business' ? 'Ej: Exportadora S.A.' : 'Ej: Juan Pérez'} className="py-2" />
+                </Form.Group>
+                <Form.Group className="mb-3">
+                  <Form.Label className="small fw-bold text-muted">Correo Electrónico</Form.Label>
+                  <Form.Control type="email" value={email} onChange={(e) => setEmail(e.target.value)} required placeholder="correo@ejemplo.com" className="py-2" />
+                </Form.Group>
+                <Form.Group className="mb-3">
+                  <Form.Label className="small fw-bold text-muted">Contraseña</Form.Label>
+                  <InputGroup>
+                    <Form.Control
+                      type={showPassword ? "text" : "password"}
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      required
+                      placeholder="Mínimo 6 caracteres"
+                      className="py-2"
+                    />
+                    <Button
+                      variant="outline-secondary"
+                      onClick={() => setShowPassword(!showPassword)}
+                      style={{ borderLeft: 'none' }}
+                    >
+                      <i className={`bi bi-eye${showPassword ? '-slash' : ''}`}></i>
+                    </Button>
+                  </InputGroup>
+                </Form.Group>
+                <Form.Group className="mb-4">
+                  <Form.Label className="small fw-bold text-muted">Confirmar Contraseña</Form.Label>
+                  <InputGroup>
+                    <Form.Control
+                      type={showConfirmPassword ? "text" : "password"}
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      required
+                      placeholder="Repite tu contraseña"
+                      className="py-2"
+                    />
+                    <Button
+                      variant="outline-secondary"
+                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      style={{ borderLeft: 'none' }}
+                    >
+                      <i className={`bi bi-eye${showConfirmPassword ? '-slash' : ''}`}></i>
+                    </Button>
+                  </InputGroup>
+                </Form.Group>
+
+                {/* --- COMPLIANCE CHECKBOX --- */}
+                <Form.Group className="mb-4">
+                  <Form.Check type="checkbox" id="contract-check">
+                    <Form.Check.Input
+                      type="checkbox"
+                      checked={contractAccepted}
+                      onChange={(e) => setContractAccepted(e.target.checked)}
+                      required
+                    />
+                    <Form.Check.Label className="small text-muted ms-1">
+                      He leído y acepto los <span
+                        className="text-primary text-decoration-underline pointer-cursor"
+                        style={{ cursor: 'pointer' }}
+                        onClick={() => setShowContractModal(true)}
+                      >
+                        {registrationCountry === 'BO'
+                          ? 'Términos, Condiciones y Contrato de Mandato'
+                          : 'Términos y Condiciones de Uso'}
+                      </span>
+                    </Form.Check.Label>
+                  </Form.Check>
+                </Form.Group>
+
+                {error && <Alert variant="danger" className="py-2 text-center small">{error}</Alert>}
+
+                <div className="d-grid mb-3">
+                  <Button type="submit" variant="primary" disabled={loading} className="py-3 fw-bold text-primary">
+                    {loading ? <Spinner as="span" size="sm" /> : 'Registrarse'}
+                  </Button>
+                </div>
+                <div className="text-center">
+                  <span className="text-muted small">¿Ya tienes cuenta? </span>
+                  <Link to="/login" className="text-accent fw-bold text-decoration-none">Inicia Sesión</Link>
+                </div>
+              </Form>
+            </>
           )}
         </Card.Body>
       </Card>
