@@ -3,7 +3,7 @@ import { useEffect, useRef } from 'react';
 import { getToken, onMessage } from 'firebase/messaging';
 import { getFirebaseMessaging } from '../config/firebase';
 import { registerFcmToken, deleteFcmToken } from '../services/api';
-import { useNotifications } from './context/NotificationContext';
+import { useNotifications } from '../context/NotificationContext';
 import { toast } from 'sonner';
 
 const VAPID_KEY = import.meta.env.VITE_FCM_VAPID_KEY;
