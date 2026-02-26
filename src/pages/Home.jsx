@@ -96,7 +96,7 @@ const Home = () => {
             </div>
 
             {/* Avatar (Right) */}
-            <div className="position-relative shadow-sm rounded-circle" style={{ width: '85px', height: '85px', flexShrink: 0 }}>
+            <div className="position-relative shadow-sm rounded-circle" style={{ width: '105px', height: '105px', flexShrink: 0 }}>
               <label
                 htmlFor="profile-upload"
                 className="rounded-circle d-flex align-items-center justify-content-center overflow-hidden border border-2 border-white bg-light cursor-pointer"

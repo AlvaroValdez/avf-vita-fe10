@@ -4,6 +4,21 @@ import { useParams, Link } from 'react-router-dom';
 import { getTransactionById, approveDeposit } from '../services/api';
 import { formatNumberForDisplay } from '../utils/formatting';
 
+// Flag imports
+import clFlag from '../assets/flags/cl.svg';
+import peFlag from '../assets/flags/pe.svg';
+import coFlag from '../assets/flags/co.svg';
+import arFlag from '../assets/flags/ar.svg';
+import mxFlag from '../assets/flags/mx.svg';
+import brFlag from '../assets/flags/br.svg';
+import usFlag from '../assets/flags/us.svg';
+import boFlag from '../assets/flags/bo.svg';
+
+const flagMap = {
+  CL: clFlag, PE: peFlag, CO: coFlag, AR: arFlag,
+  MX: mxFlag, BR: brFlag, US: usFlag, BO: boFlag,
+};
+
 const TransactionDetail = () => {
   const { id } = useParams();
   const [transaction, setTransaction] = useState(null);
@@ -163,89 +178,101 @@ const TransactionDetail = () => {
               {getStatusBadge(transaction.status)}
             </Card.Header>
             <Card.Body>
-              <div className="p-3 bg-light rounded mb-4">
-                <div className="d-flex justify-content-between align-items-center mb-2">
-                  <span className="text-muted">Monto Enviado:</span>
-                  <span className="fw-bold fs-5">{new Intl.NumberFormat('es-CL', { style: 'currency', currency: transaction.currency }).format(transaction.amount)}</span>
+              {/* Resumen Superior Estilo Recibo */}
+              <div className="p-4 mb-4" style={{ backgroundColor: '#F8F9FD', borderRadius: '12px' }}>
+                <div className="d-flex justify-content-between align-items-center mb-3">
+                  <span className="text-secondary fw-medium">Total a enviar:</span>
+                  <div className="d-flex align-items-center">
+                    <img src={clFlag} alt="Chile" style={{ width: '22px', height: '22px', marginRight: '8px', borderRadius: '50%', objectFit: 'cover' }} />
+                    <span className="fw-bold fs-5 text-dark" style={{ letterSpacing: '-0.5px' }}>
+                      {new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP', minimumFractionDigits: 0 }).format(transaction.amount)}
+                    </span>
+                  </div>
                 </div>
 
-                {/*Detalles de Comisión */}
-                {transaction.feePercent && transaction.feePercent > 0 && (
-                  <>
-                    <hr className="my-2" />
-                    <div className="d-flex justify-content-between align-items-center mb-1">
-                      <span className="text-muted">Comisión ({transaction.feePercent}%):</span>
-                      <span className="text-warning fw-bold">
-                        {new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP', minimumFractionDigits: 0 }).format(transaction.fee || 0)}
+                <div className="d-flex justify-content-between align-items-center mb-3">
+                  <span className="text-secondary fw-medium">Tasa de referencia:</span>
+                  <div className="d-flex align-items-center text-muted">
+                    <i className="bi bi-stack me-2" style={{ fontSize: '1.1rem' }}></i>
+                    <span className="fw-medium">
+                      1 {transaction.currency} = {
+                        transaction.vitaResponse?.exchange_rate
+                          ? new Intl.NumberFormat('es-CL', { maximumFractionDigits: 4 }).format(transaction.vitaResponse.exchange_rate)
+                          : (transaction.fxRate ? new Intl.NumberFormat('es-CL', { maximumFractionDigits: 4 }).format(transaction.fxRate) : '---')
+                      } CLP
+                    </span>
+                  </div>
+                </div>
+
+                {transaction.vitaResponse?.estimated_amount && (
+                  <div className="d-flex justify-content-between align-items-center pt-3 border-top border-light">
+                    <span className="fw-bold" style={{ color: '#00b4d8' }}>Total a recibir:</span>
+                    <div className="d-flex align-items-center">
+                      <img src={flagMap[transaction.country] || usFlag} alt={transaction.country} style={{ width: '22px', height: '22px', marginRight: '8px', borderRadius: '50%', objectFit: 'cover' }} />
+                      <span className="fw-bold fs-5" style={{ color: '#00b4d8', letterSpacing: '-0.5px' }}>
+                        {new Intl.NumberFormat('es-CL', {
+                          minimumFractionDigits: 0,
+                          maximumFractionDigits: 0
+                        }).format(transaction.vitaResponse.estimated_amount)} {transaction.currency}
                       </span>
                     </div>
-                    {transaction.feeOriginAmount > 0 && transaction.currency !== 'CLP' && (
-                      <div className="text-end">
-                        <small className="text-muted">
-                          ({new Intl.NumberFormat('es-CL', { minimumFractionDigits: 2 }).format(transaction.feeOriginAmount)} {transaction.currency})
-                        </small>
-                      </div>
-                    )}
-                    <div className="d-flex justify-content-between align-items-center mt-2 pt-2 border-top">
-                      <span className="text-muted fw-bold">Total Debitado:</span>
-                      <span className="fw-bold">
-                        {new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP', minimumFractionDigits: 0 }).format(
-                          (transaction.currency === 'CLP' ? transaction.amount : 0) + (transaction.fee || 0)
-                        )} CLP
-                      </span>
-                    </div>
-                  </>
+                  </div>
                 )}
               </div>
 
-              <h6 className="text-primary mb-3">Datos del Beneficiario</h6>
-              <ListGroup variant="flush" className="small">
-                <ListGroup.Item className="px-0 d-flex justify-content-between">
-                  <span>Nombre:</span>
-                  <strong>{transaction.beneficiary_first_name} {transaction.beneficiary_last_name} {transaction.company_name}</strong>
-                </ListGroup.Item>
-                <ListGroup.Item className="px-0 d-flex justify-content-between">
-                  <span>Email:</span>
-                  <strong>{transaction.beneficiary_email}</strong>
-                </ListGroup.Item>
-                <ListGroup.Item className="px-0 d-flex justify-content-between">
-                  <span>País Destino:</span>
-                  <strong>{transaction.country}</strong>
-                </ListGroup.Item>
+              {/* Datos del Beneficiario - Clean Layout */}
+              <div className="px-1 mt-2">
+                <div className="mb-3">
+                  <div className="text-secondary fw-bold mb-1" style={{ fontSize: '0.9rem' }}>Beneficiario:</div>
+                  <div className="text-dark fw-medium fs-6">{transaction.beneficiary_first_name} {transaction.beneficiary_last_name} {transaction.company_name}</div>
+                </div>
 
-                {/* Monto en moneda destino */}
-                {transaction.vitaResponse?.estimated_amount && (
-                  <ListGroup.Item className="px-0 d-flex justify-content-between bg-success bg-opacity-10">
-                    <span className="text-success fw-bold">Monto Recibido:</span>
-                    <strong className="text-success">
-                      {new Intl.NumberFormat('es-CL', {
-                        minimumFractionDigits: 0,
-                        maximumFractionDigits: 0
-                      }).format(transaction.vitaResponse.estimated_amount)}
-                      {' '}
-                      {transaction.country === 'CO' ? 'COP' :
-                        transaction.country === 'PE' ? 'PEN' :
-                          transaction.country === 'AR' ? 'ARS' :
-                            transaction.country === 'MX' ? 'MXN' : 'USD'}
-                    </strong>
-                  </ListGroup.Item>
-                )}
+                <div className="mb-3">
+                  <div className="text-secondary fw-bold mb-1" style={{ fontSize: '0.9rem' }}>Email:</div>
+                  <div className="text-dark fw-medium fs-6">{transaction.beneficiary_email}</div>
+                </div>
 
-                {/*Banco destino */}
                 {transaction.withdrawalPayload?.beneficiary_bank_name && (
-                  <ListGroup.Item className="px-0 d-flex justify-content-between">
-                    <span>Banco:</span>
-                    <strong>{transaction.withdrawalPayload.beneficiary_bank_name}</strong>
-                  </ListGroup.Item>
+                  <div className="mb-3">
+                    <div className="text-secondary fw-bold mb-1" style={{ fontSize: '0.9rem' }}>Banco:</div>
+                    <div className="text-dark fw-medium fs-6">{transaction.withdrawalPayload.beneficiary_bank_name}</div>
+                  </div>
                 )}
 
                 {transaction.withdrawalPayload?.beneficiary_bank_account && (
-                  <ListGroup.Item className="px-0 d-flex justify-content-between">
-                    <span>Cuenta:</span>
-                    <strong className="font-monospace">{transaction.withdrawalPayload.beneficiary_bank_account}</strong>
-                  </ListGroup.Item>
+                  <div className="mb-3">
+                    <div className="text-secondary fw-bold mb-1" style={{ fontSize: '0.9rem' }}>Nro de cuenta:</div>
+                    <div className="text-dark fw-medium fs-6 font-monospace">{transaction.withdrawalPayload.beneficiary_bank_account}</div>
+                  </div>
                 )}
-              </ListGroup>
+
+                {transaction.withdrawalPayload?.account_type && (
+                  <div className="mb-3">
+                    <div className="text-secondary fw-bold mb-1" style={{ fontSize: '0.9rem' }}>Tipo de cuenta:</div>
+                    <div className="text-dark fw-medium fs-6 text-capitalize">
+                      {transaction.withdrawalPayload.account_type === 'checking' ? 'Cuenta Corriente' :
+                        transaction.withdrawalPayload.account_type === 'savings' ? 'Cuenta de Ahorros' :
+                          transaction.withdrawalPayload.account_type}
+                    </div>
+                  </div>
+                )}
+
+                <div className="mb-1 mt-4">
+                  <div className="text-secondary fw-bold mb-1" style={{ fontSize: '0.9rem' }}>Transfer ID:</div>
+                  <div className="d-flex align-items-center">
+                    <div className="text-muted small font-monospace me-2 text-break">{transaction._id}</div>
+                    <i
+                      className="bi bi-copy text-primary"
+                      style={{ cursor: 'pointer', fontSize: '1.2rem' }}
+                      title="Copiar ID"
+                      onClick={() => {
+                        navigator.clipboard.writeText(transaction._id);
+                        alert('Transfer ID copiado al portapapeles');
+                      }}
+                    ></i>
+                  </div>
+                </div>
+              </div>
             </Card.Body>
           </Card>
         </Col>

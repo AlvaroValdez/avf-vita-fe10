@@ -80,7 +80,7 @@ const Profile = () => {
               onClick={handleAvatarClick}
               className="rounded-circle overflow-hidden shadow-sm"
               style={{
-                width: '90px', height: '90px',
+                width: '110px', height: '110px',
                 backgroundColor: '#e9ecef', margin: '0 auto',
                 position: 'relative', cursor: 'pointer',
                 backgroundImage: user?.avatar ? `url(${user.avatar})` : 'none',
