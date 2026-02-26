@@ -32,9 +32,7 @@ const Landing = () => {
     const [showPass, setShowPass] = useState(false);
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
-    const [step, setStep] = useState('onboard'); // 'onboard' | 'login'
 
-    // Si ya está autenticado, redirigir al home
     if (token) return <Navigate to="/" replace />;
 
     const handleLogin = async (e) => {
@@ -55,126 +53,125 @@ const Landing = () => {
     };
 
     return (
-        <div className="landing-root">
+        <div className="landing-page-wrapper">
 
-            {/* ─── LEFT / Hero Panel ───────────────────────────────── */}
-            <div className="landing-hero">
-                <div className="landing-hero-content">
-                    <img src={logo} alt="Alyto" className="landing-logo" />
-                    <h1 className="landing-tagline">
-                        Envía dinero al extranjero<br />
-                        <span className="landing-tagline-accent">sin complicaciones</span>
-                    </h1>
-                    <p className="landing-subtitle">
-                        La plataforma de envíos internacionales de AV Finance,
-                        diseñada para la comunidad latinoamericana.
-                    </p>
+            {/* ── Two-column layout ── */}
+            <div className="landing-root">
 
-                    {/* Feature cards */}
-                    <div className="landing-features">
-                        {features.map((f, i) => (
-                            <div key={i} className="landing-feature-card">
-                                <span className="landing-feature-icon">{f.icon}</span>
-                                <div>
-                                    <div className="landing-feature-title">{f.title}</div>
-                                    <div className="landing-feature-desc">{f.desc}</div>
+                {/* LEFT: Hero */}
+                <div className="landing-hero">
+                    <div className="landing-hero-content">
+                        <img src={logo} alt="Alyto" className="landing-logo" />
+                        <h1 className="landing-tagline">
+                            Envía dinero al extranjero<br />
+                            <span className="landing-tagline-accent">sin complicaciones</span>
+                        </h1>
+                        <p className="landing-subtitle">
+                            La plataforma de envíos internacionales de AV Finance,
+                            diseñada para la comunidad latinoamericana.
+                        </p>
+
+                        <div className="landing-features">
+                            {features.map((f, i) => (
+                                <div key={i} className="landing-feature-card">
+                                    <span className="landing-feature-icon">{f.icon}</span>
+                                    <div>
+                                        <div className="landing-feature-title">{f.title}</div>
+                                        <div className="landing-feature-desc">{f.desc}</div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+
+                    <div className="landing-circle landing-circle-1"></div>
+                    <div className="landing-circle landing-circle-2"></div>
+                </div>
+
+                {/* RIGHT: Login */}
+                <div className="landing-login-panel">
+                    <div className="landing-login-box">
+
+                        <img src={logo} alt="Alyto" className="landing-logo-mobile" />
+
+                        <h2 className="landing-login-title">Iniciar Sesión</h2>
+                        <p className="landing-login-sub">Accede a tu cuenta para comenzar a enviar</p>
+
+                        {error && (
+                            <div className="landing-error">
+                                <i className="bi bi-exclamation-triangle me-2"></i>{error}
+                            </div>
+                        )}
+
+                        <form onSubmit={handleLogin} className="landing-form">
+                            <div className="landing-field">
+                                <label>Correo electrónico</label>
+                                <input
+                                    type="email"
+                                    placeholder="tu@correo.com"
+                                    value={email}
+                                    onChange={e => setEmail(e.target.value)}
+                                    required
+                                    autoComplete="email"
+                                />
+                            </div>
+
+                            <div className="landing-field">
+                                <label>Contraseña</label>
+                                <div className="landing-pass-wrap">
+                                    <input
+                                        type={showPass ? 'text' : 'password'}
+                                        placeholder="Tu contraseña"
+                                        value={password}
+                                        onChange={e => setPassword(e.target.value)}
+                                        required
+                                        autoComplete="current-password"
+                                    />
+                                    <button
+                                        type="button"
+                                        className="landing-pass-toggle"
+                                        onClick={() => setShowPass(p => !p)}
+                                        tabIndex={-1}
+                                    >
+                                        <i className={`bi bi-eye${showPass ? '-slash' : ''}`}></i>
+                                    </button>
                                 </div>
                             </div>
-                        ))}
+
+                            <div className="landing-forgot">
+                                <Link to="/forgot-password">¿Olvidaste tu contraseña?</Link>
+                            </div>
+
+                            <button type="submit" className="landing-btn-primary" disabled={loading}>
+                                {loading
+                                    ? <><span className="landing-spinner"></span> Ingresando…</>
+                                    : 'Ingresar'}
+                            </button>
+                        </form>
+
+                        <div className="landing-divider"><span>¿Eres nuevo?</span></div>
+
+                        <Link to="/register" className="landing-btn-register">
+                            Crear una cuenta gratuita
+                        </Link>
                     </div>
                 </div>
 
-                {/* Decorative circles */}
-                <div className="landing-circle landing-circle-1"></div>
-                <div className="landing-circle landing-circle-2"></div>
             </div>
 
-            {/* ─── RIGHT / Login Panel ─────────────────────────────── */}
-            <div className="landing-login-panel">
-                <div className="landing-login-box">
+            {/* ── Footer: full width at the very bottom ── */}
+            <footer className="landing-footer">
+                <p>
+                    <strong>Alyto</strong> es un servicio de transferencias internacionales
+                    desarrollado y operado por{' '}
+                    <a href="https://avfinance.cl" target="_blank" rel="noopener noreferrer">
+                        AV Finance SpA
+                    </a>
+                    , empresa de asesoría financiera registrada en Chile.
+                </p>
+                <p>© {new Date().getFullYear()} AV Finance SpA. Todos los derechos reservados.</p>
+            </footer>
 
-                    {/* Mobile-only logo */}
-                    <img src={logo} alt="Alyto" className="landing-logo-mobile" />
-
-                    <h2 className="landing-login-title">Iniciar Sesión</h2>
-                    <p className="landing-login-sub">Accede a tu cuenta para comenzar a enviar</p>
-
-                    {error && (
-                        <div className="landing-error">
-                            <i className="bi bi-exclamation-triangle me-2"></i>{error}
-                        </div>
-                    )}
-
-                    <form onSubmit={handleLogin} className="landing-form">
-                        <div className="landing-field">
-                            <label>Correo electrónico</label>
-                            <input
-                                type="email"
-                                placeholder="tu@correo.com"
-                                value={email}
-                                onChange={e => setEmail(e.target.value)}
-                                required
-                                autoComplete="email"
-                            />
-                        </div>
-
-                        <div className="landing-field">
-                            <label>Contraseña</label>
-                            <div className="landing-pass-wrap">
-                                <input
-                                    type={showPass ? 'text' : 'password'}
-                                    placeholder="Tu contraseña"
-                                    value={password}
-                                    onChange={e => setPassword(e.target.value)}
-                                    required
-                                    autoComplete="current-password"
-                                />
-                                <button
-                                    type="button"
-                                    className="landing-pass-toggle"
-                                    onClick={() => setShowPass(p => !p)}
-                                    tabIndex={-1}
-                                >
-                                    <i className={`bi bi-eye${showPass ? '-slash' : ''}`}></i>
-                                </button>
-                            </div>
-                        </div>
-
-                        <div className="landing-forgot">
-                            <Link to="/forgot-password">¿Olvidaste tu contraseña?</Link>
-                        </div>
-
-                        <button type="submit" className="landing-btn-primary" disabled={loading}>
-                            {loading
-                                ? <><span className="landing-spinner"></span> Ingresando…</>
-                                : 'Ingresar'}
-                        </button>
-                    </form>
-
-                    <div className="landing-divider"><span>¿Eres nuevo?</span></div>
-
-                    <Link to="/register" className="landing-btn-register">
-                        Crear una cuenta gratuita
-                    </Link>
-                </div>
-
-                {/* ─── Institutional Footer ─── */}
-                <footer className="landing-footer">
-                    <p>
-                        <strong>Alyto</strong> es un servicio de transferencias internacionales desarrollado y
-                        operado por{' '}
-                        <a
-                            href="https://avfinance.cl"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                        >
-                            AV Finance SpA
-                        </a>
-                        , empresa de asesoria financiera registrada en Chile.
-                    </p>
-                    <p>© {new Date().getFullYear()} AV Finance SpA. Todos los derechos reservados.</p>
-                </footer>
-            </div>
         </div>
     );
 };
