@@ -179,22 +179,22 @@ const TransactionDetail = () => {
             </Card.Header>
             <Card.Body>
               {/* Resumen Superior Estilo Recibo */}
-              <div className="p-4 mb-4" style={{ backgroundColor: '#F8F9FD', borderRadius: '12px' }}>
+              <div className="p-4 mb-4 bg-white border" style={{ borderRadius: '12px', borderColor: '#e9ecef' }}>
                 <div className="d-flex justify-content-between align-items-center mb-3">
-                  <span className="text-secondary fw-medium">Total a enviar:</span>
+                  <span className="text-secondary fw-bold" style={{ fontSize: '0.95rem' }}>Total a enviar:</span>
                   <div className="d-flex align-items-center">
                     <img src={clFlag} alt="Chile" style={{ width: '22px', height: '22px', marginRight: '8px', borderRadius: '50%', objectFit: 'cover' }} />
-                    <span className="fw-bold fs-5 text-dark" style={{ letterSpacing: '-0.5px' }}>
+                    <span className="fw-medium text-dark" style={{ fontSize: '1.05rem', letterSpacing: '-0.3px' }}>
                       {new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP', minimumFractionDigits: 0 }).format(transaction.amount)}
                     </span>
                   </div>
                 </div>
 
-                <div className="d-flex justify-content-between align-items-center mb-3">
-                  <span className="text-secondary fw-medium">Tasa de referencia:</span>
+                <div className="d-flex justify-content-between align-items-center mb-4">
+                  <span className="text-secondary fw-bold" style={{ fontSize: '0.95rem' }}>Tasa de referencia:</span>
                   <div className="d-flex align-items-center text-muted">
-                    <i className="bi bi-stack me-2" style={{ fontSize: '1.1rem' }}></i>
-                    <span className="fw-medium">
+                    <i className="bi bi-stack me-2 small"></i>
+                    <span className="small fw-medium text-nowrap" style={{ fontSize: '0.85rem' }}>
                       1 {transaction.currency} = {
                         transaction.vitaResponse?.exchange_rate
                           ? new Intl.NumberFormat('es-CL', { maximumFractionDigits: 4 }).format(transaction.vitaResponse.exchange_rate)
@@ -205,14 +205,14 @@ const TransactionDetail = () => {
                 </div>
 
                 {transaction.vitaResponse?.estimated_amount && (
-                  <div className="d-flex justify-content-between align-items-center pt-3 border-top border-light">
-                    <span className="fw-bold" style={{ color: '#00b4d8' }}>Total a recibir:</span>
+                  <div className="d-flex justify-content-between align-items-center pt-3 border-top" style={{ borderColor: '#e9ecef' }}>
+                    <span className="fw-bold" style={{ color: '#00A89D', fontSize: '0.95rem' }}>Total a recibir:</span>
                     <div className="d-flex align-items-center">
-                      <img src={flagMap[transaction.country] || usFlag} alt={transaction.country} style={{ width: '22px', height: '22px', marginRight: '8px', borderRadius: '50%', objectFit: 'cover' }} />
-                      <span className="fw-bold fs-5" style={{ color: '#00b4d8', letterSpacing: '-0.5px' }}>
+                      <img src={flagMap[transaction.country] || usFlag} alt={transaction.country} style={{ width: '24px', height: '24px', marginRight: '8px', borderRadius: '50%', objectFit: 'cover' }} />
+                      <span className="fw-bold fs-5" style={{ color: '#00A89D', letterSpacing: '-0.3px' }}>
                         {new Intl.NumberFormat('es-CL', {
                           minimumFractionDigits: 0,
-                          maximumFractionDigits: 0
+                          maximumFractionDigits: 2
                         }).format(transaction.vitaResponse.estimated_amount)} {transaction.currency}
                       </span>
                     </div>
