@@ -32,26 +32,32 @@ export const usePushNotifications = () => {
             try {
                 // 1. Verificar soporte del navegador
                 if (!('Notification' in window)) {
-                    console.log('[Push] Navegador no soporta notificaciones');
+                    toast.error('[Debug Push] Navegador no soporta notificaciones');
                     return;
                 }
 
                 // 2. Pedir permiso
                 const permission = await Notification.requestPermission();
                 if (permission !== 'granted') {
-                    console.log('[Push] Permiso de notificaciones denegado');
+                    toast.error('[Debug Push] Permiso de notificaciones DENEGADO por el usuario/navegador');
                     return;
                 }
 
                 // 3. Registrar Service Worker
-                if (!('serviceWorker' in navigator)) return;
+                if (!('serviceWorker' in navigator)) {
+                    toast.error('[Debug Push] Navegador no soporta serviceWorker');
+                    return;
+                }
 
                 const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
                 console.log('[Push] Service Worker registrado');
 
                 // 4. Obtener mensajería
                 const messaging = await getFirebaseMessaging();
-                if (!messaging) return;
+                if (!messaging) {
+                    toast.error('[Debug Push] Firebase Messaging no soportado (messaging = null)');
+                    return;
+                }
 
                 // 5. Obtener token FCM
                 const token = await getToken(messaging, {
@@ -60,7 +66,7 @@ export const usePushNotifications = () => {
                 });
 
                 if (!token) {
-                    console.warn('[Push] No se pudo obtener el FCM token');
+                    toast.error('[Debug Push] No se pudo obtener el FCM token de los servidores de Google');
                     return;
                 }
 
@@ -73,6 +79,9 @@ export const usePushNotifications = () => {
                         localStorage.setItem('fcmToken', token);
                         console.log('[Push] ✅ Token FCM registrado en backend');
                         registered.current = true; // Solo marcamos como registrado si tuvo éxito
+                        toast.success('[Debug Push] ✅ Token FCM guardado en tu Base de Datos Backend con éxito!');
+                    } else {
+                        toast.error('[Debug Push] ❌ Backend falló al intentar guardar tu Token FCM');
                     }
                 } else {
                     // Si el token es el mismo del localStorage, igual intentamos registrarlo
@@ -81,6 +90,9 @@ export const usePushNotifications = () => {
                     if (response?.ok) {
                         console.log('[Push] ✅ Token FCM re-registrado en backend');
                         registered.current = true;
+                        toast.success('[Debug Push] ✅ Token FCM RE-guardado en tu BD Backend con éxito!');
+                    } else {
+                        toast.error('[Debug Push] ❌ Backend falló al intentar re-guardar tu Token FCM');
                     }
                 }
 
@@ -116,6 +128,7 @@ export const usePushNotifications = () => {
             } catch (err) {
                 // No loguear errores críticos — push es no-crítico
                 console.warn('[Push] Error en setup:', err.message);
+                toast.error(`[Debug Push] Excepción Fatal en Setup: ${err.message}`);
             }
         };
 
