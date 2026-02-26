@@ -84,24 +84,33 @@ const Home = () => {
 
         <Container className="py-2 pb-5 position-relative" style={{ zIndex: 1, maxWidth: '600px' }}>
 
-          {/* 1. USER PROFILE (Centered & Large) */}
-          <div className="text-center mb-4">
-            {/* Avatar Centered */}
-            <div className="mx-auto mb-3 position-relative" style={{ width: '100px', height: '100px' }}>
+          {/* 1. USER PROFILE (Left/Right Layout) */}
+          <div className="d-flex justify-content-between align-items-center mb-4 px-2 mt-4">
+
+            {/* Texts (Left) */}
+            <div className="text-start">
+              <h2 className="fw-bold mb-1 text-dark" style={{ fontSize: '1.6rem', letterSpacing: '-0.5px' }}>
+                Hola, {user?.name?.split(' ')[0] || 'Usuario'} 👋
+              </h2>
+              <p className="text-muted mb-0 small">{today}</p>
+            </div>
+
+            {/* Avatar (Right) */}
+            <div className="position-relative shadow-sm rounded-circle" style={{ width: '65px', height: '65px', flexShrink: 0 }}>
               <label
                 htmlFor="profile-upload"
-                className="rounded-circle d-flex align-items-center justify-content-center overflow-hidden border border-4 border-white shadow bg-light cursor-pointer"
+                className="rounded-circle d-flex align-items-center justify-content-center overflow-hidden border border-2 border-white bg-light cursor-pointer"
                 style={{ width: '100%', height: '100%', cursor: 'pointer' }}
               >
                 {user?.avatar ? (
                   <img src={user.avatar} alt="Profile" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                 ) : (
-                  <span className="fw-bold display-4 text-secondary">{user?.name?.charAt(0) || 'U'}</span>
+                  <span className="fw-bold fs-3 text-secondary">{user?.name?.charAt(0) || 'U'}</span>
                 )}
 
                 {/* Overlay Icon for Edit */}
                 <div className="position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center bg-dark bg-opacity-25 opacity-0 hover-opacity-100 transition-opacity">
-                  <i className="bi bi-camera-fill text-white fs-3"></i>
+                  <i className="bi bi-camera-fill text-white fs-5"></i>
                 </div>
               </label>
               <input
@@ -112,26 +121,17 @@ const Home = () => {
                 onChange={async (e) => {
                   if (e.target.files && e.target.files[0]) {
                     const file = e.target.files[0];
-                    // Validate file size (max 5MB)
                     if (file.size > 5 * 1024 * 1024) {
                       toast.error("La imagen no debe superar los 5MB");
                       return;
                     }
-
                     const formData = new FormData();
                     formData.append('avatar', file);
-
-                    // Show loading toast (optional, or just logic)
                     const toastId = toast.loading("Subiendo foto de perfil...");
-
                     try {
-                      // Import uploadAvatar dynamically if not at top, or assume it's imported
                       const { uploadAvatar } = await import('../services/api');
-
                       const response = await uploadAvatar(formData);
-
                       if (response.ok && response.avatar) {
-                        // Update user session context
                         const updatedUser = { ...user, avatar: response.avatar };
                         updateUserSession(updatedUser);
                         toast.success("Foto de perfil actualizada", { id: toastId });
@@ -146,11 +146,6 @@ const Home = () => {
                 }}
               />
             </div>
-
-            <h2 className="fw-bold mb-1 text-dark" style={{ fontSize: '1.75rem' }}>
-              {user?.name || 'Usuario'}
-            </h2>
-            <p className="text-muted mb-0">{today}</p>
           </div>
 
           {/* 3. ACTION GRID (4 Buttons with Custom SVGs) */}

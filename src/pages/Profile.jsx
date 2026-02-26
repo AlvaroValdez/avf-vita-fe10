@@ -54,142 +54,170 @@ const Profile = () => {
   };
 
   return (
-    <Container className="my-4">
-      {/* Logo Header */}
-      <div className="text-center mb-4">
-        <img src={logo} alt="Alyto" style={{ height: '90px' }} />
-      </div>
+    <div style={{ backgroundColor: '#000000', color: '#ffffff', minHeight: '100vh', paddingBottom: '80px', paddingTop: '20px' }}>
+      <Container className="px-3" style={{ maxWidth: '600px' }}>
 
-      <h2 className="mb-4 fw-bold" style={{ color: 'var(--avf-primary)' }}>Mi Perfil</h2>
-      <Row>
-        {/* --- Columna Izquierda: Datos Personales --- */}
-        <Col lg={4} className="mb-4">
-          <Card className="shadow-sm border-0">
-            <Card.Body>
-              <div className="text-center mb-3">
+        {/* TOP NAVBAR REPLACEMENT FOR THIS VIEW (Optional back button if mobile) 
+        <div className="d-flex justify-content-between mb-4 mt-2">
+          <i className="bi bi-arrow-left fs-4" onClick={() => window.history.back()} style={{cursor: 'pointer'}}></i>
+          <i className="bi bi-gear fs-4" style={{cursor: 'pointer'}}></i>
+        </div>
+        */}
 
-                {/* --- AVATAR INTERACTIVO --- */}
-                <div
-                  onClick={handleAvatarClick}
-                  style={{
-                    width: '100px', height: '100px', borderRadius: '50%',
-                    backgroundColor: '#e9ecef', margin: '0 auto',
-                    position: 'relative', cursor: 'pointer', overflow: 'hidden',
-                    backgroundImage: user?.avatar ? `url(${user.avatar})` : 'none',
-                    backgroundSize: 'cover', backgroundPosition: 'center',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    border: '3px solid var(--avf-secondary)'
-                  }}
-                >
-                  {/* Input oculto */}
-                  <input
-                    type="file"
-                    ref={fileInputRef}
-                    onChange={handleFileChange}
-                    style={{ display: 'none' }}
-                    accept="image/*"
-                  />
+        {/* --- 1. HEADER ROW: Texts Left, Avatar Right --- */}
+        <div className="d-flex justify-content-between align-items-center mb-4 mt-4">
 
-                  {uploadingAvatar ? (
-                    <Spinner animation="border" size="sm" />
-                  ) : (
-                    !user?.avatar && <span style={{ fontSize: '32px', color: '#6c757d' }}>{user?.name?.charAt(0).toUpperCase()}</span>
-                  )}
+          <div className="text-start">
+            <h1 className="fw-normal mb-0" style={{ fontSize: '2rem', letterSpacing: '-0.5px' }}>
+              {user?.name || 'Usuario'}
+            </h1>
+            <div className="text-secondary" style={{ fontSize: '1.1rem' }}>
+              {user?.email}
+            </div>
+            <div className="text-secondary mt-1">
+              <Badge bg="secondary" className="fw-normal rounded-pill px-3 py-1 bg-opacity-25 text-light border border-secondary">
+                Cuenta {user?.accountType === 'business' ? 'Empresa' : 'Personal'}
+              </Badge>
+            </div>
+          </div>
 
-                  {/* Overlay al hacer hover (opcional, visual) */}
-                  <div className="avatar-overlay" style={{ position: 'absolute', bottom: 0, width: '100%', background: 'rgba(0,0,0,0.5)', color: 'white', fontSize: '10px' }}>
-                    EDITAR
-                  </div>
-                </div>
-
-                <h5 className="mt-3">{user?.name}</h5>
-                <p className="text-muted small">{user?.email}</p>
-
-                <div className="mb-2">
-                  Tipo de Cuenta: <Badge bg="info" className="text-dark ms-1">{user?.accountType === 'business' ? 'Empresa' : 'Personal'}</Badge>
-                </div>
-                <div className="mb-2">
-                  Nivel {user?.accountType === 'business' ? 'KYB' : 'KYC'}: <strong className="fs-5">{user?.kyc?.level || 1}</strong>
-                </div>
-                <div>{getKycStatusBadge(user?.kyc?.status)}</div>
-              </div>
-
-              <hr />
-
-              {user?.accountType === 'business' ? (
-                <ListGroup variant="flush" className="small">
-                  <ListGroup.Item className="px-0">
-                    <strong>Razón Social:</strong> <br /> {user?.business?.name || 'No registrada'}
-                  </ListGroup.Item>
-                  <ListGroup.Item className="px-0">
-                    <strong>ID Fiscal (NIT/RUT):</strong> <br /> {user?.business?.taxId || 'No registrado'}
-                  </ListGroup.Item>
-                  <ListGroup.Item className="px-0">
-                    <strong>Dirección Legal:</strong> <br /> {user?.business?.registeredAddress || 'No registrada'}
-                  </ListGroup.Item>
-                </ListGroup>
+          <div style={{ flexShrink: 0 }}>
+            {/* AVATAR INTERACTIVO */}
+            <div
+              onClick={handleAvatarClick}
+              className="rounded-circle overflow-hidden shadow"
+              style={{
+                width: '90px', height: '90px',
+                backgroundColor: '#1C1C1E', margin: '0 auto',
+                position: 'relative', cursor: 'pointer',
+                backgroundImage: user?.avatar ? `url(${user.avatar})` : 'none',
+                backgroundSize: 'cover', backgroundPosition: 'center',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                border: '1px solid #333'
+              }}
+            >
+              <input type="file" ref={fileInputRef} onChange={handleFileChange} style={{ display: 'none' }} accept="image/*" />
+              {uploadingAvatar ? (
+                <Spinner animation="border" size="sm" variant="light" />
               ) : (
-                <ListGroup variant="flush" className="small">
-                  <ListGroup.Item className="px-0">
-                    <strong>Teléfono:</strong> <br /> {user?.phoneNumber || 'No registrado'}
-                  </ListGroup.Item>
-                  <ListGroup.Item className="px-0">
-                    <strong>Documento ({user?.documentType}):</strong> <br /> {user?.documentNumber || 'No registrado'}
-                  </ListGroup.Item>
-                  <ListGroup.Item className="px-0">
-                    <strong>Dirección:</strong> <br /> {user?.address || 'No registrado'}
-                  </ListGroup.Item>
-                </ListGroup>
+                !user?.avatar && <span style={{ fontSize: '32px', color: '#666' }}>{user?.name?.charAt(0).toUpperCase() || 'U'}</span>
               )}
+            </div>
+          </div>
 
-              <hr />
+        </div>
 
-              {/* Transaction Limits Section */}
-              <div className="mt-3">
-                <h6 className="fw-bold mb-3">Límites de Transacción</h6>
-                <div className="small">
-                  <div className="d-flex justify-content-between mb-2">
-                    <span className="text-muted">Nivel Actual:</span>
-                    <Badge bg="primary">{user?.kyc?.level || 1}</Badge>
-                  </div>
-                  <div className="d-flex justify-content-between mb-2">
-                    <span className="text-muted">Límite por Transacción:</span>
-                    <strong>
-                      {user?.kyc?.level === 3 ? '$50.000.000' :
-                        user?.kyc?.level === 2 ? '$4.500.000' :
-                          '$450.000'} CLP
-                    </strong>
-                  </div>
-                  {user?.kyc?.level < 3 && (
-                    <div className="mt-2 p-2 bg-light rounded">
-                      <small className="text-muted">
-                        ⬆️ Nivel {(user?.kyc?.level || 1) + 1}: {
-                          (user?.kyc?.level || 1) === 1 ? '$4.500.000' : '$50.000.000'
-                        } CLP
-                      </small>
-                    </div>
-                  )}
-                </div>
+        {/* --- 2. FOLLOWERS / FOLLOWING EQUIVALENT (KYC Status) --- */}
+        <div className="d-flex mb-4">
+          <div className="me-5">
+            <div className="text-uppercase text-secondary mb-1" style={{ fontSize: '0.75rem', letterSpacing: '1px' }}>Nivel KYC</div>
+            <div className="fs-5 fw-medium text-white">{user?.kyc?.level || 1}</div>
+          </div>
+          <div>
+            <div className="text-uppercase text-secondary mb-1" style={{ fontSize: '0.75rem', letterSpacing: '1px' }}>Estado</div>
+            <div className="fs-5 fw-medium text-white d-flex align-items-center">
+              {user?.kyc?.status === 'approved' ? (
+                <><span className="text-success me-2">●</span> Verificado</>
+              ) : user?.kyc?.status === 'pending' ? (
+                <><span className="text-warning me-2">●</span> En Revisión</>
+              ) : (
+                <><span className="text-secondary me-2">●</span> Básico</>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* --- 3. ACTIONS ROW --- */}
+        <div className="d-flex gap-3 mb-5">
+          <Button variant="outline-light" className="rounded-pill px-4 fw-normal" style={{ fontSize: '0.9rem' }} onClick={handleAvatarClick}>
+            Editar Foto
+          </Button>
+          <Button variant="outline-light" className="rounded-circle d-flex align-items-center justify-content-center" style={{ width: '38px', height: '38px' }}>
+            <i className="bi bi-person-plus"></i>
+          </Button>
+        </div>
+
+        <hr style={{ borderColor: '#333' }} className="mb-4" />
+
+        {/* --- 4. PRACTICE STATS EQUIVALENT (Limits & Info) --- */}
+        <div className="mb-4">
+          <div className="text-uppercase text-secondary mb-3" style={{ fontSize: '0.8rem', letterSpacing: '1px' }}>Límites Transaccionales</div>
+
+          <Row className="text-center text-md-start">
+            <Col xs={3}>
+              <div className="fs-3 fw-normal text-white">{user?.kyc?.level || 1}</div>
+              <div className="text-secondary text-uppercase" style={{ fontSize: '0.6rem', letterSpacing: '1px' }}>Nivel<br />Actual</div>
+            </Col>
+            <Col xs={4}>
+              <div className="fs-3 fw-normal text-white">450k</div>
+              <div className="text-secondary text-uppercase" style={{ fontSize: '0.6rem', letterSpacing: '1px' }}>Límite<br />Diario</div>
+            </Col>
+            <Col xs={5}>
+              <div className="fs-3 fw-normal text-success">
+                {user?.kyc?.level === 3 ? 'Ilimitado' : (user?.kyc?.level === 2 ? '4.5M' : '450k')}
               </div>
-            </Card.Body>
-          </Card>
-        </Col>
+              <div className="text-secondary text-uppercase" style={{ fontSize: '0.6rem', letterSpacing: '1px' }}>Monto<br />Permitido</div>
+            </Col>
+          </Row>
+        </div>
 
-        {/* --- Columna Derecha: Verificación de Identidad --- */}
-        <Col lg={8}>
-          <Card className="shadow-sm border-0">
-            <Card.Header className="bg-white border-bottom-0 pt-4 pb-0">
-              <h4 style={{ color: 'var(--avf-primary)' }}>
-                {user?.accountType === 'business' ? 'Verificación Corporativa' : 'Aumentar Límites (Nivel 2)'}
-              </h4>
-            </Card.Header>
-            <Card.Body>
+        <hr style={{ borderColor: '#333' }} className="mb-4" />
+
+        {/* --- 5. MY CLASSES EQUIVALENT (Detailed Info & Verification) --- */}
+        <div className="mb-4">
+          <div className="text-uppercase text-secondary mb-3" style={{ fontSize: '0.8rem', letterSpacing: '1px' }}>Datos de Seguridad</div>
+
+          {user?.accountType === 'business' ? (
+            <>
+              <div className="d-flex justify-content-between py-3 border-bottom" style={{ borderColor: '#333' }}>
+                <div className="d-flex align-items-center">
+                  <i className="bi bi-briefcase text-white me-3 fs-5"></i>
+                  <span className="text-light">Razón Social</span>
+                </div>
+                <div className="text-secondary">{user?.business?.name || 'Pendiente'}</div>
+              </div>
+              <div className="d-flex justify-content-between py-3 border-bottom" style={{ borderColor: '#333' }}>
+                <div className="d-flex align-items-center">
+                  <i className="bi bi-hash text-white me-3 fs-5"></i>
+                  <span className="text-light">ID Fiscal</span>
+                </div>
+                <div className="text-secondary">{user?.business?.taxId || 'Pendiente'}</div>
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="d-flex justify-content-between py-3 border-bottom" style={{ borderColor: '#222' }}>
+                <div className="d-flex align-items-center">
+                  <i className="bi bi-telephone text-white me-3 fs-5"></i>
+                  <span className="text-light">Teléfono</span>
+                </div>
+                <div className="text-secondary">{user?.phoneNumber || 'No registrado'}</div>
+              </div>
+              <div className="d-flex justify-content-between py-3 border-bottom" style={{ borderColor: '#222' }}>
+                <div className="d-flex align-items-center">
+                  <i className="bi bi-card-text text-white me-3 fs-5"></i>
+                  <span className="text-light">Documento</span>
+                </div>
+                <div className="text-secondary">{user?.documentNumber || 'No registrado'}</div>
+              </div>
+            </>
+          )}
+
+        </div>
+
+        {/* Formulario de Aumento de Nivel embebido al final */}
+        {(!user?.kyc?.status || user?.kyc?.status !== 'approved') && (
+          <div className="mt-5 p-4 rounded" style={{ backgroundColor: '#1A1A1C' }}>
+            <h5 className="text-white mb-3 fw-normal">Sube de Nivel KYC</h5>
+            <p className="text-secondary small mb-4">Aumenta tus límites de envío subiendo tus documentos.</p>
+            <div className="bg-white rounded p-3">
               {user?.accountType === 'business' ? <KybLevel2Form /> : <KycLevel2Form />}
-            </Card.Body>
-          </Card>
-        </Col>
-      </Row>
-    </Container>
+            </div>
+          </div>
+        )}
+
+      </Container>
+    </div>
   );
 };
 
