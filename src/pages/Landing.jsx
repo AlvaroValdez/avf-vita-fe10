@@ -164,7 +164,7 @@ const Landing = () => {
                 <p>
                     <strong>Alyto</strong> es un servicio de transferencias internacionales
                     desarrollado y operado por{' '}
-                    <a href="https://avfinance.cl" target="_blank" rel="noopener noreferrer">
+                    <a href="https://avfinance.net" target="_blank" rel="noopener noreferrer">
                         AV Finance SpA
                     </a>
                     , empresa de asesoría financiera registrada en Chile.
