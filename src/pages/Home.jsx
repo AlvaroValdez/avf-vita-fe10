@@ -76,35 +76,6 @@ const Home = () => {
         maxWidth: '100vw'
       }}>
 
-        {/* 1. APP BAR (Blue Background, Logo, Actions) */}
-        <div className="d-flex justify-content-between align-items-center px-4 py-3 shadow-sm position-sticky top-0"
-          style={{
-            backgroundColor: '#233E58',
-            color: 'white',
-            zIndex: 10,
-            width: '100%',
-            maxWidth: '100vw',
-            boxSizing: 'border-box',
-            left: 0,
-            right: 0
-          }}>
-          {/* Left: Logo (Image) */}
-          <div className="d-flex align-items-center">
-            <Image src={logo} alt="Alyto" height="30" />
-          </div>
-
-          {/* Right: Actions */}
-          <div className="d-flex align-items-center gap-4">
-            {/* Show/Hide Balance */}
-            {/* Balance Toggle Removed for Remittance Only Mode */}
-
-            {/* Notifications (Bell) */}
-            <NotificationBell color="white" />
-          </div>
-        </div>
-
-
-        {/* BACKGROUND BLOBS */}
         <div style={{
           position: 'absolute', top: 0, left: 0, width: 300, height: 300,
           background: 'radial-gradient(circle, rgba(35,62,88,0.1) 0%, rgba(255,255,255,0) 70%)',
@@ -113,20 +84,7 @@ const Home = () => {
 
         <Container className="py-2 pb-5 position-relative" style={{ zIndex: 1, maxWidth: '600px' }}>
 
-
-          {/* 1. Header Actions (Logout Right) */}
-          <div className="d-flex justify-content-end align-items-center mt-3 mb-2 px-2">
-            <button
-              onClick={logout}
-              className="btn p-0 border-0 d-flex align-items-center justify-content-center"
-              style={{ width: '45px', height: '45px', color: '#dc3545', backgroundColor: 'transparent' }}
-              title="Cerrar Sesión"
-            >
-              <i className="bi bi-power fs-4"></i>
-            </button>
-          </div>
-
-          {/* 2. USER PROFILE (Centered & Large) */}
+          {/* 1. USER PROFILE (Centered & Large) */}
           <div className="text-center mb-4">
             {/* Avatar Centered */}
             <div className="mx-auto mb-3 position-relative" style={{ width: '100px', height: '100px' }}>
