@@ -280,76 +280,83 @@ const Transactions = () => {
                   e.currentTarget.style.transform = 'translateY(0)';
                 }}
               >
-                <Card.Body className="p-3 p-md-4">
-                  <div className="row align-items-center">
-                    {/* Left Side - Beneficiary & Amounts */}
-                    <div className="col-lg-7 mb-3 mb-lg-0">
-                      {/* Beneficiary with Flag */}
-                      <div className="d-flex align-items-center mb-3">
-                        {getFlagUrl(tx.destCountry || tx.country) && (
-                          <img
-                            src={getFlagUrl(tx.destCountry || tx.country)}
-                            alt={tx.destCountry || tx.country}
-                            style={{ width: '40px', height: '40px', borderRadius: '50%', objectFit: 'cover' }}
-                            className="me-3 flex-shrink-0"
-                          />
-                        )}
-                        <div className="flex-grow-1">
-                          <h6 className="mb-0 fw-bold" style={{ color: '#233E58' }}>
-                            {tx.company_name || `${tx.beneficiary_first_name || ''} ${tx.beneficiary_last_name || ''}`.trim()}
-                          </h6>
-                          <small className="text-muted">
-                            <i className="bi bi-calendar3 me-1"></i>
-                            {new Date(tx.createdAt).toLocaleString('es-ES', {
-                              day: '2-digit',
-                              month: '2-digit',
-                              year: 'numeric',
-                              hour: '2-digit',
-                              minute: '2-digit'
-                            })}
-                          </small>
-                        </div>
-                      </div>
+                <Card.Body className="p-3">
+                  {(() => {
+                    // Derive destination currency and amounts
+                    const destCurrency = tx.amountsTracking?.destCurrency ||
+                      (tx.country === 'BO' ? 'BOB' : tx.country === 'PE' ? 'PEN' :
+                        tx.country === 'CO' ? 'COP' : tx.country === 'AR' ? 'ARS' :
+                          tx.country === 'MX' ? 'MXN' : tx.country === 'BR' ? 'BRL' : 'USD');
 
-                      {/* Amounts */}
-                      <div className="row g-3">
-                        <div className="col-12 col-md-6">
-                          <small className="text-muted d-block mb-1">Enviaste</small>
-                          <div className="d-flex align-items-center gap-2">
-                            {getFlagUrl(tx.currency?.substring(0, 2)) && (
+                    const destAmount = tx.amountsTracking?.destReceiveAmount || tx.vitaResponse?.estimated_amount;
+
+                    // Mask account number (show last 4 chars)
+                    const rawAccount = tx.withdrawalPayload?.beneficiary_bank_account || '';
+                    const maskedAccount = rawAccount.length > 4
+                      ? `****${rawAccount.slice(-4)}`
+                      : rawAccount;
+
+                    const bankName = tx.withdrawalPayload?.beneficiary_bank_name;
+                    const benefName = tx.company_name || [tx.beneficiary_first_name, tx.beneficiary_last_name].filter(Boolean).join(' ');
+
+                    return (
+                      <>
+                        {/* --- Section 1: Reciben --- */}
+                        <div className="d-flex justify-content-between align-items-start mb-2">
+                          <div>
+                            <div className="text-secondary mb-1" style={{ fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Reciben</div>
+                            <div className="d-flex align-items-center gap-2">
                               <img
-                                src={getFlagUrl(tx.currency?.substring(0, 2))}
-                                alt={tx.currency}
-                                style={{ width: '24px', height: '24px', borderRadius: '50%', objectFit: 'cover' }}
+                                src={getFlagUrl(tx.country) || flagUS}
+                                alt={tx.country}
+                                style={{ width: '22px', height: '22px', borderRadius: '50%', objectFit: 'cover' }}
                               />
-                            )}
-                            <span className="fw-bold" style={{ color: '#233E58' }}>
-                              {new Intl.NumberFormat('es-CL', {
-                                style: 'currency',
-                                currency: tx.currency || 'CLP',
-                                minimumFractionDigits: 0
-                              }).format(tx.amount || 0)}
+                              {destAmount ? (
+                                <span className="fw-bold" style={{ fontSize: '1.15rem', color: '#00A89D' }}>
+                                  {new Intl.NumberFormat('es-CL', { minimumFractionDigits: 0, maximumFractionDigits: 2 }).format(destAmount)} {destCurrency}
+                                </span>
+                              ) : (
+                                <span className="text-muted small">Pendiente</span>
+                              )}
+                            </div>
+                          </div>
+                          {/* Date/time on the right */}
+                          <div className="text-end">
+                            <small className="text-muted d-block" style={{ fontSize: '0.75rem' }}>
+                              {new Date(tx.createdAt).toLocaleDateString('es-CL', { day: '2-digit', month: '2-digit', year: 'numeric' })}
+                            </small>
+                            <small className="text-muted d-block" style={{ fontSize: '0.75rem' }}>
+                              {new Date(tx.createdAt).toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit' })}
+                            </small>
+                          </div>
+                        </div>
+
+                        {/* --- Section 2: Enviaste --- */}
+                        <div className="mb-3">
+                          <div className="text-secondary mb-1" style={{ fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Enviaste</div>
+                          <div className="d-flex align-items-center gap-2">
+                            <img src={flagCL} alt="CL" style={{ width: '22px', height: '22px', borderRadius: '50%', objectFit: 'cover' }} />
+                            <span className="fw-bold" style={{ color: '#233E58', fontSize: '1rem' }}>
+                              {new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP', minimumFractionDigits: 0 }).format(tx.amount || 0)}
                             </span>
                           </div>
                         </div>
-                        <div className="col-12 col-md-6">
-                          <small className="text-muted d-block mb-1">Reciben</small>
-                          <div className="fw-bold text-success" style={{ fontSize: '1.1rem' }}>
-                            {tx.amountsTracking?.destReceiveAmount ? (
-                              `${new Intl.NumberFormat('es-CL', { minimumFractionDigits: 0 }).format(tx.amountsTracking.destReceiveAmount)} ${tx.amountsTracking.destCurrency}`
-                            ) : (
-                              <span className="text-muted small">-</span>
+
+                        {/* --- Section 3: Destinatario --- */}
+                        {benefName && (
+                          <div className="mb-3">
+                            <div className="text-secondary mb-1" style={{ fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Destinatario</div>
+                            <div className="fw-medium text-dark" style={{ fontSize: '0.9rem' }}>{benefName}</div>
+                            {(maskedAccount || bankName) && (
+                              <div className="text-muted" style={{ fontSize: '0.82rem' }}>
+                                {maskedAccount}{maskedAccount && bankName ? ' · ' : ''}{bankName}
+                              </div>
                             )}
                           </div>
-                        </div>
-                      </div>
-                    </div>
+                        )}
 
-                    {/* Right Side - Status & Actions */}
-                    <div className="col-lg-5">
-                      <div className="d-flex flex-column gap-3 align-items-lg-end">
-                        {/* Status Badge */}
-                        <div>
+                        {/* --- Status badge --- */}
+                        <div className="mb-3">
                           {tx.paymentMethod === 'manual_anchor' && (
                             <Badge bg="warning" text="dark" className="me-2">
                               <i className="bi bi-bank2"></i> Manual
@@ -358,34 +365,36 @@ const Transactions = () => {
                           {getStatusBadge(tx.status)}
                         </div>
 
-                        {/* Action Buttons */}
-                        <div className="d-flex gap-2 flex-wrap">
+                        {/* --- Separator --- */}
+                        <hr className="my-2" style={{ borderColor: '#e9ecef' }} />
+
+                        {/* --- Buttons: small, side by side --- */}
+                        <div className="d-flex gap-2">
                           <Button
                             size="sm"
-                            variant="primary"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleViewReceipt(tx);
-                            }}
-                            className="d-flex align-items-center gap-2"
+                            variant="outline-primary"
+                            onClick={(e) => { e.stopPropagation(); handleViewReceipt(tx); }}
+                            className="d-flex align-items-center gap-1 px-2 py-1"
+                            style={{ fontSize: '0.78rem' }}
                           >
-                            <i className="bi bi-receipt"></i>
-                            Ver Comprobante
+                            <i className="bi bi-receipt" style={{ fontSize: '0.8rem' }}></i>
+                            Comprobante
                           </Button>
                           <Button
                             size="sm"
                             variant="outline-secondary"
                             as={Link}
                             to={`/transactions/${tx._id}`}
-                            className="d-flex align-items-center gap-2"
+                            className="d-flex align-items-center gap-1 px-2 py-1"
+                            style={{ fontSize: '0.78rem' }}
                           >
-                            <i className="bi bi-info-circle"></i>
+                            <i className="bi bi-info-circle" style={{ fontSize: '0.8rem' }}></i>
                             Detalles
                           </Button>
                         </div>
-                      </div>
-                    </div>
-                  </div>
+                      </>
+                    );
+                  })()}
                 </Card.Body>
               </Card>
             </div>

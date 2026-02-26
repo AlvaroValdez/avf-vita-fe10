@@ -179,58 +179,91 @@ const TransactionDetail = () => {
             </Card.Header>
             <Card.Body>
               {/* Resumen Superior Estilo Recibo */}
-              <div className="p-4 mb-4 bg-white border" style={{ borderRadius: '12px', borderColor: '#e9ecef' }}>
-                <div className="d-flex justify-content-between align-items-center mb-3">
-                  <span className="text-secondary fw-bold" style={{ fontSize: '0.95rem' }}>Total a enviar:</span>
-                  <div className="d-flex align-items-center">
-                    <img src={clFlag} alt="Chile" style={{ width: '22px', height: '22px', marginRight: '8px', borderRadius: '50%', objectFit: 'cover' }} />
-                    <span className="fw-medium text-dark" style={{ fontSize: '1.05rem', letterSpacing: '-0.3px' }}>
-                      {new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP', minimumFractionDigits: 0 }).format(transaction.amount)}
-                    </span>
-                  </div>
-                </div>
+              {(() => {
+                // Derive display values from the correct schema fields
+                const originCurrency = transaction.amountsTracking?.originCurrency || transaction.currency || 'CLP';
+                const destCurrency = transaction.amountsTracking?.destCurrency ||
+                  (transaction.country === 'BO' ? 'BOB' :
+                    transaction.country === 'PE' ? 'PEN' :
+                      transaction.country === 'CO' ? 'COP' :
+                        transaction.country === 'AR' ? 'ARS' :
+                          transaction.country === 'MX' ? 'MXN' :
+                            transaction.country === 'BR' ? 'BRL' : 'USD');
 
-                <div className="d-flex justify-content-between align-items-center mb-4">
-                  <span className="text-secondary fw-bold" style={{ fontSize: '0.95rem' }}>Tasa de referencia:</span>
-                  <div className="d-flex align-items-center text-muted">
-                    <i className="bi bi-stack me-2 small"></i>
-                    <span className="small fw-medium text-nowrap" style={{ fontSize: '0.85rem' }}>
-                      1 {transaction.currency} = {
-                        transaction.vitaResponse?.exchange_rate
-                          ? new Intl.NumberFormat('es-CL', { maximumFractionDigits: 4 }).format(transaction.vitaResponse.exchange_rate)
-                          : (transaction.fxRate ? new Intl.NumberFormat('es-CL', { maximumFractionDigits: 4 }).format(transaction.fxRate) : '---')
-                      } CLP
-                    </span>
-                  </div>
-                </div>
+                // The rate: how many origin units is 1 dest unit worth (e.g. 1 BOB = 110.5 CLP)
+                const alytoRate = transaction.rateTracking?.alytoRate
+                  || transaction.vitaResponse?.exchange_rate
+                  || transaction.fxRate;
 
-                {transaction.vitaResponse?.estimated_amount && (
-                  <div className="d-flex justify-content-between align-items-center pt-3 border-top" style={{ borderColor: '#e9ecef' }}>
-                    <span className="fw-bold" style={{ color: '#00A89D', fontSize: '0.95rem' }}>Total a recibir:</span>
-                    <div className="d-flex align-items-center">
-                      <img src={flagMap[transaction.country] || usFlag} alt={transaction.country} style={{ width: '24px', height: '24px', marginRight: '8px', borderRadius: '50%', objectFit: 'cover' }} />
-                      <span className="fw-bold fs-5" style={{ color: '#00A89D', letterSpacing: '-0.3px' }}>
-                        {new Intl.NumberFormat('es-CL', {
-                          minimumFractionDigits: 0,
-                          maximumFractionDigits: 2
-                        }).format(transaction.vitaResponse.estimated_amount)} {transaction.currency}
-                      </span>
+                // Destination amount: what the beneficiary receives
+                const destAmount = transaction.amountsTracking?.destReceiveAmount
+                  || transaction.vitaResponse?.estimated_amount;
+
+                return (
+                  <div className="p-4 mb-4 bg-white border" style={{ borderRadius: '12px', borderColor: '#e9ecef' }}>
+                    {/* Row 1: Total a enviar */}
+                    <div className="d-flex justify-content-between align-items-center mb-3">
+                      <span className="text-secondary fw-bold" style={{ fontSize: '0.95rem' }}>Total a enviar:</span>
+                      <div className="d-flex align-items-center">
+                        <img src={clFlag} alt="CL" style={{ width: '22px', height: '22px', marginRight: '8px', borderRadius: '50%', objectFit: 'cover' }} />
+                        <span className="fw-medium text-dark" style={{ fontSize: '1.05rem', letterSpacing: '-0.3px' }}>
+                          {new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP', minimumFractionDigits: 0 }).format(transaction.amount)}
+                        </span>
+                      </div>
                     </div>
+
+                    {/* Row 2: Tasa de referencia */}
+                    <div className="d-flex justify-content-between align-items-center mb-3">
+                      <span className="text-secondary fw-bold" style={{ fontSize: '0.95rem' }}>Tasa de referencia:</span>
+                      <div className="d-flex align-items-center text-muted">
+                        <i className="bi bi-stack me-2 small"></i>
+                        <span className="small fw-medium text-nowrap" style={{ fontSize: '0.85rem' }}>
+                          {alytoRate
+                            ? `1 ${destCurrency} = ${new Intl.NumberFormat('es-CL', { maximumFractionDigits: 4 }).format(alytoRate)} ${originCurrency}`
+                            : '---'}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Row 3: Total a recibir */}
+                    {destAmount && (
+                      <div className="d-flex justify-content-between align-items-center pt-3 border-top" style={{ borderColor: '#e9ecef' }}>
+                        <span className="fw-bold" style={{ color: '#00A89D', fontSize: '0.95rem' }}>Total a recibir:</span>
+                        <div className="d-flex align-items-center">
+                          <img
+                            src={flagMap[transaction.country] || usFlag}
+                            alt={transaction.country}
+                            style={{ width: '24px', height: '24px', marginRight: '8px', borderRadius: '50%', objectFit: 'cover' }}
+                          />
+                          <span className="fw-bold fs-5" style={{ color: '#00A89D', letterSpacing: '-0.3px' }}>
+                            {new Intl.NumberFormat('es-CL', { minimumFractionDigits: 0, maximumFractionDigits: 2 }).format(destAmount)} {destCurrency}
+                          </span>
+                        </div>
+                      </div>
+                    )}
                   </div>
-                )}
-              </div>
+                );
+              })()}
 
               {/* Datos del Beneficiario - Clean Layout */}
               <div className="px-1 mt-2">
-                <div className="mb-3">
-                  <div className="text-secondary fw-bold mb-1" style={{ fontSize: '0.9rem' }}>Beneficiario:</div>
-                  <div className="text-dark fw-medium fs-6">{transaction.beneficiary_first_name} {transaction.beneficiary_last_name} {transaction.company_name}</div>
-                </div>
+                {/* Beneficiario: solo mostrar si hay nombre o razón social */}
+                {(transaction.beneficiary_first_name || transaction.beneficiary_last_name || transaction.company_name) && (
+                  <div className="mb-3">
+                    <div className="text-secondary fw-bold mb-1" style={{ fontSize: '0.9rem' }}>Beneficiario:</div>
+                    <div className="text-dark fw-medium fs-6">
+                      {[transaction.beneficiary_first_name, transaction.beneficiary_last_name, transaction.company_name].filter(Boolean).join(' ')}
+                    </div>
+                  </div>
+                )}
 
-                <div className="mb-3">
-                  <div className="text-secondary fw-bold mb-1" style={{ fontSize: '0.9rem' }}>Email:</div>
-                  <div className="text-dark fw-medium fs-6">{transaction.beneficiary_email}</div>
-                </div>
+                {/* Email: solo si fue ingresado */}
+                {transaction.beneficiary_email && (
+                  <div className="mb-3">
+                    <div className="text-secondary fw-bold mb-1" style={{ fontSize: '0.9rem' }}>Email:</div>
+                    <div className="text-dark fw-medium fs-6">{transaction.beneficiary_email}</div>
+                  </div>
+                )}
 
                 {transaction.withdrawalPayload?.beneficiary_bank_name && (
                   <div className="mb-3">
