@@ -24,16 +24,11 @@ const MainLayout = ({ children }) => {
                     `}
                 </style>
 
-                {/* Top Navbar: ONLY Visible for Guests (Landing Page) 
-                    User requested to remove top menu (hamburger) for logged in users on mobile.
-                */}
-                {!showNav && (
-                    <div className="d-lg-none">
-                        <AppNavbar />
-                    </div>
-                )}
+                {/* Top Navbar: Visible at all times to match redesign */}
+                <AppNavbar />
 
-                <main className="p-3 p-md-4">
+                {/* p-top added to account for the fixed TopBar spacing (around 70px) */}
+                <main className="p-3 p-md-4 mt-5 pt-4 mb-5 pb-5">
                     {children}
                 </main>
 
