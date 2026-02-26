@@ -96,7 +96,7 @@ const Home = () => {
             </div>
 
             {/* Avatar (Right) */}
-            <div className="position-relative shadow-sm rounded-circle" style={{ width: '65px', height: '65px', flexShrink: 0 }}>
+            <div className="position-relative shadow-sm rounded-circle" style={{ width: '85px', height: '85px', flexShrink: 0 }}>
               <label
                 htmlFor="profile-upload"
                 className="rounded-circle d-flex align-items-center justify-content-center overflow-hidden border border-2 border-white bg-light cursor-pointer"
@@ -105,12 +105,12 @@ const Home = () => {
                 {user?.avatar ? (
                   <img src={user.avatar} alt="Profile" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                 ) : (
-                  <span className="fw-bold fs-3 text-secondary">{user?.name?.charAt(0) || 'U'}</span>
+                  <span className="fw-bold fs-2 text-secondary">{user?.name?.charAt(0) || 'U'}</span>
                 )}
 
                 {/* Overlay Icon for Edit */}
                 <div className="position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center bg-dark bg-opacity-25 opacity-0 hover-opacity-100 transition-opacity">
-                  <i className="bi bi-camera-fill text-white fs-5"></i>
+                  <i className="bi bi-camera-fill text-white fs-4"></i>
                 </div>
               </label>
               <input
@@ -146,6 +146,11 @@ const Home = () => {
                 }}
               />
             </div>
+          </div>
+
+          {/* Exchange Rate Marquee (Moved up) */}
+          <div className="mb-4">
+            <ExchangeRateMarquee />
           </div>
 
           {/* 3. ACTION GRID (4 Buttons with Custom SVGs) */}
@@ -228,8 +233,7 @@ const Home = () => {
 
 
 
-          {/* Exchange Rate Marquee (Full Width Breakout) */}
-          <ExchangeRateMarquee />
+          {/* --- Exchange Rate Marquee moved above --- */}
 
           {/* 4. PROMO BANNER (Purple Gradient -> Blue/Yellow Gradient) */}
           <div className="card border-0 mb-4 overflow-hidden shadow-sm"
