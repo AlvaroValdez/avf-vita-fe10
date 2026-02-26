@@ -1,5 +1,6 @@
 import React from 'react';
 import './SessionWarningModal.css';
+import logo from '../assets/images/logo.png';
 
 /**
  * Modal que advierte al usuario sobre el timeout de sesión inminente
@@ -18,7 +19,9 @@ export const SessionWarningModal = ({ show, timeRemaining, onExtend, onLogout })
     return (
         <div className="session-modal-overlay" onClick={(e) => e.stopPropagation()}>
             <div className="session-modal-content">
-                <div className="session-warning-icon">⏱️</div>
+                <div className="session-warning-icon">
+                    <img src={logo} alt="Alyto" style={{ height: '56px', objectFit: 'contain' }} />
+                </div>
 
                 <h2 className="session-warning-title">Sesión por Expirar</h2>
 

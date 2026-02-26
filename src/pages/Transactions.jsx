@@ -301,6 +301,16 @@ const Transactions = () => {
 
                     return (
                       <>
+                        {/* --- Status badge (title) --- */}
+                        <div className="mb-2">
+                          {tx.paymentMethod === 'manual_anchor' && (
+                            <Badge bg="warning" text="dark" className="me-2">
+                              <i className="bi bi-bank2"></i> Manual
+                            </Badge>
+                          )}
+                          {getStatusBadge(tx.status)}
+                        </div>
+
                         {/* --- Section 1: Reciben --- */}
                         <div className="d-flex justify-content-between align-items-start mb-2">
                           <div>
@@ -354,16 +364,6 @@ const Transactions = () => {
                             )}
                           </div>
                         )}
-
-                        {/* --- Status badge --- */}
-                        <div className="mb-3">
-                          {tx.paymentMethod === 'manual_anchor' && (
-                            <Badge bg="warning" text="dark" className="me-2">
-                              <i className="bi bi-bank2"></i> Manual
-                            </Badge>
-                          )}
-                          {getStatusBadge(tx.status)}
-                        </div>
 
                         {/* --- Separator --- */}
                         <hr className="my-2" style={{ borderColor: '#e9ecef' }} />

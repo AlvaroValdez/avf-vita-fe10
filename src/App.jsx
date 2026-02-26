@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Routes, Route, Navigate, Outlet } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { useInactivityTimeout } from './hooks/useInactivityTimeout';
@@ -28,6 +28,7 @@ import SendMoney from './pages/SendMoney.jsx';
 // Componentes UI
 import Toaster from './components/ui/Toaster.jsx';
 import MainLayout from './components/layout/MainLayout.jsx';
+import SplashScreen from './components/SplashScreen.jsx';
 
 const ProtectedRouteWrapper = () => {
   const { token } = useAuth();
@@ -98,12 +99,17 @@ function AppContent() {
 }
 
 function App() {
+  const [splashDone, setSplashDone] = useState(false);
+
   return (
-    <AuthProvider>
-      <NotificationProvider>
-        <AppContent />
-      </NotificationProvider>
-    </AuthProvider>
+    <>
+      {!splashDone && <SplashScreen onFinished={() => setSplashDone(true)} />}
+      <AuthProvider>
+        <NotificationProvider>
+          <AppContent />
+        </NotificationProvider>
+      </AuthProvider>
+    </>
   );
 }
 
