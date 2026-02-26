@@ -170,7 +170,7 @@ const Landing = () => {
                         >
                             AV Finance SpA
                         </a>
-                        , empresa financiera registrada en Chile.
+                        , empresa de asesoria financiera registrada en Chile.
                     </p>
                     <p>© {new Date().getFullYear()} AV Finance SpA. Todos los derechos reservados.</p>
                 </footer>
