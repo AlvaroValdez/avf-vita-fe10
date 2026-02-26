@@ -11,6 +11,7 @@ import Home from './pages/Home.jsx';
 import Transactions from './pages/Transactions.jsx';
 import TransactionDetail from './pages/TransactionDetail.jsx';
 import Login from './pages/Login.jsx';
+import Landing from './pages/Landing.jsx';
 import Register from './pages/Register.jsx';
 import PaymentSuccess from './pages/PaymentSuccess.jsx';
 import AdminMarkup from './pages/AdminMarkup.jsx';
@@ -56,7 +57,8 @@ function AppContent() {
       <Routes>
         {/* Rutas Públicas */}
         <Route path="/" element={<Home />} />
-        <Route path="/login" element={<Login />} />
+        <Route path="/login" element={<Landing />} />
+        <Route path="/landing" element={<Landing />} />
         <Route path="/register" element={<Register />} />
         <Route path="/payment-success" element={<PaymentSuccess />} />
         <Route path="/payment-success/:orderId" element={<PaymentSuccess />} />

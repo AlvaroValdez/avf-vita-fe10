@@ -1,0 +1,376 @@
+/* ===================================
+   ALYTO LANDING PAGE
+   =================================== */
+
+.landing-root {
+    display: flex;
+    min-height: 100vh;
+    background: #ffffff;
+}
+
+/* ── Hero / Left Panel ──────────────────────── */
+.landing-hero {
+    flex: 1;
+    background: linear-gradient(145deg, #1a3048 0%, #233E58 55%, #2a5075 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 48px 52px;
+    position: relative;
+    overflow: hidden;
+}
+
+.landing-hero-content {
+    position: relative;
+    z-index: 2;
+    max-width: 460px;
+}
+
+.landing-logo {
+    height: 56px;
+    object-fit: contain;
+    margin-bottom: 32px;
+    filter: brightness(0) invert(1);
+    /* white logo on dark bg */
+}
+
+.landing-tagline {
+    font-size: 2rem;
+    font-weight: 800;
+    color: #ffffff;
+    line-height: 1.2;
+    margin: 0 0 16px;
+    letter-spacing: -0.5px;
+}
+
+.landing-tagline-accent {
+    color: #F5C400;
+}
+
+.landing-subtitle {
+    color: rgba(255, 255, 255, 0.72);
+    font-size: 0.97rem;
+    line-height: 1.6;
+    margin: 0 0 36px;
+}
+
+/* Feature cards */
+.landing-features {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.landing-feature-card {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    background: rgba(255, 255, 255, 0.07);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 12px;
+    padding: 14px 16px;
+    backdrop-filter: blur(4px);
+    transition: background 0.2s;
+}
+
+.landing-feature-card:hover {
+    background: rgba(255, 255, 255, 0.12);
+}
+
+.landing-feature-icon {
+    font-size: 1.5rem;
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+.landing-feature-title {
+    color: #ffffff;
+    font-weight: 700;
+    font-size: 0.9rem;
+    margin-bottom: 2px;
+}
+
+.landing-feature-desc {
+    color: rgba(255, 255, 255, 0.65);
+    font-size: 0.8rem;
+    line-height: 1.45;
+}
+
+/* Decorative floating circles */
+.landing-circle {
+    position: absolute;
+    border-radius: 50%;
+    opacity: 0.08;
+    pointer-events: none;
+}
+
+.landing-circle-1 {
+    width: 380px;
+    height: 380px;
+    background: #F5C400;
+    top: -120px;
+    right: -100px;
+}
+
+.landing-circle-2 {
+    width: 260px;
+    height: 260px;
+    background: #00A89D;
+    bottom: -80px;
+    left: -60px;
+}
+
+/* ── Login / Right Panel ────────────────────── */
+.landing-login-panel {
+    width: 440px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 32px;
+    background: #ffffff;
+    overflow-y: auto;
+}
+
+.landing-login-box {
+    width: 100%;
+    max-width: 360px;
+}
+
+.landing-logo-mobile {
+    display: none;
+    height: 44px;
+    object-fit: contain;
+    margin-bottom: 24px;
+}
+
+.landing-login-title {
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: #233E58;
+    margin: 0 0 4px;
+}
+
+.landing-login-sub {
+    color: #888;
+    font-size: 0.88rem;
+    margin: 0 0 24px;
+}
+
+/* Error */
+.landing-error {
+    background: #fff0f0;
+    border: 1px solid #fcc;
+    border-radius: 8px;
+    color: #c0392b;
+    padding: 10px 14px;
+    font-size: 0.85rem;
+    margin-bottom: 18px;
+}
+
+/* Form */
+.landing-form {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.landing-field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.landing-field label {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: #555;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+}
+
+.landing-field input {
+    width: 100%;
+    padding: 11px 14px;
+    border: 1.5px solid #dde1e7;
+    border-radius: 10px;
+    font-size: 0.95rem;
+    color: #233E58;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    background: #fafbfc;
+    box-sizing: border-box;
+}
+
+.landing-field input:focus {
+    border-color: #233E58;
+    box-shadow: 0 0 0 3px rgba(35, 62, 88, 0.08);
+    background: #fff;
+}
+
+.landing-pass-wrap {
+    position: relative;
+}
+
+.landing-pass-wrap input {
+    padding-right: 44px;
+}
+
+.landing-pass-toggle {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: #aaa;
+    cursor: pointer;
+    padding: 4px;
+    font-size: 1rem;
+    line-height: 1;
+}
+
+.landing-pass-toggle:hover {
+    color: #233E58;
+}
+
+.landing-forgot {
+    text-align: right;
+    margin-top: -6px;
+}
+
+.landing-forgot a {
+    font-size: 0.8rem;
+    color: #888;
+    text-decoration: none;
+}
+
+.landing-forgot a:hover {
+    color: #233E58;
+}
+
+/* Primary button */
+.landing-btn-primary {
+    width: 100%;
+    padding: 13px;
+    background: #233E58;
+    color: #ffffff;
+    font-weight: 700;
+    font-size: 0.95rem;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: background 0.2s, transform 0.1s;
+    margin-top: 4px;
+}
+
+.landing-btn-primary:hover:not(:disabled) {
+    background: #1a3048;
+}
+
+.landing-btn-primary:active:not(:disabled) {
+    transform: scale(0.98);
+}
+
+.landing-btn-primary:disabled {
+    opacity: 0.65;
+    cursor: not-allowed;
+}
+
+/* Spinner */
+.landing-spinner {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    border: 2px solid rgba(255, 255, 255, 0.35);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Divider */
+.landing-divider {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 22px 0 16px;
+    color: #ccc;
+    font-size: 0.8rem;
+}
+
+.landing-divider::before,
+.landing-divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: #e9ecef;
+}
+
+.landing-divider span {
+    color: #aaa;
+    white-space: nowrap;
+}
+
+/* Register button */
+.landing-btn-register {
+    display: block;
+    width: 100%;
+    text-align: center;
+    padding: 12px;
+    border: 2px solid #F5C400;
+    border-radius: 10px;
+    color: #233E58;
+    font-weight: 700;
+    font-size: 0.92rem;
+    text-decoration: none;
+    transition: background 0.2s;
+}
+
+.landing-btn-register:hover {
+    background: #F5C400;
+    color: #233E58;
+}
+
+/* ── Responsive: mobile ─────────────────────── */
+@media (max-width: 768px) {
+    .landing-root {
+        flex-direction: column;
+    }
+
+    .landing-hero {
+        padding: 40px 24px 36px;
+        min-height: unset;
+    }
+
+    .landing-logo {
+        display: none;
+    }
+
+    .landing-tagline {
+        font-size: 1.5rem;
+    }
+
+    .landing-login-panel {
+        width: 100%;
+        padding: 32px 24px 48px;
+        align-items: flex-start;
+    }
+
+    .landing-login-box {
+        max-width: 100%;
+    }
+
+    .landing-logo-mobile {
+        display: block;
+    }
+}
