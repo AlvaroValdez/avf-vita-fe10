@@ -56,7 +56,7 @@ function AppContent() {
     <MainLayout>
       <Routes>
         {/* Rutas Públicas */}
-        <Route path="/" element={<Home />} />
+        <Route path="/" element={token ? <Home /> : <Navigate to="/login" replace />} />
         <Route path="/login" element={<Landing />} />
         <Route path="/landing" element={<Landing />} />
         <Route path="/register" element={<Register />} />
