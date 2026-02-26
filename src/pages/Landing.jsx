@@ -157,6 +157,23 @@ const Landing = () => {
                         Crear una cuenta gratuita
                     </Link>
                 </div>
+
+                {/* ─── Institutional Footer ─── */}
+                <footer className="landing-footer">
+                    <p>
+                        <strong>Alyto</strong> es un servicio de transferencias internacionales desarrollado y
+                        operado por{' '}
+                        <a
+                            href="https://avfinance.cl"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                        >
+                            AV Finance SpA
+                        </a>
+                        , empresa financiera registrada en Chile.
+                    </p>
+                    <p>© {new Date().getFullYear()} AV Finance SpA. Todos los derechos reservados.</p>
+                </footer>
             </div>
         </div>
     );

@@ -374,3 +374,29 @@
         display: block;
     }
 }
+
+/* ── Footer ─────────────────────────────────── */
+.landing-footer {
+    margin-top: 32px;
+    padding-top: 20px;
+    border-top: 1px solid #e9ecef;
+    text-align: center;
+}
+
+.landing-footer p {
+    margin: 0 0 4px;
+    font-size: 0.75rem;
+    color: #aaa;
+    line-height: 1.55;
+}
+
+.landing-footer a {
+    color: #233E58;
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.landing-footer a:hover {
+    color: #00A89D;
+    text-decoration: underline;
+}
