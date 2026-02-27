@@ -22,43 +22,54 @@
   letter-spacing: 0.5px;
 }
 
-/* ── JS-scroll track ──────────────────────────────────────
-   overflow-x: hidden here means the inner content physically
-   lives inside this box. No element escapes into the page
-   layout — this is why transform-based marquees bleed out
-   but scrollLeft never does.
-─────────────────────────────────────────────────────────── */
+/* ── Marquee Track ────────────────────────────────────────────
+   IMPORTANT: Use overflow-x: clip, NOT overflow: hidden.
+   - overflow: hidden creates a scroll container → transform
+     animations "exist" in the scroll space and browsers
+     expose that space as horizontal page overflow.
+   - overflow-x: clip does NOT create a scroll container →
+     the browser paints only what's inside and the transform
+     is completely invisible to the layout engine outside.
+   This is the correct modern solution for CSS carousels.
+───────────────────────────────────────────────────────────── */
 .marquee-track {
-  overflow-x: hidden;
-  /* scroll without showing scrollbar */
+  overflow-x: clip;
+  /* clips transforms, no scroll ctx  */
   overflow-y: visible;
-  /* allow card shadows to show */
+  /* allow card shadows to breathe   */
   width: 100%;
   box-sizing: border-box;
-  cursor: default;
-  /* Edge fade */
+  /* Subtle edge fades */
   -webkit-mask-image: linear-gradient(to right, transparent, black 6%, black 94%, transparent);
   mask-image: linear-gradient(to right, transparent, black 6%, black 94%, transparent);
 }
 
-/* Hide the scrollbar on all browsers */
-.marquee-track::-webkit-scrollbar {
-  display: none;
-}
-
-.marquee-track {
-  scrollbar-width: none;
-  -ms-overflow-style: none;
-}
-
-/* Inner flex row — wide enough to hold all the cards */
+/* Inner row: sized to content, animated with transform */
 .marquee-inner {
-  display: inline-flex;
-  /* shrinks to content naturally */
+  display: flex;
   gap: 14px;
+  width: max-content;
+  /* grows to fit all cards          */
   padding: 10px 8px 14px;
-  /* bottom padding = shadow room */
-  white-space: nowrap;
+  /* bottom padding for card shadows  */
+  animation: marquee-scroll 22s linear infinite;
+  will-change: transform;
+}
+
+/* Pause on hover (desktop) and touch (mobile) */
+.marquee-track:hover .marquee-inner {
+  animation-play-state: paused;
+}
+
+/* Keyframe: scroll exactly half of the duplicated strip */
+@keyframes marquee-scroll {
+  0% {
+    transform: translateX(0);
+  }
+
+  100% {
+    transform: translateX(-50%);
+  }
 }
 
 /* ── Premium Card ──────────────────────────── */
@@ -70,7 +81,7 @@
   padding: 12px 20px;
   background: #ffffff;
   border-radius: 14px;
-  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.07);
+  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.08);
   border: 1px solid rgba(0, 0, 0, 0.04);
   min-width: 140px;
   flex-shrink: 0;
@@ -79,7 +90,7 @@
 
 .rate-card:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.11);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.12);
 }
 
 .rate-card-countries {

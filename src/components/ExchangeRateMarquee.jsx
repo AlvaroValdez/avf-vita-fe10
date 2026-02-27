@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { getAlytoRatesSummary } from '../services/api';
 import './ExchangeRateMarquee.css';
 
@@ -46,18 +46,11 @@ const ExchangeRateMarquee = () => {
     const [rates, setRates] = useState([]);
     const [loading, setLoading] = useState(true);
 
-    // === JS-based scroll: no CSS transform, zero layout bleed ===
-    const scrollRef = useRef(null);
-    const animRef = useRef(null);
-    const pausedRef = useRef(false);
-    const speedRef = useRef(0.6); // px per frame (~36px/s @ 60fps)
-
     const fetchRates = async () => {
         try {
             const response = await getAlytoRatesSummary();
             if (response.ok) {
-                const ratesData = response.data.rates || [];
-                setRates(ratesData);
+                setRates(response.data.rates || []);
             }
         } catch (error) {
             console.error('[ExchangeRateMarquee] Error fetching rates:', error);
@@ -72,26 +65,6 @@ const ExchangeRateMarquee = () => {
         return () => clearInterval(interval);
     }, []);
 
-    // Start the JS scroll animation once cards are rendered
-    useEffect(() => {
-        const el = scrollRef.current;
-        if (!el || rates.length === 0) return;
-
-        const animate = () => {
-            if (!pausedRef.current && el) {
-                el.scrollLeft += speedRef.current;
-                // When we've scrolled exactly half of the total content, loop back
-                if (el.scrollLeft >= el.scrollWidth / 2) {
-                    el.scrollLeft = 0;
-                }
-            }
-            animRef.current = requestAnimationFrame(animate);
-        };
-
-        animRef.current = requestAnimationFrame(animate);
-        return () => cancelAnimationFrame(animRef.current);
-    }, [rates]);
-
     if (loading || rates.length === 0) return null;
 
     // Deduplicate
@@ -100,7 +73,7 @@ const ExchangeRateMarquee = () => {
         return acc;
     }, []);
 
-    // Duplicate for seamless loop
+    // Duplicate strip for seamless CSS animation loop
     const displayRates = [...uniqueRates, ...uniqueRates];
 
     return (
@@ -109,15 +82,7 @@ const ExchangeRateMarquee = () => {
                 <span className="exchange-rate-title">Nuestras tasas</span>
             </div>
 
-            {/* JS-scrolled container: overflow-x hidden means ZERO layout impact */}
-            <div
-                ref={scrollRef}
-                className="marquee-track"
-                onMouseEnter={() => { pausedRef.current = true; }}
-                onMouseLeave={() => { pausedRef.current = false; }}
-                onTouchStart={() => { pausedRef.current = true; }}
-                onTouchEnd={() => { pausedRef.current = false; }}
-            >
+            <div className="marquee-track">
                 <div className="marquee-inner">
                     {displayRates.map((rate, index) => {
                         const destCurrency = COUNTRY_CURRENCY[rate.to] || rate.to;
@@ -126,7 +91,7 @@ const ExchangeRateMarquee = () => {
                                 <div className="rate-card-countries">
                                     <img src={FLAGS['CL']} alt="CL" className="rate-flag" />
                                     <span className="rate-currency">CLP</span>
-                                    <i className="bi bi-arrow-right mx-1 text-muted" style={{ fontSize: '0.75rem' }}></i>
+                                    <i className="bi bi-arrow-right mx-1" style={{ fontSize: '0.72rem', color: '#9ca3af' }}></i>
                                     <img src={FLAGS[rate.to] || FLAGS['CL']} alt={rate.to} className="rate-flag" />
                                     <span className="rate-currency">{destCurrency}</span>
                                 </div>

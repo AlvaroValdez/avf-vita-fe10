@@ -43,15 +43,6 @@ body {
   min-height: 100vh;
 }
 
-/* Prevent all Bootstrap Containers + rows from expanding past 100% */
-.container,
-.container-fluid,
-.row {
-  overflow-x: hidden;
-  max-width: 100%;
-}
-
-
 /* Estilo global para todas las tarjetas */
 .card {
   border-radius: 0.75rem;
