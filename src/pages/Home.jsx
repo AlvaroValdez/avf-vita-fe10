@@ -73,7 +73,7 @@ const Home = () => {
         fontFamily: "'Inter', sans-serif",
         overflow: 'hidden',
         overflowX: 'hidden',
-        maxWidth: '100vw'
+        maxWidth: '100%'
       }}>
 
         <div style={{
