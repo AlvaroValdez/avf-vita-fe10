@@ -85,17 +85,17 @@ const ExchangeRateCarousel = () => {
     const items = duplicate(rates);
 
     return (
-        <div className="carousel-container" onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave}>
-            <div className="carousel-track" ref={trackRef}>
+        <div className="ticker-wrapper" onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave}>
+            <div className="ticker-track" ref={trackRef}>
                 {items.map((rate, idx) => (
-                    <div className="carousel-card" key={`${rate.to}-${idx}`}>
-                        <div className="card-countries">
-                            <img src={FLAGS['CL']} alt="CLP" className="card-flag" />
-                            <span className="card-arrow">→</span>
-                            <img src={FLAGS[rate.to] || FLAGS['CL']} alt={rate.to} className="card-flag" />
+                    <div className="ticker-item" key={`${rate.to}-${idx}`}>
+                        <div className="ticker-countries">
+                            <img src={FLAGS['CL']} alt="CLP" className="ticker-flag" />
+                            <span className="ticker-arrow">→</span>
+                            <img src={FLAGS[rate.to] || FLAGS['CL']} alt={rate.to} className="ticker-flag" />
                         </div>
-                        <div className="card-currency">CLP/{rate.to}</div>
-                        <div className="card-value">{parseFloat(rate.alytoRate || rate.rate || 0).toFixed(4)}</div>
+                        <div className="ticker-currency">CLP/{rate.to}</div>
+                        <div className="ticker-value">{parseFloat(rate.alytoRate || rate.rate || 0).toFixed(4)}</div>
                     </div>
                 ))}
             </div>
