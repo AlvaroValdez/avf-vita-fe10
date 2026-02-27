@@ -5,6 +5,7 @@ import { Link } from 'react-router-dom';
 import RemittanceSteps from '../components/remittance/RemittanceSteps';
 import { useAuth } from '../context/AuthContext';
 import ExchangeRateCarousel from '../components/ExchangeRateCarousel';
+import BobRatePulse from '../components/BobRatePulse';
 import homeBackgroundImage from '../assets/home-background.jpg';
 import logo from '../assets/images/logo-white.png';
 import logoOriginal from '../assets/images/logo.png';
@@ -149,9 +150,14 @@ const Home = () => {
           </div>
 
 
-          {/* Exchange Rate Carousel */}
-          <div className="mb-4">
-            <ExchangeRateCarousel />
+          {/* Exchange Rate Pulses: CLP and BOB */}
+          <div className="d-flex gap-3 mb-4 justify-content-center">
+            <div style={{ flex: 1, maxWidth: 200 }}>
+              <ExchangeRateCarousel />
+            </div>
+            <div style={{ flex: 1, maxWidth: 200 }}>
+              <BobRatePulse />
+            </div>
           </div>
 
           {/* 3. ACTION GRID (4 Buttons with Custom SVGs) */}

@@ -285,6 +285,17 @@ export const getAlytoAdminSummary = async () => {
   }
 };
 
+// Get Bolivia (BOB) rates to all supported countries - derived via cross-rate math
+export const getBoliviaRatesSummary = async () => {
+  try {
+    const response = await apiClient.get('/prices/bob-summary');
+    return response.data;
+  } catch (error) {
+    console.error('[API] Error obteniendo tasas Bolivia:', error?.response?.data || error.message);
+    return { ok: false, data: { rates: [] } };
+  }
+};
+
 
 // 💰 MARKUP / SPREAD MANAGEMENT
 
