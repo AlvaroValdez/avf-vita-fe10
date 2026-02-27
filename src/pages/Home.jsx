@@ -229,7 +229,7 @@ const Home = () => {
 
 
           {/* Exchange Rate Carousel */}
-          <div className="mb-4">
+          <div className="mb-4 d-none">
             <ExchangeRateCarousel />
           </div>
 
