@@ -11,7 +11,7 @@ const MainLayout = ({ children }) => {
     const showNav = !!token;
 
     return (
-        <div className="d-flex min-vh-100 pb-5 pb-lg-0"> {/* Add padding bottom for mobile nav */}
+        <div className="d-flex min-vh-100 pb-5 pb-lg-0" style={{ overflowX: 'hidden', maxWidth: '100%' }}> {/* Add padding bottom for mobile nav */}
             {showNav && <Sidebar />}
 
             <div className="flex-grow-1 d-flex flex-column" style={showNav ? { marginLeft: '280px' } : {}}>
