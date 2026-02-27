@@ -1,68 +1,82 @@
-/* ===================================
-   EXCHANGE RATE MARQUEE
-   =================================== */
-
 .exchange-rate-card {
-  padding: 8px 0 0;
+  background: transparent;
+  padding: 8px 0;
   display: block;
   width: 100%;
+  margin: 0;
   box-sizing: border-box;
+  position: relative;
 }
 
 .exchange-rate-header {
-  margin-bottom: 10px;
+  margin-bottom: 12px;
+  padding: 0 4px;
+  display: block;
+  /* Restore visibility */
   text-align: center;
+  /* Center the title */
 }
 
 .exchange-rate-title {
   color: #233E58;
   font-weight: 600;
   font-size: 0.9rem;
+  /* Capitalize instead of uppercase */
   text-transform: capitalize;
   letter-spacing: 0.5px;
 }
 
-/* ── Marquee Track ────────────────────────────────────────────
-   IMPORTANT: Use overflow-x: clip, NOT overflow: hidden.
-   - overflow: hidden creates a scroll container → transform
-     animations "exist" in the scroll space and browsers
-     expose that space as horizontal page overflow.
-   - overflow-x: clip does NOT create a scroll container →
-     the browser paints only what's inside and the transform
-     is completely invisible to the layout engine outside.
-   This is the correct modern solution for CSS carousels.
-───────────────────────────────────────────────────────────── */
-.marquee-track {
-  overflow-x: clip;
-  /* clips transforms, no scroll ctx  */
-  overflow-y: visible;
-  /* allow card shadows to breathe   */
+.marquee-container {
+  overflow: hidden;
+  position: relative;
   width: 100%;
-  box-sizing: border-box;
-  /* Subtle edge fades */
-  -webkit-mask-image: linear-gradient(to right, transparent, black 6%, black 94%, transparent);
-  mask-image: linear-gradient(to right, transparent, black 6%, black 94%, transparent);
+  margin: 0;
+  padding: 0;
+  /* Professional fade effect on edges */
+  mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
+  -webkit-mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
 }
 
-/* Inner row: sized to content, animated with transform */
-.marquee-inner {
+.marquee-content {
   display: flex;
-  gap: 14px;
-  width: max-content;
-  /* grows to fit all cards          */
-  padding: 10px 8px 14px;
-  /* bottom padding for card shadows  */
-  animation: marquee-scroll 22s linear infinite;
+  width: 100%;
+  white-space: nowrap;
+  animation: scroll 10s linear infinite;
+  /* Faster speed (was 60s) */
   will-change: transform;
 }
 
-/* Pause on hover (desktop) and touch (mobile) */
-.marquee-track:hover .marquee-inner {
+.marquee-content:hover {
   animation-play-state: paused;
 }
 
-/* Keyframe: scroll exactly half of the duplicated strip */
-@keyframes marquee-scroll {
+.rate-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 8px 16px;
+  margin-right: 12px;
+  white-space: nowrap;
+  background: linear-gradient(135deg, #233E58 0%, #4A6F9E 100%);
+  color: white;
+  font-size: 0.85rem;
+  border-radius: 20px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  flex-shrink: 0;
+}
+
+.rate-badge strong {
+  color: #F7C843;
+}
+
+.rate-flag {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+@keyframes scroll {
   0% {
     transform: translateX(0);
   }
@@ -70,54 +84,4 @@
   100% {
     transform: translateX(-50%);
   }
-}
-
-/* ── Premium Card ──────────────────────────── */
-.rate-card {
-  display: inline-flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 12px 20px;
-  background: #ffffff;
-  border-radius: 14px;
-  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.08);
-  border: 1px solid rgba(0, 0, 0, 0.04);
-  min-width: 140px;
-  flex-shrink: 0;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-.rate-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.12);
-}
-
-.rate-card-countries {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  margin-bottom: 6px;
-}
-
-.rate-flag {
-  width: 18px;
-  height: 18px;
-  border-radius: 50%;
-  object-fit: cover;
-  border: 1px solid rgba(0, 0, 0, 0.08);
-  flex-shrink: 0;
-}
-
-.rate-currency {
-  font-size: 0.75rem;
-  font-weight: 600;
-  color: #6b7280;
-}
-
-.rate-card-value {
-  font-size: 1.1rem;
-  font-weight: 800;
-  color: #122533;
-  letter-spacing: -0.3px;
 }

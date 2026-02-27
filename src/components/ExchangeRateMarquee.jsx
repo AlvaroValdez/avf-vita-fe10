@@ -29,17 +29,30 @@ import flagUY from '../assets/flags/uy.svg';
 import flagVE from '../assets/flags/ve.svg';
 
 const FLAGS = {
-    AR: flagAR, AU: flagAU, BO: flagBO, BR: flagBR, CL: flagCL, CN: flagCN,
-    CO: flagCO, CR: flagCR, DO: flagDO, EC: flagEC, ES: flagES, EU: flagEU,
-    GB: flagGB, GT: flagGT, HT: flagHT, MX: flagMX, PA: flagPA, PE: flagPE,
-    PL: flagPL, PY: flagPY, SV: flagSV, US: flagUS, UY: flagUY, VE: flagVE
-};
-
-const COUNTRY_CURRENCY = {
-    AR: 'ARS', AU: 'AUD', BO: 'BOB', BR: 'BRL', CL: 'CLP', CN: 'CNY',
-    CO: 'COP', CR: 'CRC', DO: 'DOP', EC: 'USD', ES: 'EUR', EU: 'EUR',
-    GB: 'GBP', GT: 'GTQ', HT: 'HTG', MX: 'MXN', PA: 'PAB', PE: 'PEN',
-    PL: 'PLN', PY: 'PYG', SV: 'USD', US: 'USD', UY: 'UYU', VE: 'VES'
+    AR: flagAR,
+    AU: flagAU,
+    BO: flagBO,
+    BR: flagBR,
+    CL: flagCL,
+    CN: flagCN,
+    CO: flagCO,
+    CR: flagCR,
+    DO: flagDO,
+    EC: flagEC,
+    ES: flagES,
+    EU: flagEU,
+    GB: flagGB,
+    GT: flagGT,
+    HT: flagHT,
+    MX: flagMX,
+    PA: flagPA,
+    PE: flagPE,
+    PL: flagPL,
+    PY: flagPY,
+    SV: flagSV,
+    US: flagUS,
+    UY: flagUY,
+    VE: flagVE
 };
 
 const ExchangeRateMarquee = () => {
@@ -50,7 +63,8 @@ const ExchangeRateMarquee = () => {
         try {
             const response = await getAlytoRatesSummary();
             if (response.ok) {
-                setRates(response.data.rates || []);
+                const ratesData = response.data.rates || [];
+                setRates(ratesData);
             }
         } catch (error) {
             console.error('[ExchangeRateMarquee] Error fetching rates:', error);
@@ -65,15 +79,29 @@ const ExchangeRateMarquee = () => {
         return () => clearInterval(interval);
     }, []);
 
-    if (loading || rates.length === 0) return null;
+    if (loading || rates.length === 0) {
+        return null;
+    }
 
-    // Deduplicate
+    // Deduplicate by 'to' country code in case backend returns duplicates
     const uniqueRates = rates.reduce((acc, rate) => {
-        if (!acc.find(r => r.to === rate.to)) acc.push(rate);
+        const existing = acc.find(r => r.to === rate.to);
+        if (!existing) {
+            acc.push(rate);
+        } else {
+            console.warn(`[ExchangeRateMarquee] Duplicate rate for ${rate.to}: `, { existing, new: rate });
+        }
         return acc;
     }, []);
 
-    // Duplicate strip for seamless CSS animation loop
+    // Log all rates with flag availability
+    console.log('[ExchangeRateMarquee] Total rates received:', rates.length);
+    console.log('[ExchangeRateMarquee] Unique rates:', uniqueRates.length);
+    uniqueRates.forEach(r => {
+        const hasFlag = FLAGS[r.to] !== undefined;
+        console.log(`  ${r.to}: ${r.alytoRate} | Flag: ${hasFlag ? '✓' : '✗ MISSING'}`);
+    });
+
     const displayRates = [...uniqueRates, ...uniqueRates];
 
     return (
@@ -82,25 +110,24 @@ const ExchangeRateMarquee = () => {
                 <span className="exchange-rate-title">Nuestras tasas</span>
             </div>
 
-            <div className="marquee-track">
-                <div className="marquee-inner">
-                    {displayRates.map((rate, index) => {
-                        const destCurrency = COUNTRY_CURRENCY[rate.to] || rate.to;
-                        return (
-                            <div key={`${rate.to}-${index}`} className="rate-card">
-                                <div className="rate-card-countries">
-                                    <img src={FLAGS['CL']} alt="CL" className="rate-flag" />
-                                    <span className="rate-currency">CLP</span>
-                                    <i className="bi bi-arrow-right mx-1" style={{ fontSize: '0.72rem', color: '#9ca3af' }}></i>
-                                    <img src={FLAGS[rate.to] || FLAGS['CL']} alt={rate.to} className="rate-flag" />
-                                    <span className="rate-currency">{destCurrency}</span>
-                                </div>
-                                <div className="rate-card-value">
-                                    {parseFloat(rate.alytoRate).toFixed(4)}
-                                </div>
-                            </div>
-                        );
-                    })}
+            <div className="marquee-container">
+                <div className="marquee-content">
+                    {displayRates.map((rate, index) => (
+                        <span key={`${rate.to}-${index}`} className="rate-badge">
+                            <img
+                                src={FLAGS['CL']}
+                                alt="CL"
+                                className="rate-flag"
+                            />
+                            <i className="bi bi-arrow-right mx-1" style={{ fontSize: '0.7rem', opacity: 0.7 }}></i>
+                            <img
+                                src={FLAGS[rate.to] || FLAGS['CL']}
+                                alt={rate.to}
+                                className="rate-flag"
+                            />
+                            <span className="ms-2"><strong>{parseFloat(rate.alytoRate).toFixed(4)}</strong></span>
+                        </span>
+                    ))}
                 </div>
             </div>
         </div>
