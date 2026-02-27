@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { getAlytoRatesSummary } from '../services/api';
 import './ExchangeRateMarquee.css';
 
@@ -29,35 +29,28 @@ import flagUY from '../assets/flags/uy.svg';
 import flagVE from '../assets/flags/ve.svg';
 
 const FLAGS = {
-    AR: flagAR,
-    AU: flagAU,
-    BO: flagBO,
-    BR: flagBR,
-    CL: flagCL,
-    CN: flagCN,
-    CO: flagCO,
-    CR: flagCR,
-    DO: flagDO,
-    EC: flagEC,
-    ES: flagES,
-    EU: flagEU,
-    GB: flagGB,
-    GT: flagGT,
-    HT: flagHT,
-    MX: flagMX,
-    PA: flagPA,
-    PE: flagPE,
-    PL: flagPL,
-    PY: flagPY,
-    SV: flagSV,
-    US: flagUS,
-    UY: flagUY,
-    VE: flagVE
+    AR: flagAR, AU: flagAU, BO: flagBO, BR: flagBR, CL: flagCL, CN: flagCN,
+    CO: flagCO, CR: flagCR, DO: flagDO, EC: flagEC, ES: flagES, EU: flagEU,
+    GB: flagGB, GT: flagGT, HT: flagHT, MX: flagMX, PA: flagPA, PE: flagPE,
+    PL: flagPL, PY: flagPY, SV: flagSV, US: flagUS, UY: flagUY, VE: flagVE
+};
+
+const COUNTRY_CURRENCY = {
+    AR: 'ARS', AU: 'AUD', BO: 'BOB', BR: 'BRL', CL: 'CLP', CN: 'CNY',
+    CO: 'COP', CR: 'CRC', DO: 'DOP', EC: 'USD', ES: 'EUR', EU: 'EUR',
+    GB: 'GBP', GT: 'GTQ', HT: 'HTG', MX: 'MXN', PA: 'PAB', PE: 'PEN',
+    PL: 'PLN', PY: 'PYG', SV: 'USD', US: 'USD', UY: 'UYU', VE: 'VES'
 };
 
 const ExchangeRateMarquee = () => {
     const [rates, setRates] = useState([]);
     const [loading, setLoading] = useState(true);
+
+    // === JS-based scroll: no CSS transform, zero layout bleed ===
+    const scrollRef = useRef(null);
+    const animRef = useRef(null);
+    const pausedRef = useRef(false);
+    const speedRef = useRef(0.6); // px per frame (~36px/s @ 60fps)
 
     const fetchRates = async () => {
         try {
@@ -79,37 +72,36 @@ const ExchangeRateMarquee = () => {
         return () => clearInterval(interval);
     }, []);
 
-    if (loading || rates.length === 0) {
-        return null;
-    }
+    // Start the JS scroll animation once cards are rendered
+    useEffect(() => {
+        const el = scrollRef.current;
+        if (!el || rates.length === 0) return;
 
-    // Deduplicate by 'to' country code in case backend returns duplicates
+        const animate = () => {
+            if (!pausedRef.current && el) {
+                el.scrollLeft += speedRef.current;
+                // When we've scrolled exactly half of the total content, loop back
+                if (el.scrollLeft >= el.scrollWidth / 2) {
+                    el.scrollLeft = 0;
+                }
+            }
+            animRef.current = requestAnimationFrame(animate);
+        };
+
+        animRef.current = requestAnimationFrame(animate);
+        return () => cancelAnimationFrame(animRef.current);
+    }, [rates]);
+
+    if (loading || rates.length === 0) return null;
+
+    // Deduplicate
     const uniqueRates = rates.reduce((acc, rate) => {
-        const existing = acc.find(r => r.to === rate.to);
-        if (!existing) {
-            acc.push(rate);
-        } else {
-            console.warn(`[ExchangeRateMarquee] Duplicate rate for ${rate.to}: `, { existing, new: rate });
-        }
+        if (!acc.find(r => r.to === rate.to)) acc.push(rate);
         return acc;
     }, []);
 
-    // Log all rates with flag availability
-    console.log('[ExchangeRateMarquee] Total rates received:', rates.length);
-    console.log('[ExchangeRateMarquee] Unique rates:', uniqueRates.length);
-    uniqueRates.forEach(r => {
-        const hasFlag = FLAGS[r.to] !== undefined;
-        console.log(`  ${r.to}: ${r.alytoRate} | Flag: ${hasFlag ? '✓' : '✗ MISSING'}`);
-    });
-
+    // Duplicate for seamless loop
     const displayRates = [...uniqueRates, ...uniqueRates];
-
-    const COUNTRY_CURRENCY = {
-        AR: 'ARS', AU: 'AUD', BO: 'BOB', BR: 'BRL', CL: 'CLP', CN: 'CNY',
-        CO: 'COP', CR: 'CRC', DO: 'DOP', EC: 'USD', ES: 'EUR', EU: 'EUR',
-        GB: 'GBP', GT: 'GTQ', HT: 'HTG', MX: 'MXN', PA: 'PAB', PE: 'PEN',
-        PL: 'PLN', PY: 'PYG', SV: 'USD', US: 'USD', UY: 'UYU', VE: 'VES'
-    };
 
     return (
         <div className="exchange-rate-card mb-4">
@@ -117,8 +109,16 @@ const ExchangeRateMarquee = () => {
                 <span className="exchange-rate-title">Nuestras tasas</span>
             </div>
 
-            <div className="marquee-container">
-                <div className="marquee-content">
+            {/* JS-scrolled container: overflow-x hidden means ZERO layout impact */}
+            <div
+                ref={scrollRef}
+                className="marquee-track"
+                onMouseEnter={() => { pausedRef.current = true; }}
+                onMouseLeave={() => { pausedRef.current = false; }}
+                onTouchStart={() => { pausedRef.current = true; }}
+                onTouchEnd={() => { pausedRef.current = false; }}
+            >
+                <div className="marquee-inner">
                     {displayRates.map((rate, index) => {
                         const destCurrency = COUNTRY_CURRENCY[rate.to] || rate.to;
                         return (
@@ -126,7 +126,7 @@ const ExchangeRateMarquee = () => {
                                 <div className="rate-card-countries">
                                     <img src={FLAGS['CL']} alt="CL" className="rate-flag" />
                                     <span className="rate-currency">CLP</span>
-                                    <i className="bi bi-arrow-right mx-1 text-muted" style={{ fontSize: '0.8rem' }}></i>
+                                    <i className="bi bi-arrow-right mx-1 text-muted" style={{ fontSize: '0.75rem' }}></i>
                                     <img src={FLAGS[rate.to] || FLAGS['CL']} alt={rate.to} className="rate-flag" />
                                     <span className="rate-currency">{destCurrency}</span>
                                 </div>

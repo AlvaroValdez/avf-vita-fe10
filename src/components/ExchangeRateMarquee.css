@@ -1,139 +1,112 @@
+/* ===================================
+   EXCHANGE RATE MARQUEE
+   =================================== */
+
 .exchange-rate-card {
-  background: transparent;
-  padding: 8px 0;
+  padding: 8px 0 0;
   display: block;
   width: 100%;
-  max-width: 100%;
-  overflow: hidden;
-  margin: 0;
   box-sizing: border-box;
-  position: relative;
 }
 
 .exchange-rate-header {
-  margin-bottom: 12px;
-  padding: 0 4px;
-  display: block;
-  /* Restore visibility */
+  margin-bottom: 10px;
   text-align: center;
-  /* Center the title */
 }
 
 .exchange-rate-title {
   color: #233E58;
   font-weight: 600;
   font-size: 0.9rem;
-  /* Capitalize instead of uppercase */
   text-transform: capitalize;
   letter-spacing: 0.5px;
 }
 
-.marquee-container {
-  overflow: hidden !important;
-  position: relative;
+/* ── JS-scroll track ──────────────────────────────────────
+   overflow-x: hidden here means the inner content physically
+   lives inside this box. No element escapes into the page
+   layout — this is why transform-based marquees bleed out
+   but scrollLeft never does.
+─────────────────────────────────────────────────────────── */
+.marquee-track {
+  overflow-x: hidden;
+  /* scroll without showing scrollbar */
+  overflow-y: visible;
+  /* allow card shadows to show */
   width: 100%;
-  max-width: 100%;
-  margin: 0;
-  padding: 0;
   box-sizing: border-box;
-  /* Crucial for iOS Safari: prevents transformed children from expanding page width */
-  contain: paint;
-  /* Professional fade effect on edges */
-  mask-image: linear-gradient(to right, transparent, black 5%, black 95%, transparent);
-  -webkit-mask-image: linear-gradient(to right, transparent, black 5%, black 95%, transparent);
+  cursor: default;
+  /* Edge fade */
+  -webkit-mask-image: linear-gradient(to right, transparent, black 6%, black 94%, transparent);
+  mask-image: linear-gradient(to right, transparent, black 6%, black 94%, transparent);
 }
 
-/* Ocultar barra de desplazamiento si llegase a intentar aparecer */
-.marquee-container::-webkit-scrollbar {
+/* Hide the scrollbar on all browsers */
+.marquee-track::-webkit-scrollbar {
   display: none;
 }
 
-.marquee-container {
-  -ms-overflow-style: none;
+.marquee-track {
   scrollbar-width: none;
+  -ms-overflow-style: none;
 }
 
-.marquee-content {
-  display: flex;
-  gap: 16px;
-  /* Space between cards */
-  width: fit-content;
+/* Inner flex row — wide enough to hold all the cards */
+.marquee-inner {
+  display: inline-flex;
+  /* shrinks to content naturally */
+  gap: 14px;
+  padding: 10px 8px 14px;
+  /* bottom padding = shadow room */
   white-space: nowrap;
-  animation: scroll 25s linear infinite;
-  /* Adjusted smooth speed */
-  will-change: transform;
-  padding: 12px 10px;
-  /* Room for card drop shadows */
 }
 
-/* UX: Pause animation on hover */
-.marquee-container:hover .marquee-content {
-  animation-play-state: paused;
-}
-
-/* Premium Card Design */
+/* ── Premium Card ──────────────────────────── */
 .rate-card {
   display: inline-flex;
   flex-direction: column;
-  justify-content: center;
   align-items: center;
-  padding: 14px 22px;
+  justify-content: center;
+  padding: 12px 20px;
   background: #ffffff;
-  border-radius: 16px;
-  /* rounded-2xl style */
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.06);
-  /* shadow-md */
-  border: 1px solid rgba(0, 0, 0, 0.03);
-  min-width: 150px;
+  border-radius: 14px;
+  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.07);
+  border: 1px solid rgba(0, 0, 0, 0.04);
+  min-width: 140px;
   flex-shrink: 0;
-  transition: transform 0.25s ease, box-shadow 0.25s ease;
-  cursor: default;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .rate-card:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.11);
 }
 
 .rate-card-countries {
   display: flex;
   align-items: center;
-  gap: 6px;
-  margin-bottom: 8px;
+  gap: 5px;
+  margin-bottom: 6px;
 }
 
 .rate-flag {
-  width: 20px;
-  height: 20px;
+  width: 18px;
+  height: 18px;
   border-radius: 50%;
   object-fit: cover;
   border: 1px solid rgba(0, 0, 0, 0.08);
-  /* subtle border around flags */
+  flex-shrink: 0;
 }
 
 .rate-currency {
-  font-size: 0.8rem;
+  font-size: 0.75rem;
   font-weight: 600;
   color: #6b7280;
-  /* text-gray-500 */
 }
 
 .rate-card-value {
-  font-size: 1.15rem;
+  font-size: 1.1rem;
   font-weight: 800;
   color: #122533;
-  /* avf-primary */
   letter-spacing: -0.3px;
-}
-
-@keyframes scroll {
-  0% {
-    transform: translateX(0);
-  }
-
-  100% {
-    /* Translate exactly half of the duplicated content width to create infinite seamless loop */
-    transform: translateX(calc(-50% - 8px));
-    /* accounting for half the gap */
-  }
 }
