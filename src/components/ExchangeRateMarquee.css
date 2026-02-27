@@ -35,39 +35,67 @@
   padding: 0;
   box-sizing: border-box;
   /* Professional fade effect on edges */
-  mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
-  -webkit-mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
+  mask-image: linear-gradient(to right, transparent, black 5%, black 95%, transparent);
+  -webkit-mask-image: linear-gradient(to right, transparent, black 5%, black 95%, transparent);
+}
+
+/* Ocultar barra de desplazamiento si llegase a intentar aparecer */
+.marquee-container::-webkit-scrollbar {
+  display: none;
+}
+
+.marquee-container {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
 
 .marquee-content {
   display: flex;
+  gap: 16px;
+  /* Space between cards */
   width: max-content;
   white-space: nowrap;
-  animation: scroll 15s linear infinite;
-  /* Smoother speed */
+  animation: scroll 25s linear infinite;
+  /* Adjusted smooth speed */
   will-change: transform;
+  padding: 12px 10px;
+  /* Room for card drop shadows */
 }
 
-.marquee-content:hover {
+/* UX: Pause animation on hover */
+.marquee-container:hover .marquee-content {
   animation-play-state: paused;
 }
 
-.rate-badge {
+/* Premium Card Design */
+.rate-card {
   display: inline-flex;
+  flex-direction: column;
+  justify-content: center;
   align-items: center;
-  padding: 8px 16px;
-  margin-right: 12px;
-  white-space: nowrap;
-  background: linear-gradient(135deg, #233E58 0%, #4A6F9E 100%);
-  color: white;
-  font-size: 0.85rem;
-  border-radius: 20px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  padding: 14px 22px;
+  background: #ffffff;
+  border-radius: 16px;
+  /* rounded-2xl style */
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.06);
+  /* shadow-md */
+  border: 1px solid rgba(0, 0, 0, 0.03);
+  min-width: 150px;
   flex-shrink: 0;
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+  cursor: default;
 }
 
-.rate-badge strong {
-  color: #F7C843;
+.rate-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+}
+
+.rate-card-countries {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 8px;
 }
 
 .rate-flag {
@@ -75,7 +103,23 @@
   height: 20px;
   border-radius: 50%;
   object-fit: cover;
-  border: 1px solid rgba(255, 255, 255, 0.3);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  /* subtle border around flags */
+}
+
+.rate-currency {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #6b7280;
+  /* text-gray-500 */
+}
+
+.rate-card-value {
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: #122533;
+  /* avf-primary */
+  letter-spacing: -0.3px;
 }
 
 @keyframes scroll {
@@ -84,6 +128,8 @@
   }
 
   100% {
-    transform: translateX(-50%);
+    /* Translate exactly half of the duplicated content width to create infinite seamless loop */
+    transform: translateX(calc(-50% - 8px));
+    /* accounting for half the gap */
   }
 }
