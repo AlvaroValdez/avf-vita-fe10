@@ -148,10 +148,6 @@ const Home = () => {
             </div>
           </div>
 
-          {/* Exchange Rate Marquee (Moved up) */}
-          <div className="mb-4">
-            <ExchangeRateMarquee />
-          </div>
 
           {/* 3. ACTION GRID (4 Buttons with Custom SVGs) */}
           <div className="d-flex justify-content-between mb-4 px-2">
@@ -232,8 +228,10 @@ const Home = () => {
           </div>
 
 
-
-          {/* --- Exchange Rate Marquee moved above --- */}
+          {/* Exchange Rate Carousel */}
+          <div className="mb-4">
+            <ExchangeRateMarquee />
+          </div>
 
           {/* 4. PROMO BANNER (Purple Gradient -> Blue/Yellow Gradient) */}
           <div className="card border-0 mb-4 overflow-hidden shadow-sm"
