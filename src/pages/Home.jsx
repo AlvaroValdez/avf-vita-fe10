@@ -151,11 +151,18 @@ const Home = () => {
 
 
           {/* Exchange Rate Pulses: CLP and BOB */}
-          <div className="d-flex gap-3 mb-4 justify-content-center">
-            <div style={{ flex: 1, maxWidth: 200 }}>
+          <div style={{
+            display: 'flex',
+            gap: '12px',
+            marginBottom: '16px',
+            justifyContent: 'center',
+            width: '100%',
+            overflow: 'hidden'
+          }}>
+            <div style={{ flex: '0 0 auto', width: '44%', maxWidth: '150px' }}>
               <ExchangeRateCarousel />
             </div>
-            <div style={{ flex: 1, maxWidth: 200 }}>
+            <div style={{ flex: '0 0 auto', width: '44%', maxWidth: '150px' }}>
               <BobRatePulse />
             </div>
           </div>

@@ -76,6 +76,7 @@ const BobRatePulse = () => {
 
     return (
         <div className="pulse-container">
+            <div className="pulse-label">Tasas Bolivia</div>
             <div className="pulse-card" key={currentRate.to}>
                 <div className="pulse-indicator">
                     <span className="live-dot" style={{ backgroundColor: '#F7C843' }}></span>

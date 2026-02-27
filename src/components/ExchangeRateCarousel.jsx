@@ -90,6 +90,7 @@ const ExchangeRateCarousel = () => {
 
     return (
         <div className="pulse-container">
+            <div className="pulse-label">Tasas Chile</div>
             <div className="pulse-card" key={currentRate.to}>
                 <div className="pulse-indicator">
                     <span className="live-dot"></span>
