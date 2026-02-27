@@ -1,93 +1,123 @@
 /* ExchangeRateCarousel.css */
-.ticker-wrapper {
+.pulse-container {
     width: 100%;
-    overflow: hidden;
-    position: relative;
+    display: flex;
+    justify-content: center;
     padding: 12px 0;
     margin: 0;
     box-sizing: border-box;
-    /* Hardware acceleration to prevent bleeding */
-    transform: translateZ(0);
-    -webkit-mask-image: linear-gradient(to right, transparent, black 5%, black 95%, transparent);
-    mask-image: linear-gradient(to right, transparent, black 5%, black 95%, transparent);
 }
 
-.ticker-track {
-    display: inline-block;
-    white-space: nowrap;
-    animation: ticker-scroll 35s linear infinite;
-    /* Force GPU rendering to prevent jank */
-    transform: translate3d(0, 0, 0);
-}
-
-.ticker-wrapper:hover .ticker-track {
-    animation-play-state: paused;
-}
-
-.ticker-item {
-    display: inline-flex;
+.pulse-card {
+    position: relative;
+    display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    width: 160px;
-    /* Fixed width prevents jitter during calculation */
+    width: 240px;
     background: #fff;
     border-radius: 12px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-    padding: 12px;
-    margin-right: 16px;
-    /* Gap substitute for inline-block */
+    padding: 16px;
     text-align: center;
-    vertical-align: top;
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    animation: fade-pulse 3s ease-in-out infinite;
+    transform: translateZ(0);
+    /* Hardware acceleration */
 }
 
-.ticker-item:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+.pulse-indicator {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
 }
 
-.ticker-countries {
+.live-dot {
+    width: 8px;
+    height: 8px;
+    background-color: #20c997;
+    border-radius: 50%;
+    animation: live-ping 1.5s infinite;
+}
+
+.live-text {
+    font-size: 0.65rem;
+    color: #20c997;
+    font-weight: bold;
+    text-transform: uppercase;
+}
+
+.pulse-countries {
     display: flex;
     justify-content: center;
     align-items: center;
-    gap: 6px;
+    gap: 12px;
     margin-bottom: 8px;
-    width: 100%;
+    margin-top: 8px;
 }
 
-.ticker-flag {
-    width: 24px;
-    height: 24px;
+.pulse-flag {
+    width: 36px;
+    height: 36px;
     object-fit: cover;
     border-radius: 50%;
     border: 1px solid rgba(0, 0, 0, 0.08);
 }
 
-.ticker-arrow {
-    font-size: 0.9rem;
+.pulse-arrow {
+    font-size: 1.2rem;
     color: #555;
 }
 
-.ticker-currency {
-    font-size: 0.85rem;
+.pulse-currency {
+    font-size: 0.95rem;
     color: #555;
     margin-bottom: 4px;
 }
 
-.ticker-value {
-    font-size: 1.1rem;
+.pulse-value {
+    font-size: 1.4rem;
     font-weight: 700;
     color: #122533;
 }
 
-@keyframes ticker-scroll {
+@keyframes fade-pulse {
     0% {
-        transform: translate3d(0, 0, 0);
+        opacity: 0;
+        transform: scale(0.95);
+    }
+
+    15% {
+        opacity: 1;
+        transform: scale(1);
+    }
+
+    85% {
+        opacity: 1;
+        transform: scale(1);
     }
 
     100% {
-        transform: translate3d(-50%, 0, 0);
-        /* Shifts exactly halfway through the duplicated content */
+        opacity: 0;
+        transform: scale(0.95);
+    }
+}
+
+@keyframes live-ping {
+    0% {
+        transform: scale(0.8);
+        box-shadow: 0 0 0 0 rgba(32, 201, 151, 0.7);
+    }
+
+    70% {
+        transform: scale(1);
+        box-shadow: 0 0 0 6px rgba(32, 201, 151, 0);
+    }
+
+    100% {
+        transform: scale(0.8);
+        box-shadow: 0 0 0 0 rgba(32, 201, 151, 0);
     }
 }

@@ -44,7 +44,7 @@ const duplicate = (arr) => {
 
 const ExchangeRateCarousel = () => {
     const [rates, setRates] = useState([]);
-    const trackRef = useRef(null);
+    const [currentIndex, setCurrentIndex] = useState(0);
 
     useEffect(() => {
         const fetchRates = async () => {
@@ -71,33 +71,37 @@ const ExchangeRateCarousel = () => {
             }
         };
         fetchRates();
+        const intervalId = setInterval(fetchRates, 30000);
+        return () => clearInterval(intervalId);
     }, []);
 
-    const handleMouseEnter = () => {
-        if (trackRef.current) trackRef.current.style.animationPlayState = 'paused';
-    };
-    const handleMouseLeave = () => {
-        if (trackRef.current) trackRef.current.style.animationPlayState = 'running';
-    };
+    useEffect(() => {
+        if (rates.length === 0) return;
+        const cycleInterval = setInterval(() => {
+            setCurrentIndex((prev) => (prev + 1) % rates.length);
+        }, 3000); // Wait 3 seconds to show next (matches CSS animation duration)
+
+        return () => clearInterval(cycleInterval);
+    }, [rates]);
 
     if (rates.length === 0) return null;
 
-    const items = duplicate(rates);
+    const currentRate = rates[currentIndex];
 
     return (
-        <div className="ticker-wrapper" onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave}>
-            <div className="ticker-track" ref={trackRef}>
-                {items.map((rate, idx) => (
-                    <div className="ticker-item" key={`${rate.to}-${idx}`}>
-                        <div className="ticker-countries">
-                            <img src={FLAGS['CL']} alt="CLP" className="ticker-flag" />
-                            <span className="ticker-arrow">→</span>
-                            <img src={FLAGS[rate.to] || FLAGS['CL']} alt={rate.to} className="ticker-flag" />
-                        </div>
-                        <div className="ticker-currency">CLP/{rate.to}</div>
-                        <div className="ticker-value">{parseFloat(rate.alytoRate || rate.rate || 0).toFixed(4)}</div>
-                    </div>
-                ))}
+        <div className="pulse-container">
+            <div className="pulse-card" key={currentRate.to}>
+                <div className="pulse-indicator">
+                    <span className="live-dot"></span>
+                    <span className="live-text">En vivo</span>
+                </div>
+                <div className="pulse-countries">
+                    <img src={FLAGS['CL']} alt="CLP" className="pulse-flag" />
+                    <span className="pulse-arrow">→</span>
+                    <img src={FLAGS[currentRate.to] || FLAGS['CL']} alt={currentRate.to} className="pulse-flag" />
+                </div>
+                <div className="pulse-currency">CLP/{currentRate.to}</div>
+                <div className="pulse-value">{parseFloat(currentRate.alytoRate || currentRate.rate || 0).toFixed(4)}</div>
             </div>
         </div>
     );
