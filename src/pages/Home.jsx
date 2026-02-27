@@ -4,7 +4,7 @@ import { Container, Row, Col, Image, Button } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
 import RemittanceSteps from '../components/remittance/RemittanceSteps';
 import { useAuth } from '../context/AuthContext';
-import ExchangeRateMarquee from '../components/ExchangeRateMarquee';
+import ExchangeRateCarousel from '../components/ExchangeRateCarousel';
 import homeBackgroundImage from '../assets/home-background.jpg';
 import logo from '../assets/images/logo-white.png';
 import logoOriginal from '../assets/images/logo.png';
@@ -230,7 +230,7 @@ const Home = () => {
 
           {/* Exchange Rate Carousel */}
           <div className="mb-4">
-            <ExchangeRateMarquee />
+            <ExchangeRateCarousel />
           </div>
 
           {/* 4. PROMO BANNER (Purple Gradient -> Blue/Yellow Gradient) */}

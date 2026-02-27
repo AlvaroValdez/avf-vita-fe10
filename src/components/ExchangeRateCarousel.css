@@ -1,0 +1,78 @@
+/* ExchangeRateCarousel.css */
+.carousel-container {
+    width: 100%;
+    overflow: hidden;
+    /* clip overflow without creating scrollbars */
+    position: relative;
+    padding: 12px 0;
+    background: transparent;
+}
+
+.carousel-track {
+    display: flex;
+    gap: 16px;
+    animation: scroll 30s linear infinite;
+}
+
+.carousel-container:hover .carousel-track {
+    animation-play-state: paused;
+}
+
+.carousel-card {
+    flex: 0 0 auto;
+    min-width: 150px;
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+    padding: 12px;
+    text-align: center;
+    transition: transform 0.2s ease;
+}
+
+.carousel-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+}
+
+.card-countries {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 8px;
+}
+
+.card-flag {
+    width: 24px;
+    height: 24px;
+    object-fit: cover;
+    border-radius: 50%;
+    border: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.card-arrow {
+    font-size: 0.9rem;
+    color: #555;
+}
+
+.card-currency {
+    font-size: 0.85rem;
+    color: #555;
+    margin-bottom: 4px;
+}
+
+.card-value {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #122533;
+}
+
+@keyframes scroll {
+    0% {
+        transform: translateX(0);
+    }
+
+    100% {
+        transform: translateX(calc(-50% - 8px));
+    }
+}
