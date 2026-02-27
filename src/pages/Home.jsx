@@ -149,6 +149,11 @@ const Home = () => {
           </div>
 
 
+          {/* Exchange Rate Carousel */}
+          <div className="mb-4">
+            <ExchangeRateCarousel />
+          </div>
+
           {/* 3. ACTION GRID (4 Buttons with Custom SVGs) */}
           <div className="d-flex justify-content-between mb-4 px-2">
             {/* Transfer (Send) - MOVED TO FIRST POSITION */}
@@ -225,12 +230,6 @@ const Home = () => {
               </div>
               <small className="fw-bold text-dark" style={{ fontSize: '0.75rem' }}>Historial</small>
             </Link>
-          </div>
-
-
-          {/* Exchange Rate Carousel */}
-          <div className="mb-4">
-            <ExchangeRateCarousel />
           </div>
 
           {/* 4. PROMO BANNER (Purple Gradient -> Blue/Yellow Gradient) */}
