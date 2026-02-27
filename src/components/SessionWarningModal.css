@@ -17,6 +17,7 @@
   from {
     opacity: 0;
   }
+
   to {
     opacity: 1;
   }
@@ -38,6 +39,7 @@
     transform: translateY(-30px);
     opacity: 0;
   }
+
   to {
     transform: translateY(0);
     opacity: 1;
@@ -51,26 +53,29 @@
 }
 
 @keyframes pulse {
-  0%, 100% {
+
+  0%,
+  100% {
     transform: scale(1);
   }
+
   50% {
     transform: scale(1.15);
   }
 }
 
 .session-warning-title {
-  margin: 0 0 16px;
+  margin: 0 0 10px;
   color: #e74c3c;
-  font-size: 26px;
+  font-size: 20px;
   font-weight: 700;
 }
 
 .session-warning-text {
-  margin: 12px 0;
-  font-size: 17px;
+  margin: 8px 0;
+  font-size: 14px;
   color: #333;
-  line-height: 1.5;
+  line-height: 1.4;
 }
 
 .session-countdown {
@@ -84,8 +89,8 @@
 
 .session-warning-subtext {
   color: #666;
-  font-size: 15px;
-  margin: 16px 0 0;
+  font-size: 13px;
+  margin: 10px 0 0;
 }
 
 .session-modal-actions {
@@ -96,10 +101,10 @@
 
 .session-btn {
   flex: 1;
-  padding: 14px 24px;
+  padding: 10px 12px;
   border: none;
   border-radius: 10px;
-  font-size: 15px;
+  font-size: 13px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -140,33 +145,31 @@
   transform: translateY(0);
 }
 
-/* Responsive */
 @media (max-width: 480px) {
   .session-modal-content {
-    padding: 30px 20px;
+    padding: 24px 16px;
   }
-  
-  .session-warning-icon {
-    font-size: 56px;
-  }
-  
+
   .session-warning-title {
+    font-size: 18px;
+  }
+
+  .session-warning-text {
+    font-size: 13px;
+  }
+
+  .session-countdown {
     font-size: 22px;
   }
-  
-  .session-warning-text {
-    font-size: 15px;
-  }
-  
-  .session-countdown {
-    font-size: 24px;
-  }
-  
+
+  /* Buttons stay side-by-side on mobile */
   .session-modal-actions {
-    flex-direction: column;
+    flex-direction: row;
+    gap: 8px;
   }
-  
+
   .session-btn {
-    width: 100%;
+    font-size: 12px;
+    padding: 10px 8px;
   }
 }

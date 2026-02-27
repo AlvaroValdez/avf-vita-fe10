@@ -64,9 +64,10 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    gap: 12px;
-    margin-bottom: 8px;
-    margin-top: 8px;
+    gap: 8px;
+    margin-bottom: 6px;
+    margin-top: 22px;
+    /* Space below the absolute 'En vivo' badge */
 }
 
 .pulse-flag {
