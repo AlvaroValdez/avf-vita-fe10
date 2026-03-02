@@ -22,7 +22,7 @@ const ForgotPassword = () => {
         setEmail(''); // Limpiar campo
       }
     } catch (err) {
-      setError(err.error || 'Error al solicitar la recuperación.');
+      setError(typeof err.error === 'string' ? err.error : (err.message || 'Error al solicitar la recuperación.'));
     } finally {
       setLoading(false);
     }
@@ -43,18 +43,18 @@ const ForgotPassword = () => {
           <Form onSubmit={handleSubmit}>
             <Form.Group className="mb-3">
               <Form.Label>Correo Electrónico</Form.Label>
-              <Form.Control 
-                type="email" 
-                value={email} 
-                onChange={(e) => setEmail(e.target.value)} 
-                required 
+              <Form.Control
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
                 placeholder="ejemplo@correo.com"
               />
             </Form.Group>
 
             <div className="d-grid gap-2">
-              <Button 
-                type="submit" 
+              <Button
+                type="submit"
                 disabled={loading}
                 style={{ backgroundColor: 'var(--avf-secondary)', borderColor: 'var(--avf-secondary)' }}
               >

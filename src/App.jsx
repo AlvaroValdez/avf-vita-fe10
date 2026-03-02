@@ -24,6 +24,8 @@ import Profile from './pages/Profile.jsx';
 import Favorites from './pages/Favorites.jsx';
 import DirectPaymentPage from './pages/DirectPaymentPage.jsx';
 import SendMoney from './pages/SendMoney.jsx';
+import ForgotPassword from './pages/ForgotPassword.jsx';
+import ResetPassword from './pages/ResetPassword.jsx';
 
 // Componentes UI
 // Componentes UI
@@ -64,6 +66,8 @@ function AppContent() {
         <Route path="/payment-success/:orderId" element={<PaymentSuccess />} />
         <Route path="/payment-cancelled/:orderId" element={<PaymentSuccess />} /> {/* Handle cancel redirect */}
         <Route path="/verify-email" element={<VerifyEmail />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/reset-password/:token" element={<ResetPassword />} />
 
         {/* Rutas Protegidas (Usuario) */}
         <Route element={<ProtectedRouteWrapper />}>
