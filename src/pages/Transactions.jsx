@@ -208,12 +208,37 @@ const Transactions = () => {
 
                 {/* Tasa Vita */}
                 <td className="small text-muted text-center">
-                  {tx.rateTracking?.vitaRate ? tx.rateTracking.vitaRate.toFixed(3) : '-'}
+                  {(() => {
+                    const r = tx.rateTracking;
+                    if (!r?.vitaRate) return '-';
+                    const origCurr = tx.amountsTracking?.originCurrency || tx.currency || 'CLP';
+                    const destCurr = tx.amountsTracking?.destCurrency || '';
+                    // Format with enough decimals: BOB→COP rates are ~400, CLP→COP are ~4.x
+                    const decimals = r.vitaRate >= 100 ? 2 : 4;
+                    return (
+                      <span title={`Tasa pura de Vita: 1 ${origCurr} = ${r.vitaRate.toFixed(decimals)} ${destCurr}`}>
+                        {r.vitaRate.toFixed(decimals)}
+                      </span>
+                    );
+                  })()}
                 </td>
 
                 {/* Tasa Alyto */}
                 <td className="small text-center">
-                  {tx.rateTracking?.alytoRate ? <strong>{tx.rateTracking.alytoRate.toFixed(3)}</strong> : '-'}
+                  {(() => {
+                    const r = tx.rateTracking;
+                    if (!r?.alytoRate) return '-';
+                    const origCurr = tx.amountsTracking?.originCurrency || tx.currency || 'CLP';
+                    const destCurr = tx.amountsTracking?.destCurrency || '';
+                    const decimals = r.alytoRate >= 100 ? 2 : 4;
+                    const spread = r.spreadPercent || (r.vitaRate && r.alytoRate ? ((1 - r.alytoRate / r.vitaRate) * 100).toFixed(1) : null);
+                    return (
+                      <strong title={`Tasa Alyto: 1 ${origCurr} = ${r.alytoRate.toFixed(decimals)} ${destCurr}${spread ? ` | Spread: ${spread}%` : ''}`}>
+                        {r.alytoRate.toFixed(decimals)}
+                        {spread ? <small className="text-muted fw-normal"> ({spread}%)</small> : null}
+                      </strong>
+                    );
+                  })()}
                 </td>
 
                 {/* Ganancia */}
