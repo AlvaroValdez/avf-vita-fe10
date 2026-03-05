@@ -325,19 +325,33 @@ const AdminTreasury = () => {
                                                         value={`${alytoRateDisplay.toFixed(2)} ${destCurr}/${tx.currency}`}
                                                         highlight />
                                                 )}
-                                                {vitaRateBOBtoDest && alytoRateDisplay && (
-                                                    <DetailRow
-                                                        label="Diferencial por BOB"
-                                                        value={`${(vitaRateBOBtoDest - alytoRateDisplay).toFixed(2)} ${destCurr}/${tx.currency}`} />
-                                                )}
+                                                {isBOB && vitaRateBOBtoDest && alytoRateDisplay && (() => {
+                                                    // Restar el costo fijo de Vita distribuido por BOB
+                                                    // para mostrar SOLO el margen real de Alyto (spread puro)
+                                                    const fixedCostPerBOB = at.destVitaFixedCost && at.originTotal
+                                                        ? at.destVitaFixedCost / at.originTotal
+                                                        : 0;
+                                                    const vitaNetRate = vitaRateBOBtoDest - fixedCostPerBOB;
+                                                    const cleanMargin = vitaNetRate - alytoRateDisplay;
+                                                    const cleanMarginTotal = cleanMargin * (at.originTotal || 1);
+                                                    return (
+                                                        <>
+                                                            <DetailRow
+                                                                label={`Vita neta (bruta − costo fijo)`}
+                                                                value={`${vitaNetRate.toFixed(2)} ${destCurr}/${tx.currency}`} />
+                                                            <DetailRow
+                                                                label={`Margen Alyto (neto)`}
+                                                                value={`${cleanMargin.toFixed(2)} ${destCurr}/${tx.currency} × ${fmt(at.originTotal || 1)} = ${fmt(cleanMarginTotal, 0)} ${destCurr}`}
+                                                                highlight />
+                                                        </>
+                                                    );
+                                                })()}
                                                 <DetailRow label="Spread aplicado"
                                                     value={rt.spreadPercent ? `${rt.spreadPercent}%` : '-'} />
-                                                <DetailRow label="Ganancia est. en tasa"
+                                                <DetailRow label="Ganancia (wallet Vita)"
                                                     value={at.profitOriginCurrency > 0
                                                         ? `${fmt(at.profitOriginCurrency, 0)} CLP`
-                                                        : isBOB
-                                                            ? `${((vitaRateBOBtoDest || 0) - (alytoRateDisplay || 0)).toFixed(2)} ${destCurr} × cada BOB`
-                                                            : '-'} />
+                                                        : '≈ 0 CLP (break-even en wallet)'} />
                                             </>
                                         );
                                     })()}
