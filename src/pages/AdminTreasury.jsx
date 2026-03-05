@@ -289,22 +289,61 @@ const AdminTreasury = () => {
                             </div>
                             <Card className="mb-3 border-0 bg-light">
                                 <Card.Body className="py-2 px-3">
-                                    {tx.rateTracking?.vitaRate && (
-                                        <DetailRow label={`Tasa Vita (${tx.currency}→${tx.amountsTracking?.destCurrency || ''})`}
-                                            value={`${tx.rateTracking.vitaRate.toFixed(2)} ${tx.amountsTracking?.destCurrency || 'COP'}/${tx.currency}`} />
-                                    )}
-                                    {tx.rateTracking?.alytoRate && (
-                                        <DetailRow label={`Tasa Alyto (cliente)`}
-                                            value={`${tx.rateTracking.alytoRate.toFixed(2)} ${tx.amountsTracking?.destCurrency || 'COP'}/${tx.currency}`} />
-                                    )}
-                                    <DetailRow label="Spread aplicado"
-                                        value={tx.rateTracking?.spreadPercent ? `${tx.rateTracking.spreadPercent}%` : '-'} />
-                                    <DetailRow label="Ganancia estimada"
-                                        value={tx.amountsTracking?.profitOriginCurrency > 0
-                                            ? `${fmt(tx.amountsTracking.profitOriginCurrency, 0)} CLP`
-                                            : 'En diferencial de tasa BOB→CLP'} />
+                                    {(() => {
+                                        const rt = tx.rateTracking || {};
+                                        const at = tx.amountsTracking || {};
+                                        const isBOB = tx.currency?.toUpperCase() === 'BOB';
+                                        const destCurr = at.destCurrency || 'COP';
+
+                                        // vitaRate siempre es CLP→DEST (pivot de Vita).
+                                        // Para BOB: la tasa BOB→DEST de Vita = originToClpBase × vitaRate
+                                        const clpToDestRate = rt.vitaRate;
+                                        const bobToClpBase = rt.originToClpBase || rt.bobToClpBase;
+                                        const vitaRateBOBtoDest = isBOB && bobToClpBase && clpToDestRate
+                                            ? bobToClpBase * clpToDestRate
+                                            : clpToDestRate;
+
+                                        // alytoRate para BOB = BOB→DEST efectivo (promisedDest / bobAmount)
+                                        // alytoRate para CLP = CLP→DEST con spread
+                                        const alytoRateDisplay = rt.alytoRate;
+
+                                        return (
+                                            <>
+                                                {isBOB && clpToDestRate && (
+                                                    <DetailRow
+                                                        label={`Tasa pivot Vita (CLP→${destCurr})`}
+                                                        value={`${clpToDestRate.toFixed(4)} ${destCurr}/CLP`} />
+                                                )}
+                                                {vitaRateBOBtoDest && (
+                                                    <DetailRow
+                                                        label={`Tasa Vita bruta (${tx.currency}→${destCurr})`}
+                                                        value={`${vitaRateBOBtoDest.toFixed(2)} ${destCurr}/${tx.currency}`} />
+                                                )}
+                                                {alytoRateDisplay && (
+                                                    <DetailRow
+                                                        label={`Tasa Alyto — cliente recibe`}
+                                                        value={`${alytoRateDisplay.toFixed(2)} ${destCurr}/${tx.currency}`}
+                                                        highlight />
+                                                )}
+                                                {vitaRateBOBtoDest && alytoRateDisplay && (
+                                                    <DetailRow
+                                                        label="Diferencial por BOB"
+                                                        value={`${(vitaRateBOBtoDest - alytoRateDisplay).toFixed(2)} ${destCurr}/${tx.currency}`} />
+                                                )}
+                                                <DetailRow label="Spread aplicado"
+                                                    value={rt.spreadPercent ? `${rt.spreadPercent}%` : '-'} />
+                                                <DetailRow label="Ganancia est. en tasa"
+                                                    value={at.profitOriginCurrency > 0
+                                                        ? `${fmt(at.profitOriginCurrency, 0)} CLP`
+                                                        : isBOB
+                                                            ? `${((vitaRateBOBtoDest || 0) - (alytoRateDisplay || 0)).toFixed(2)} ${destCurr} × cada BOB`
+                                                            : '-'} />
+                                            </>
+                                        );
+                                    })()}
                                 </Card.Body>
                             </Card>
+
 
                             {tx.proofOfPayment && (
                                 <div className="text-center mb-2">
