@@ -243,14 +243,43 @@ const Transactions = () => {
 
                 {/* Ganancia */}
                 <td className="text-end">
-                  {tx.amountsTracking?.profitOriginCurrency ? (
-                    <span className="text-success fw-bold">
-                      {new Intl.NumberFormat('es-CL', { minimumFractionDigits: 0 }).format(tx.amountsTracking.profitOriginCurrency)} CLP
-                    </span>
-                  ) : (
-                    <span className="text-muted">-</span>
-                  )}
+                  {(() => {
+                    const at = tx.amountsTracking || {};
+                    const isBOB = (at.originCurrency || tx.currency || '').toUpperCase() === 'BOB';
+
+                    // Para BOB: la ganancia real está en tx.fee (marginCLP = diferencial BOB→CLP)
+                    // profitOriginCurrency en amountsTracking es la ganancia del WALLET (≈0, break-even por diseño)
+                    // Para CLP: la ganancia está en amountsTracking.profitOriginCurrency
+                    const profitCLP = isBOB
+                      ? (tx.fee || 0)
+                      : (at.profitOriginCurrency || 0);
+
+                    const profitDest = at.profitDestCurrency || 0;
+                    const destCurr = at.destCurrency || '';
+
+                    if (!profitCLP && !profitDest) {
+                      return <span className="text-muted">-</span>;
+                    }
+
+                    const fmtCLP = new Intl.NumberFormat('es-CL', { minimumFractionDigits: 0 }).format(profitCLP);
+                    const fmtDest = new Intl.NumberFormat('es-CL', { minimumFractionDigits: 0 }).format(profitDest);
+                    const tooltip = isBOB
+                      ? `${fmtCLP} CLP (diferencial tasa BOB→CLP)${profitDest ? ` ≈ ${fmtDest} ${destCurr}` : ''}`
+                      : `${fmtCLP} CLP${profitDest ? ` ≈ ${fmtDest} ${destCurr}` : ''}`;
+
+                    return (
+                      <span className="text-success fw-bold" title={tooltip}>
+                        {fmtCLP} <small className="text-muted fw-normal">CLP</small>
+                        {profitDest > 0 && (
+                          <div className="text-muted fw-normal" style={{ fontSize: '0.72rem' }}>
+                            ≈ {fmtDest} {destCurr}
+                          </div>
+                        )}
+                      </span>
+                    );
+                  })()}
                 </td>
+
 
                 <td>
                   {tx.paymentMethod === 'manual_anchor' && (
