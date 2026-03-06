@@ -1,11 +1,35 @@
 import React, { useState } from 'react';
-import { Spinner, Modal } from 'react-bootstrap';
+import { Spinner, Modal, Alert, Button } from 'react-bootstrap';
 import CardForm from './CardForm';
 import StepBeneficiary from './StepBeneficiary';
 import StepConfirm from './StepConfirm';
 import KycForm from '../auth/KycForm';
-import { getWithdrawalRules } from '../../services/api'; // Importación crítica
+import { getWithdrawalRules } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
+
+// Mensajes por estado de KYC
+const KYC_MESSAGES = {
+  unverified: {
+    title: '⚠️ Verificación requerida',
+    body: 'Para enviar dinero necesitas verificar tu identidad. Completa el formulario a continuación.',
+    showForm: true,
+  },
+  pending: {
+    title: '⏳ Verificación en revisión',
+    body: 'Recibimos tus documentos y los estamos revisando. Te notificaremos por email cuando esté aprobado.',
+    showForm: false,
+  },
+  review: {
+    title: '🔍 Revisión adicional en curso',
+    body: 'Nuestro equipo está revisando tu documentación. Te contactaremos pronto.',
+    showForm: false,
+  },
+  rejected: {
+    title: '❌ Verificación rechazada',
+    body: 'Tu verificación no pudo ser aprobada. Contacta a soporte para más información.',
+    showForm: false,
+  },
+};
 
 const RemittanceSteps = () => {
   const { user } = useAuth();
@@ -44,8 +68,11 @@ const RemittanceSteps = () => {
   };
 
   const handleQuoteSuccess = (quotePayload) => {
-    // Validación de KYC antes de avanzar
-    if (user && !user.isProfileComplete) {
+    // ⭐ GATE: verificar KYC aprobado antes de avanzar al beneficiario
+    const kycStatus = user?.kyc?.status;
+    if (kycStatus !== 'approved') {
+      // Si no tiene perfil completo, necesita completar datos (muestra KycForm)
+      // Si ya subió docs y está pendiente/rechazado, mostramos mensaje informativo
       setPendingQuote(quotePayload);
       setShowKycModal(true);
       return;
@@ -100,15 +127,38 @@ const RemittanceSteps = () => {
     }
   };
 
+  const kycStatus = user?.kyc?.status;
+  const kycInfo = KYC_MESSAGES[kycStatus];
+
   return (
     <div>
       {renderStep()}
       <Modal show={showKycModal} onHide={() => setShowKycModal(false)} backdrop="static" keyboard={false} centered>
         <Modal.Header closeButton>
-          <Modal.Title className="h5 text-primary">Falta un paso importante</Modal.Title>
+          <Modal.Title className="h5 text-primary">
+            {kycInfo?.title || '⚠️ Verificación requerida'}
+          </Modal.Title>
         </Modal.Header>
         <Modal.Body>
-          <KycForm onSuccess={handleKycSuccess} />
+          {kycInfo?.showForm !== false ? (
+            // Estado unverified → mostrar formulario de carga de documentos
+            <KycForm onSuccess={handleKycSuccess} />
+          ) : (
+            // Estado pending/review/rejected → mensaje informativo, sin formulario
+            <>
+              <Alert variant={kycStatus === 'rejected' ? 'danger' : 'warning'} className="mb-3">
+                {kycInfo.body}
+              </Alert>
+              {kycStatus === 'rejected' && (
+                <p className="small text-muted">
+                  Motivo: {user?.kyc?.rejectionReason || 'Contacta a soporte@alyto.com'}
+                </p>
+              )}
+              <div className="text-center">
+                <Button variant="secondary" onClick={() => setShowKycModal(false)}>Cerrar</Button>
+              </div>
+            </>
+          )}
         </Modal.Body>
       </Modal>
     </div>
