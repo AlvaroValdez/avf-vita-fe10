@@ -115,7 +115,7 @@ const ManualDeposit = ({ formData, onBack, onFinish }) => {
             if (res.ok) {
                 // ✅ FIX: El backend devuelve order en res.data.order
                 const orderFromResponse = res.data?.order || res.transaction?.order || res.order || `ORD-${Date.now()}`;
-                
+
                 setTransactionData({
                     ...payload,
                     order: orderFromResponse,
@@ -127,7 +127,17 @@ const ManualDeposit = ({ formData, onBack, onFinish }) => {
                 throw new Error(res.error || "Error al crear solicitud.");
             }
         } catch (err) {
-            setError(err.message || 'Error al procesar la solicitud.');
+            // normalizeAxiosError devuelve { ok, status, error, details } — no un Error estándar
+            // Extraemos el mensaje del campo .error o .message
+            const backendError = err?.error || err?.message || 'Error al procesar la solicitud.';
+            const backendCode = err?.details?.code || err?.code;
+
+            // Mensaje especial para error de KYC
+            if (backendCode === 'KYC_NOT_APPROVED' || err?.status === 403) {
+                setError(backendError || 'Tu cuenta no está verificada. Completa tu perfil y espera la aprobación del equipo de Alyto.');
+            } else {
+                setError(backendError);
+            }
         } finally {
             setLoading(false);
             setUploading(false);
