@@ -1,15 +1,12 @@
-import React, { useState, useRef } from 'react';
-import { Container, Row, Col, Card, ListGroup, Badge, Spinner, Button } from 'react-bootstrap';
+import React from 'react';
+import { Container, Row, Col, Card, ListGroup, Badge, Button } from 'react-bootstrap';
 import { useAuth } from '../context/AuthContext';
 import KycLevel2Form from '../components/auth/KycLevel2Form';
 import KybLevel2Form from '../components/auth/KybLevel2Form';
-import { uploadAvatar } from '../services/api';
 import logo from '../assets/images/logo.png';
 
 const Profile = () => {
-  const { user, updateUserSession } = useAuth();
-  const [uploadingAvatar, setUploadingAvatar] = useState(false);
-  const fileInputRef = useRef(null);
+  const { user } = useAuth();
 
   const getKycStatusBadge = (status) => {
     switch (status) {
@@ -17,39 +14,6 @@ const Profile = () => {
       case 'pending': return <Badge bg="warning" text="dark">En Revisión</Badge>;
       case 'rejected': return <Badge bg="danger">Rechazado</Badge>;
       default: return <Badge bg="secondary">No Verificado</Badge>;
-    }
-  };
-
-  const handleAvatarClick = () => {
-    fileInputRef.current.click(); // Simula clic en el input oculto
-  };
-
-  const handleFileChange = async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-
-    if (file.size > 2 * 1024 * 1024) { // Límite 2MB
-      alert("La imagen es muy pesada (máx 2MB).");
-      return;
-    }
-
-    setUploadingAvatar(true);
-    const formData = new FormData();
-    formData.append('avatar', file);
-
-    try {
-      const response = await uploadAvatar(formData);
-      if (response.ok) {
-        // response.avatar es la URL nueva
-        // Debemos fusionarla con el usuario actual
-        const updatedUser = { ...user, avatar: response.avatar };
-        updateUserSession(updatedUser);
-      }
-    } catch (err) {
-      console.error(err);
-      alert("Error al subir la imagen.");
-    } finally {
-      setUploadingAvatar(false);
     }
   };
 
@@ -75,26 +39,18 @@ const Profile = () => {
           </div>
 
           <div style={{ flexShrink: 0 }}>
-            {/* AVATAR INTERACTIVO */}
             <div
-              onClick={handleAvatarClick}
               className="rounded-circle overflow-hidden shadow-sm"
               style={{
                 width: '110px', height: '110px',
                 backgroundColor: '#e9ecef', margin: '0 auto',
-                position: 'relative', cursor: 'pointer',
                 backgroundImage: user?.avatar ? `url(${user.avatar})` : 'none',
                 backgroundSize: 'cover', backgroundPosition: 'center',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 border: '3px solid #F7C843'
               }}
             >
-              <input type="file" ref={fileInputRef} onChange={handleFileChange} style={{ display: 'none' }} accept="image/*" />
-              {uploadingAvatar ? (
-                <Spinner animation="border" size="sm" variant="primary" />
-              ) : (
-                !user?.avatar && <span className="fw-bold" style={{ fontSize: '32px', color: '#6c757d' }}>{user?.name?.charAt(0).toUpperCase() || 'U'}</span>
-              )}
+              {!user?.avatar && <span className="fw-bold" style={{ fontSize: '32px', color: '#6c757d' }}>{user?.name?.charAt(0).toUpperCase() || 'U'}</span>}
             </div>
           </div>
 

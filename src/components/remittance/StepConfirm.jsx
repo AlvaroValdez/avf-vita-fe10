@@ -148,6 +148,9 @@ const StepConfirm = ({ formData, fields, onBack, isFromFavorite }) => {
             `La transacción quedó en espera.`
           );
         }
+        if (response?.code === 'DUPLICATE_ORDER') {
+          throw new Error('Esta transacción ya fue registrada. Por favor revisa tu historial antes de intentar de nuevo.');
+        }
         throw new Error(response?.error || 'Error creando transacción');
       }
 

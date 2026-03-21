@@ -141,16 +141,6 @@ export const uploadKybDocuments = async (formData) => {
   }
 };
 
-export const uploadAvatar = async (formData) => {
-  try {
-    const response = await apiClient.post('/auth/avatar', formData, {
-      headers: { 'Content-Type': undefined },
-    });
-    return response.data;
-  } catch (error) {
-    throw normalizeAxiosError(error, 'Error subiendo avatar.');
-  }
-};
 
 // --- ADMIN KYC ---
 export const getPendingKycUsers = async () => {

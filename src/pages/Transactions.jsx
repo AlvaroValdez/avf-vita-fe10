@@ -141,8 +141,12 @@ const Transactions = () => {
     switch (status) {
       case 'succeeded': return <Badge bg="success">Completado</Badge>;
       case 'pending': return <Badge bg="warning">Pendiente</Badge>;
-      case 'failed': return <Badge bg="danger">Fallido</Badge>;
+      case 'pending_verification': return <Badge bg="warning" text="dark">En Verificación</Badge>;
+      case 'pending_manual_payout': return <Badge bg="warning" text="dark">Pago Manual</Badge>;
+      case 'claiming': return <Badge bg="info">Reclamando</Badge>;
       case 'processing': return <Badge bg="info">Procesando</Badge>;
+      case 'failed': return <Badge bg="danger">Fallido</Badge>;
+      case 'cancelled': return <Badge bg="secondary">Cancelado</Badge>;
       default: return <Badge bg="secondary">{status || 'Desconocido'}</Badge>;
     }
   };
@@ -481,9 +485,13 @@ const Transactions = () => {
                   <Form.Select name="status" value={filters.status} onChange={handleFilterChange}>
                     <option value="">Todos</option>
                     <option value="pending">Pendiente</option>
+                    <option value="pending_verification">En Verificación</option>
+                    <option value="pending_manual_payout">Pago Manual</option>
+                    <option value="claiming">Reclamando</option>
                     <option value="processing">Procesando</option>
                     <option value="succeeded">Completado</option>
                     <option value="failed">Fallido</option>
+                    <option value="cancelled">Cancelado</option>
                   </Form.Select>
                 </Form.Group>
               </Col>

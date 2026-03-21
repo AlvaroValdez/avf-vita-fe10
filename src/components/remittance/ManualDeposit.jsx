@@ -135,6 +135,8 @@ const ManualDeposit = ({ formData, onBack, onFinish }) => {
             // Mensaje especial para error de KYC
             if (backendCode === 'KYC_NOT_APPROVED' || err?.status === 403) {
                 setError(backendError || 'Tu cuenta no está verificada. Completa tu perfil y espera la aprobación del equipo de Alyto.');
+            } else if (backendCode === 'DUPLICATE_ORDER' || err?.status === 409) {
+                setError('Esta transacción ya fue registrada. Por favor revisa tu historial antes de intentar de nuevo.');
             } else {
                 setError(backendError);
             }
