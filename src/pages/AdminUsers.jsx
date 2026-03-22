@@ -146,7 +146,18 @@ const AdminUsers = () => {
                     </td>
                     <td>
                       {u.isEmailVerified ? <Badge bg="success">Verificado</Badge> : <Badge bg="warning" text="dark">No Verif.</Badge>}
-                      <div className="mt-1">{u.isProfileComplete ? <Badge bg="info">KYC Completo</Badge> : <Badge bg="secondary">Sin KYC</Badge>}</div>
+                      <div className="mt-1">{(() => {
+                        const s = u.kyc?.status;
+                        const cfg = {
+                          approved:   { bg: 'success',  text: 'KYC Aprobado' },
+                          pending:    { bg: 'warning',  text: 'KYC Pendiente', textColor: 'dark' },
+                          review:     { bg: 'info',     text: 'KYC en Revisión', textColor: 'dark' },
+                          rejected:   { bg: 'danger',   text: 'KYC Rechazado' },
+                          unverified: { bg: 'secondary',text: 'Sin verificar' },
+                        };
+                        const c = cfg[s] || cfg.unverified;
+                        return <Badge bg={c.bg} text={c.textColor}>{c.text}</Badge>;
+                      })()}</div>
                     </td>
                     <td>
                       <Button
