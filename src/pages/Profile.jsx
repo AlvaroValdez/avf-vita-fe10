@@ -78,7 +78,7 @@ const Profile = () => {
 
         {/* --- 3. ACTIONS ROW --- */}
         <div className="d-flex gap-3 mb-5">
-          <Button variant="outline-primary" className="rounded-pill px-4 fw-normal" style={{ fontSize: '0.9rem' }} onClick={handleAvatarClick}>
+          <Button variant="outline-primary" className="rounded-pill px-4 fw-normal" style={{ fontSize: '0.9rem' }} disabled>
             Editar Foto
           </Button>
           <Button variant="outline-primary" className="rounded-circle d-flex align-items-center justify-content-center" style={{ width: '38px', height: '38px' }}>
